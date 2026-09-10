@@ -2,9 +2,9 @@
 
 ## What It Is
 
-A document intelligence and RAG quality workbench built with Next.js 16, React, TypeScript, PostgreSQL/pgvector and Drizzle. Supabase provides production Auth and private Storage; Inngest runs durable document and evaluation jobs; OpenAI provides structured extraction, independent verification, answers and judging.
+A document intelligence and RAG quality workbench built with Next.js 16, React, TypeScript, PostgreSQL/pgvector and Drizzle. Neon stores production data and password hashes; signed sessions provide authentication and Vercel Blob provides private storage; Inngest runs durable document and evaluation jobs; OpenAI provides structured extraction, independent verification, answers and judging.
 
-**Status:** implemented and verified locally with the deterministic mock provider. Vercel project and GitHub integration are linked; production settings are configured. Hosted deployment is waiting for Supabase project capacity and service credentials. See [deployment status](docs/deployment.md) and the [implementation audit](docs/audit.md).
+**Status:** the synthetic demo is live at https://evidenceops.vercel.app with Neon, private Blob storage and verified sign-in. Inngest terms acceptance and an OpenAI key are still required to enable and verify live background processing. See [deployment status](docs/deployment.md) and the [implementation audit](docs/audit.md).
 
 ## The Problem
 
@@ -18,7 +18,7 @@ The synthetic corpus exercises provenance, uncertain values, review decisions, e
 
 ```mermaid
 flowchart LR
-  UI[Next.js workbench] --> Auth[Supabase Auth]
+  UI[Next.js workbench] --> Auth[Signed database sessions]
   UI --> Upload[Signed private Storage upload]
   Upload --> Jobs[Inngest document steps]
   Jobs --> DB[PostgreSQL / pgvector]
@@ -37,7 +37,7 @@ Local adapters use PostgreSQL, filesystem storage and signed sessions. Mock mode
 
 `upload → parse → chunk → extract → deterministic_validate → independent_verify → calculate_confidence → route_review → embed → finalize`
 
-PDF pages and DOCX paragraphs become addressable source blocks. Chunks target 800 tokens with 120-token overlap. Uploads are limited to 10 MB and PDFs to 50 pages. The production browser uploads directly to a signed Supabase path, avoiding Vercel's function request-size limit. Server actions receive descriptors and validate workspace, user, type and actual byte length.
+PDF pages and DOCX paragraphs become addressable source blocks. Chunks target 800 tokens with 120-token overlap. Uploads are limited to 10 MB and PDFs to 50 pages. The production browser uploads directly to a scoped private Blob path, avoiding Vercel's function request-size limit. Server actions receive descriptors and validate workspace, user, type and actual byte length.
 
 ## Human Review
 
@@ -75,7 +75,7 @@ Failures record step, attempt, error and retryability. Retries use 2, 8 and 30 s
 
 ## Resumability & Idempotency
 
-Database advisory locks serialize duplicate deliveries and uploads. Use Supabase's **session pooler on port 5432**, not transaction pooling on 6543. Parsing and chunking keys are independent of model changes. Extraction and verifier batch checkpoints preserve completed work; embeddings cache by text/model/dimension. A per-run document outcome ledger prevents counter inflation. Record creation checks persisted extraction identity before inserting. Worker configuration drift fails visibly and requires a new processing run.
+Database advisory locks serialize duplicate deliveries and uploads. Use a **direct Neon connection**, not a `-pooler` hostname or transaction pooling on port 6543. Parsing and chunking keys are independent of model changes. Extraction and verifier batch checkpoints preserve completed work; embeddings cache by text/model/dimension. A per-run document outcome ledger prevents counter inflation. Record creation checks persisted extraction identity before inserting. Worker configuration drift fails visibly and requires a new processing run.
 
 ## Data & Synthetic Corpus
 
@@ -136,9 +136,9 @@ pnpm dev
 
 ## Environment Variables
 
-See [.env.example](.env.example) and [production configuration](docs/deployment.md). Required live settings are `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `INNGEST_EVENT_KEY`, and `INNGEST_SIGNING_KEY`. Production drivers are Supabase/Supabase/Inngest. Models default to `gpt-5.6-luna`, embeddings to `text-embedding-3-small` with 768 dimensions. Token pricing is centralized in `src/lib/config.ts`; unknown model prices fail explicitly.
+See [.env.example](.env.example) and [production configuration](docs/deployment.md). Required live settings are `DATABASE_URL`, `AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`, `OPENAI_API_KEY`, `INNGEST_EVENT_KEY`, and `INNGEST_SIGNING_KEY`. Production drivers are database/blob/inngest. Models default to `gpt-5.6-luna`, embeddings to `text-embedding-3-small` with 768 dimensions. Token pricing is centralized in `src/lib/config.ts`; unknown model prices fail explicitly.
 
-Never commit `.env.local`, `.data/production.env` or service keys. Seed passwords for Supabase must be unique and at least 16 characters. Only Supabase URL and anon/publishable key may reach the browser.
+Never commit `.env.local`, `.data/production.env` or service keys. Seed passwords must be unique and at least 16 characters. Database, storage and session-signing credentials must never reach the browser.
 
 ## Testing
 
@@ -146,7 +146,7 @@ Never commit `.env.local`, `.data/production.env` or service keys. Seed password
 | --- | --- |
 | `pnpm lint` | Passed, no errors or warnings |
 | `pnpm typecheck` | Passed |
-| `pnpm test` | 43 passed, 10 files |
+| `pnpm test` | 49 passed, 11 files |
 | `pnpm test:integration` | 20 passed, 5 files |
 | `pnpm test:e2e` | 7 passed, Chromium |
 | `pnpm eval --no-ingest --no-cache` | EVAL PASSED; all targets/regression gates; 141/146 cases |
@@ -157,22 +157,19 @@ Additional browser audit: eight desktop routes and seven mobile routes returned 
 
 ## Deployment
 
-Vercel project `evidenceops` is linked to `essashahid/EvidenceOps`; Node 22 and pnpm build/install commands are configured. Known settings and generated demo passwords are set in both production and preview. **No working hosted deployment exists yet:** Supabase refused a new project because the account reached its free-project limit, and OpenAI/Inngest keys are absent.
+Vercel project `evidenceops` is linked to `essashahid/EvidenceOps`; Node 22 and pnpm build/install commands are configured. The demo is live at https://evidenceops.vercel.app. Database, storage, authentication and demo settings are synchronized across production, preview and development. OpenAI/Inngest activation remains pending.
 
 The private `.data/production.env` file contains generated passwords and empty slots for missing credentials. Once completed, `pnpm deploy:production` validates configuration, migrates, seeds and evaluates through production Auth/Storage, synchronizes Vercel variables and deploys. Then sync the deployed `/api/inngest` endpoint in Inngest and verify hosted upload/retry. [Detailed runbook](docs/deployment.md).
 
 ## Security & Privacy
 
-Server actions enforce workspace membership and role; public access is read-only. Mutations share a database rate counter. Supabase sessions are validated/refreshed; unknown users are not automatically added to a workspace. RLS protects public tables and direct client writes are revoked. Storage is private; generated reports escape source content and are served with a restrictive content policy. Raw sources and reports enforce workspace authorization. Use a dedicated Supabase project for this application. This is not a formal security/compliance certification.
+Server actions enforce workspace membership and role; public access is read-only. Mutations share a database rate counter. Database sessions are signed, secure and HTTP-only; login attempts share a database rate limit. Unknown users are not automatically added to a workspace. The Neon database has no browser-facing data API; server queries enforce workspace access. Optional Supabase deployments additionally use RLS. Storage is private; generated reports escape source content and are served with a restrictive content policy. Raw sources and reports enforce workspace authorization. Use a dedicated database for this application. This is not a formal security/compliance certification.
 
 ## Limitations
 
-No OCR; no scanned-document interpretation; no image extraction; no complex table reconstruction; synthetic corpus; no legal/compliance function; no tariff/HTS logic. The deterministic provider uses fixture truth and golden questions, so live-model quality remains unmeasured. Hosted Supabase Auth/Storage, actual Inngest delivery and Vercel deployment remain unverified until credentials are supplied. Source PDFs can contain page-split sentences, so extractive mock answers may include fragments. Model verification reduces unsupported answers but cannot guarantee correctness. Full-text quality is tuned for English. Five individual evaluation cases remain unsuccessful despite passing aggregate targets.
+No OCR; no scanned-document interpretation; no image extraction; no complex table reconstruction; synthetic corpus; no legal/compliance function; no tariff/HTS logic. The deterministic provider uses fixture truth and golden questions, so live-model quality remains unmeasured. Hosted Neon authentication, Blob storage and Vercel pages are verified; actual Inngest delivery and live OpenAI quality remain unverified until activation. Source PDFs can contain page-split sentences, so extractive mock answers may include fragments. Model verification reduces unsupported answers but cannot guarantee correctness. Full-text quality is tuned for English. Five individual evaluation cases remain unsuccessful despite passing aggregate targets.
 
 ## What I Would Add for a Client
 
 Client-specific source samples and acceptance tests, a reviewed retention policy, SSO and explicit invitation flows, usage budgets and provider billing reconciliation, asynchronous draft generation for larger contexts, OCR/table handling when required, and evaluation by independent human reviewers.
 
-## Neon deployment update
-
-The hosted deployment now uses Neon PostgreSQL, database-backed signed sessions and private Vercel Blob. Supabase is not required. See [the deployment runbook](docs/deployment.md) for configuration, provider activation and remaining live-processing prerequisites.

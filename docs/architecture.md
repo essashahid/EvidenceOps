@@ -1,6 +1,6 @@
 # Architecture
 
-The application uses Next.js 16 App Router with server components for reads and server actions for authenticated mutations. React client components handle table filtering/sorting, charts and form pending states. The request proxy refreshes Supabase sessions; workspace and role authorization is repeated at the mutation boundary.
+The application uses Next.js 16 App Router with server components for reads and server actions for authenticated mutations. React client components handle table filtering/sorting, charts and form pending states. The request proxy verifies signed database sessions (or refreshes sessions for optional Supabase deployments); workspace and role authorization is repeated at the mutation boundary.
 
 ## Modules
 
@@ -29,7 +29,7 @@ Six ordered migrations implement 28 application tables plus the migration ledger
 - RAG: `rag_queries`, `rag_answers`, `answer_citations`.
 - Quality: `eval_cases`, `eval_runs`, `eval_results`, `qa_reports`.
 
-Migration 0001 creates the schema and indexes. 0002 adds the initial Supabase policies/private bucket. 0003 adds verifier details, mutation limits and current-version uniqueness. 0004 hardens identity linkage and direct-client permissions. 0005 introduces idempotent document outcomes. 0006 preserves superseded review items. Supabase-only migrations are skipped when the local database has no Auth schema.
+Migration 0001 creates the schema and indexes. 0002 adds the initial Supabase policies/private bucket. 0003 adds verifier details, mutation limits and current-version uniqueness. 0004 hardens identity linkage and direct-client permissions. 0005 introduces idempotent document outcomes. 0006 preserves superseded review items. Supabase-only migrations are skipped when the database has no Supabase Auth schema.
 
 ## Invariants
 
@@ -45,4 +45,4 @@ Model evaluation reads the latest machine-produced record, independently of subs
 
 ## Operational boundaries
 
-Production uses a dedicated Supabase project and its session pooler, private Storage, and signed Inngest callbacks. The public default workspace is explicitly a synthetic demonstration. Hosted integrations remain pending external credentials; local mocks, SQL policy checks, browser flows and an optimized build are verified. See [the deployment runbook](deployment.md).
+Production uses a dedicated Neon project with a direct database connection, signed database sessions, private Vercel Blob storage, and signed Inngest callbacks when configured. The public default workspace is explicitly a synthetic demonstration. Hosted Neon, authentication, storage and browser flows are verified. Live OpenAI and Inngest activation remain pending external credentials/terms acceptance. See [the deployment runbook](deployment.md).
