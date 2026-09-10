@@ -1,0 +1,3507 @@
+You are building a finished portfolio MVP called **EvidenceOps**.
+
+Do not treat this as an exploratory prototype. Build the application end to end, test it, seed it with deterministic demo data, and leave the repository in a deployable state.
+
+Do not ask me implementation questions. Where this specification makes a decision, follow it. Do not substitute another architecture simply because you prefer it unless the specified dependency is technically unavailable. If a small implementation detail is unspecified, choose the simplest production-sensible approach consistent with the architecture below and document the decision.
+
+# 1. PRODUCT
+
+## Name
+
+**EvidenceOps**
+
+Subtitle:
+
+**Production Document Intelligence & RAG Quality Workbench**
+
+## One-line pitch
+
+Turn PDFs and DOCX files into cited structured data and evidence-bound AI answers, with human review, version history, regression testing and full run observability.
+
+## Product purpose
+
+EvidenceOps demonstrates what production-grade document AI should look like after moving beyond a basic extraction script or RAG chatbot.
+
+The application must:
+
+1. ingest PDF and DOCX documents;
+2. preserve their original source;
+3. parse them into source-addressable blocks;
+4. extract structured information with an LLM;
+5. capture provenance for every extracted value;
+6. independently verify extracted values;
+7. run deterministic validation;
+8. calculate confidence programmatically;
+9. route uncertain output to human review;
+10. preserve corrections through immutable version history;
+11. index approved/current documents for hybrid RAG;
+12. generate evidence-bound answers and first drafts;
+13. refuse unsupported questions;
+14. evaluate extraction, provenance, retrieval, answers and review routing against a golden set;
+15. compare evaluation runs to a baseline;
+16. detect regressions;
+17. track retries, failures, latency, token usage and cost;
+18. resume safely after failure;
+19. generate a complete HTML QA report for every evaluation/demo run.
+
+The central product principle is:
+
+**Model output is not trusted merely because a model produced it.**
+
+Every important output should be inspectable and traceable.
+
+# 2. PORTFOLIO POSITIONING
+
+This build supports a portfolio positioning around:
+
+**Production-grade AI systems with human-in-the-loop review, evaluation/observability, provenance and failure handling.**
+
+The product should visibly demonstrate the following capabilities:
+
+* RAG evaluation;
+* representative golden test cases;
+* retrieval scoring;
+* answer scoring;
+* hallucination/support checking;
+* regression detection;
+* repeatable testing;
+* agentic/LLM application architecture;
+* persistent application state;
+* structured document ingestion;
+* metadata and classification;
+* vector/semantic retrieval;
+* AI-assisted drafting;
+* source provenance;
+* PostgreSQL schema design;
+* duplicate detection;
+* corrected-document handling;
+* reprocessing;
+* deterministic validation;
+* monitoring;
+* backfills/resumability;
+* human review.
+
+# 3. IMPORTANT IP / DATA CONSTRAINT
+
+This repository must be completely independent of any tariff, HTS, customs or employer-owned system.
+
+Do not:
+
+* reuse employer code;
+* reuse employer prompts;
+* reuse employer schemas;
+* reuse employer tariff logic;
+* reuse employer classification logic;
+* reuse employer test cases;
+* implement tariff or HTS functionality;
+* reference confidential employer systems.
+
+EvidenceOps should use a completely new repository and a deterministic synthetic document corpus generated specifically for this project.
+
+# 4. SCOPE
+
+## Must support
+
+* text-based PDF;
+* DOCX;
+* structured extraction;
+* provenance;
+* confidence;
+* independent verification;
+* human review;
+* immutable versions;
+* hybrid RAG;
+* cited answers;
+* evidence-bound drafting;
+* evaluation;
+* regression detection;
+* resumability;
+* retry handling;
+* dead-letter handling;
+* run observability;
+* cost tracking;
+* HTML QA reporting.
+
+## Explicitly do not build
+
+Do not add:
+
+* OCR;
+* scanned-document OCR fallback;
+* handwriting recognition;
+* image understanding;
+* complex visual table reconstruction;
+* spreadsheet ingestion;
+* web research agents;
+* internet search;
+* tariff functionality;
+* HTS functionality;
+* customs logic;
+* multi-model routing;
+* a generic autonomous agent framework;
+* enterprise SSO;
+* billing;
+* teams administration beyond simple workspace roles;
+* mobile application;
+* browser automation;
+* n8n;
+* Make.com;
+* Zapier;
+* a separate vector database;
+* Kubernetes;
+* Terraform.
+
+Do not broaden scope before all must-have functionality, tests and QA reporting are complete.
+
+# 5. SUCCESS CRITERIA
+
+The project is finished only when the following measurable conditions pass.
+
+## Corpus processing
+
+Process a deterministic fixture corpus of 20 source files.
+
+Required composition:
+
+* 16 PDF files;
+* 4 DOCX files;
+* 16 logically unique base documents;
+* 2 exact duplicates;
+* 2 corrected source versions.
+
+Requirements:
+
+* all valid text documents ingest;
+* exact duplicates are detected;
+* duplicate uploads do not repeat paid LLM processing;
+* corrected documents create new source versions;
+* prior versions remain accessible;
+* rerunning a successful document does not create duplicate records;
+* every processing run reaches an explicit terminal state.
+
+Allowed terminal states:
+
+* `completed`
+* `completed_with_review`
+* `failed`
+
+No run may remain silently stuck.
+
+## Extraction quality
+
+Target metrics:
+
+* scalar exact accuracy >= 95%;
+* list/object extraction micro-F1 >= 90%;
+* document classification accuracy >= 95%;
+* provenance validity >= 98%.
+
+## Review
+
+* review recall on intentionally uncertain/incorrect fields >= 90%;
+* review precision >= 75%;
+* every field below the auto-approval threshold enters review or blocked review;
+* human correction creates a new immutable record version.
+
+## RAG
+
+Golden RAG set contains exactly 40 questions:
+
+* 20 single-document answerable questions;
+* 10 cross-document answerable questions;
+* 10 deliberately unanswerable questions.
+
+Targets:
+
+* retrieval Recall@5 >= 90%;
+* citation precision >= 95%;
+* evidence-supported answer rate >= 95%;
+* unanswerable refusal accuracy >= 95%;
+* average semantic answer score >= 0.90.
+
+## Reliability
+
+Implement an intentional failure-injection mechanism.
+
+A failure injected after extraction must prove that:
+
+1. completed previous steps remain persisted;
+2. the failed step is recorded;
+3. retries occur;
+4. the run can resume;
+5. the original file does not need re-uploading;
+6. completed parsing is not repeated;
+7. completed paid model output is not repeated when its idempotency key is unchanged.
+
+## Required commands
+
+These commands must all pass before completion:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:integration
+pnpm test:e2e
+pnpm eval
+pnpm build
+```
+
+# 6. TECHNOLOGY STACK
+
+Use the following stack.
+
+## Runtime
+
+Node.js 22.
+
+## Language
+
+TypeScript.
+
+Use TypeScript throughout the application wherever practical.
+
+## Web framework
+
+Next.js 16 App Router.
+
+Pin to a stable 16.x release compatible with deployment at implementation time.
+
+## Styling
+
+Tailwind CSS.
+
+## Component library
+
+shadcn/ui.
+
+## Tables
+
+TanStack Table.
+
+## Charts
+
+Recharts.
+
+## Database
+
+Supabase PostgreSQL.
+
+## Vector search
+
+PostgreSQL `pgvector`.
+
+Use 768-dimensional vectors.
+
+## Authentication
+
+Supabase Auth.
+
+## Authorization
+
+Supabase Row-Level Security plus application-level workspace role checks.
+
+Roles:
+
+* `admin`
+* `reviewer`
+* `viewer`
+
+## File storage
+
+Supabase Storage.
+
+## Durable background workflow
+
+Inngest.
+
+Use it for:
+
+* persisted steps;
+* retries;
+* resumption;
+* run orchestration.
+
+## LLM provider
+
+OpenAI.
+
+All model names must be configurable through environment variables.
+
+Default extraction/verifier/RAG/evaluation model:
+
+`gpt-5.6-luna`
+
+If this exact model identifier is unavailable to the coding environment, use the closest currently available low-cost structured-output OpenAI model and document the substitution in README. Do not redesign the architecture.
+
+## Embeddings
+
+`text-embedding-3-small`
+
+Request 768 dimensions.
+
+## Structured output validation
+
+Zod.
+
+## PDF parsing
+
+`pdfjs-dist`.
+
+## DOCX parsing
+
+`mammoth`.
+
+## Token estimation
+
+`js-tiktoken`.
+
+## Fixture PDF generation
+
+`pdf-lib`.
+
+## Fixture DOCX generation
+
+`docx`.
+
+## Synthetic-data generation
+
+`@faker-js/faker`.
+
+Use a fixed random seed.
+
+## Testing
+
+Vitest.
+
+## Browser/E2E testing
+
+Playwright.
+
+## Mocking
+
+MSW where useful.
+
+# 7. REPOSITORY STRUCTURE
+
+Use approximately this structure:
+
+```text
+evidenceops/
+├─ app/
+│  ├─ page.tsx
+│  ├─ documents/
+│  │  ├─ page.tsx
+│  │  └─ [id]/
+│  ├─ review/
+│  ├─ rag/
+│  ├─ evals/
+│  ├─ runs/
+│  │  └─ [id]/
+│  └─ api/
+│     ├─ ingest/
+│     ├─ review/
+│     ├─ rag/
+│     ├─ reports/
+│     └─ inngest/
+├─ components/
+├─ lib/
+│  ├─ ai/
+│  │  ├─ extract.ts
+│  │  ├─ verify.ts
+│  │  ├─ rag.ts
+│  │  ├─ draft.ts
+│  │  └─ eval-judge.ts
+│  ├─ parsing/
+│  │  ├─ pdf.ts
+│  │  └─ docx.ts
+│  ├─ provenance/
+│  ├─ confidence/
+│  ├─ validation/
+│  ├─ chunking/
+│  ├─ retrieval/
+│  ├─ versioning/
+│  ├─ run-state/
+│  ├─ observability/
+│  └─ reports/
+├─ inngest/
+│  ├─ client.ts
+│  └─ functions/
+├─ supabase/
+│  ├─ migrations/
+│  └─ seed.sql
+├─ scripts/
+│  ├─ generate-fixtures.ts
+│  ├─ seed-demo.ts
+│  ├─ run-evals.ts
+│  └─ process-one.ts
+├─ fixtures/
+│  ├─ documents/
+│  ├─ truth/
+│  └─ golden/
+├─ tests/
+│  ├─ unit/
+│  ├─ integration/
+│  └─ e2e/
+├─ public/
+├─ .env.example
+├─ AGENTS.md
+├─ README.md
+└─ package.json
+```
+
+Minor structural variation is acceptable where required by Next.js conventions, but keep concerns separated.
+
+# 8. ENVIRONMENT VARIABLES
+
+Create `.env.example` with:
+
+```bash
+NEXT_PUBLIC_APP_NAME=EvidenceOps
+
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+OPENAI_API_KEY=
+OPENAI_EXTRACT_MODEL=gpt-5.6-luna
+OPENAI_VERIFY_MODEL=gpt-5.6-luna
+OPENAI_RAG_MODEL=gpt-5.6-luna
+OPENAI_EVAL_MODEL=gpt-5.6-luna
+OPENAI_EMBED_MODEL=text-embedding-3-small
+OPENAI_EMBED_DIMENSIONS=768
+
+INNGEST_EVENT_KEY=
+INNGEST_SIGNING_KEY=
+
+PIPELINE_VERSION=1.0.0
+EXTRACT_PROMPT_VERSION=extract-v1
+VERIFY_PROMPT_VERSION=verify-v1
+RAG_PROMPT_VERSION=rag-v1
+DRAFT_PROMPT_VERSION=draft-v1
+EVAL_PROMPT_VERSION=eval-v1
+
+AUTO_APPROVE_THRESHOLD=0.86
+REVIEW_THRESHOLD=0.65
+
+CHUNK_TARGET_TOKENS=800
+CHUNK_OVERLAP_TOKENS=120
+RAG_TOP_K=8
+VECTOR_WEIGHT=0.75
+LEXICAL_WEIGHT=0.25
+
+MAX_UPLOAD_MB=10
+MAX_DOCUMENT_PAGES=50
+
+LLM_MAX_RETRIES=3
+RETRY_DELAYS_MS=2000,8000,30000
+
+PUBLIC_DEMO_MODE=true
+DEMO_MUTATIONS_ENABLED=false
+
+DEMO_REVIEWER_EMAIL=reviewer@evidenceops.local
+DEMO_REVIEWER_PASSWORD=
+DEMO_VIEWER_EMAIL=viewer@evidenceops.local
+DEMO_VIEWER_PASSWORD=
+
+FAILURE_INJECTION_STEP=
+```
+
+Validate required environment variables at startup.
+
+# 9. DATA MODEL
+
+Implement database migrations for all tables below.
+
+Use UUID primary keys unless otherwise specified.
+
+Use timestamps with timezone.
+
+Use foreign keys.
+
+Add sensible indexes.
+
+Use database enums or constrained text values consistently.
+
+## `workspaces`
+
+Fields:
+
+* `id uuid primary key`
+* `slug text unique not null`
+* `name text not null`
+* `created_at timestamptz not null default now()`
+
+## `workspace_members`
+
+Fields:
+
+* `workspace_id uuid not null references workspaces`
+* `user_id uuid not null references auth.users`
+* `role text not null`
+* `created_at timestamptz not null default now()`
+
+Allowed roles:
+
+* admin
+* reviewer
+* viewer
+
+Primary key:
+
+`workspace_id, user_id`
+
+## `documents`
+
+Represents logical document identity across corrected source versions.
+
+Fields:
+
+* `id uuid primary key`
+* `workspace_id uuid not null references workspaces`
+* `logical_key text not null`
+* `display_name text not null`
+* `created_at timestamptz not null default now()`
+
+Unique:
+
+`workspace_id, logical_key`
+
+## `document_versions`
+
+Fields:
+
+* `id uuid primary key`
+* `document_id uuid not null references documents`
+* `version_number integer not null check version_number >= 1`
+* `content_hash text not null`
+* `storage_path text not null`
+* `mime_type text not null`
+* `byte_size bigint not null check byte_size > 0`
+* `source_filename text not null`
+* `supersedes_version_id uuid null references document_versions`
+* `is_current boolean not null default true`
+* `parse_status text not null default 'pending'`
+* `created_at timestamptz not null default now()`
+
+Allowed parse statuses:
+
+* pending
+* parsed
+* failed
+* unsupported
+
+Unique:
+
+`document_id, version_number`
+
+## `source_blocks`
+
+Fields:
+
+* `id uuid primary key`
+* `document_version_id uuid not null references document_versions`
+* `block_type text not null`
+* `block_index integer not null`
+* `page_number integer null`
+* `paragraph_number integer null`
+* `raw_text text not null`
+* `normalized_text text not null`
+* `char_start integer not null`
+* `char_end integer not null`
+* `created_at timestamptz not null default now()`
+
+Allowed block types:
+
+* page
+* paragraph
+
+Unique:
+
+`document_version_id, block_type, block_index`
+
+## `chunks`
+
+Fields:
+
+* `id uuid primary key`
+* `document_version_id uuid not null references document_versions`
+* `chunk_index integer not null`
+* `text text not null`
+* `start_block_id uuid not null references source_blocks`
+* `end_block_id uuid not null references source_blocks`
+* `token_count integer not null`
+* `text_hash text not null`
+* `embedding vector(768) null`
+* `embedding_model text null`
+* `embedding_dimensions integer null`
+* `search_tsv tsvector`
+* `created_at timestamptz not null default now()`
+
+Unique:
+
+`document_version_id, chunk_index`
+
+Create vector and FTS indexes suitable for demo size.
+
+## `processing_runs`
+
+Fields:
+
+* `id uuid primary key`
+* `workspace_id uuid not null references workspaces`
+* `run_type text not null`
+* `pipeline_version text not null`
+* `status text not null`
+* `started_at timestamptz null`
+* `completed_at timestamptz null`
+* `documents_total integer not null default 0`
+* `documents_completed integer not null default 0`
+* `documents_failed integer not null default 0`
+* `review_items_created integer not null default 0`
+* `input_tokens bigint not null default 0`
+* `output_tokens bigint not null default 0`
+* `embedding_tokens bigint not null default 0`
+* `estimated_cost_usd numeric(10,6) not null default 0`
+* `initiated_by uuid null`
+* `config_json jsonb not null default '{}'`
+* `created_at timestamptz not null default now()`
+
+Allowed run types:
+
+* ingest
+* reprocess
+* eval
+* backfill
+
+Allowed statuses:
+
+* queued
+* running
+* completed
+* completed_with_review
+* failed
+
+## `run_steps`
+
+Fields:
+
+* `id uuid primary key`
+* `processing_run_id uuid not null references processing_runs`
+* `document_version_id uuid null references document_versions`
+* `step_name text not null`
+* `idempotency_key text unique not null`
+* `status text not null`
+* `attempt_count integer not null default 0`
+* `started_at timestamptz null`
+* `completed_at timestamptz null`
+* `latency_ms integer null`
+* `output_ref text null`
+* `error_code text null`
+* `error_message text null`
+* `metadata_json jsonb not null default '{}'`
+
+## `extraction_runs`
+
+Fields:
+
+* `id uuid primary key`
+* `processing_run_id uuid not null references processing_runs`
+* `document_version_id uuid not null references document_versions`
+* `extractor_model text not null`
+* `verifier_model text not null`
+* `extractor_prompt_version text not null`
+* `verifier_prompt_version text not null`
+* `model_config_hash text not null`
+* `raw_extraction_json jsonb not null`
+* `started_at timestamptz not null`
+* `completed_at timestamptz not null`
+* `input_tokens integer not null default 0`
+* `output_tokens integer not null default 0`
+* `cost_usd numeric(10,6) not null default 0`
+
+## `record_versions`
+
+Fields:
+
+* `id uuid primary key`
+* `document_version_id uuid not null references document_versions`
+* `extraction_run_id uuid null references extraction_runs`
+* `parent_record_version_id uuid null references record_versions`
+* `version_number integer not null`
+* `created_by_type text not null`
+* `created_by_user_id uuid null`
+* `payload_json jsonb not null`
+* `is_current boolean not null default true`
+* `created_at timestamptz not null default now()`
+
+Allowed `created_by_type`:
+
+* model
+* reviewer
+* reprocess
+
+Unique:
+
+`document_version_id, version_number`
+
+## `field_values`
+
+Fields:
+
+* `id uuid primary key`
+* `record_version_id uuid not null references record_versions`
+* `field_path text not null`
+* `value_json jsonb`
+* `confidence numeric(4,3) not null`
+* `routing_status text not null`
+* `deterministic_validation numeric(4,3) not null`
+* `evidence_exact_match numeric(4,3) not null`
+* `verifier_support numeric(4,3) not null`
+* `cross_pass_agreement numeric(4,3) not null`
+* `evidence_specificity numeric(4,3) not null`
+* `verifier_status text not null`
+* `validation_messages jsonb not null default '[]'`
+* `created_at timestamptz not null default now()`
+
+Allowed routing status:
+
+* auto_approved
+* review
+* blocked
+* accepted
+* rejected
+
+## `field_evidence`
+
+Fields:
+
+* `id uuid primary key`
+* `field_value_id uuid not null references field_values`
+* `source_block_id uuid not null references source_blocks`
+* `quote_text text not null`
+* `quote_start integer null`
+* `quote_end integer null`
+* `source_locator text not null`
+* `exact_match boolean not null`
+* `created_at timestamptz not null default now()`
+
+## `review_items`
+
+Fields:
+
+* `id uuid primary key`
+* `workspace_id uuid not null references workspaces`
+* `document_version_id uuid not null references document_versions`
+* `field_value_id uuid not null references field_values`
+* `status text not null default 'open'`
+* `priority text not null default 'normal'`
+* `reason text not null`
+* `assigned_to uuid null`
+* `created_at timestamptz not null default now()`
+* `resolved_at timestamptz null`
+
+Statuses:
+
+* open
+* resolved
+* rejected
+* needs_source
+
+Priorities:
+
+* normal
+* high
+
+## `review_actions`
+
+Fields:
+
+* `id uuid primary key`
+* `review_item_id uuid not null references review_items`
+* `reviewer_user_id uuid not null`
+* `action text not null`
+* `old_value_json jsonb`
+* `new_value_json jsonb null`
+* `comment text null`
+* `resulting_record_version_id uuid null references record_versions`
+* `created_at timestamptz not null default now()`
+
+Allowed actions:
+
+* accept
+* edit_accept
+* reject
+* needs_source
+
+## `rag_queries`
+
+Fields:
+
+* `id uuid primary key`
+* `workspace_id uuid not null references workspaces`
+* `query_text text not null`
+* `query_embedding vector(768)`
+* `include_superseded boolean not null default false`
+* `created_by uuid null`
+* `created_at timestamptz not null default now()`
+
+## `rag_answers`
+
+Fields:
+
+* `id uuid primary key`
+* `rag_query_id uuid not null references rag_queries`
+* `mode text not null`
+* `answer_text text not null`
+* `sufficient_evidence boolean not null`
+* `model text not null`
+* `prompt_version text not null`
+* `input_tokens integer not null default 0`
+* `output_tokens integer not null default 0`
+* `latency_ms integer not null`
+* `estimated_cost_usd numeric(10,6) not null default 0`
+* `created_at timestamptz not null default now()`
+
+Modes:
+
+* answer
+* executive_brief
+* findings
+* recommendations
+
+## `answer_citations`
+
+Fields:
+
+* `id uuid primary key`
+* `rag_answer_id uuid not null references rag_answers`
+* `chunk_id uuid not null references chunks`
+* `source_block_id uuid not null references source_blocks`
+* `citation_order integer not null`
+* `supported_claim text not null`
+* `similarity_score numeric not null`
+* `lexical_score numeric not null`
+* `combined_score numeric not null`
+
+## `eval_cases`
+
+Fields:
+
+* `id uuid primary key`
+* `case_key text unique not null`
+* `case_type text not null`
+* `question text null`
+* `document_logical_key text null`
+* `expected_json jsonb not null`
+* `tags text[] not null default '{}'`
+* `active boolean not null default true`
+
+## `eval_runs`
+
+Fields:
+
+* `id uuid primary key`
+* `processing_run_id uuid not null references processing_runs`
+* `baseline_eval_run_id uuid null references eval_runs`
+* `model_config_hash text not null`
+* `status text not null`
+* `aggregate_metrics_json jsonb not null`
+* `regression_passed boolean not null`
+* `started_at timestamptz not null`
+* `completed_at timestamptz null`
+
+## `eval_results`
+
+Fields:
+
+* `id uuid primary key`
+* `eval_run_id uuid not null references eval_runs`
+* `eval_case_id uuid not null references eval_cases`
+* `passed boolean not null`
+* `metric_json jsonb not null`
+* `expected_json jsonb not null`
+* `actual_json jsonb not null`
+* `judge_reason text null`
+* `latency_ms integer null`
+* `estimated_cost_usd numeric(10,6) not null default 0`
+
+## `run_events`
+
+Fields:
+
+* `id bigserial primary key`
+* `processing_run_id uuid not null references processing_runs`
+* `document_version_id uuid null references document_versions`
+* `level text not null`
+* `event_type text not null`
+* `message text not null`
+* `payload_json jsonb not null default '{}'`
+* `created_at timestamptz not null default now()`
+
+Levels:
+
+* debug
+* info
+* warn
+* error
+
+## `dead_letters`
+
+Fields:
+
+* `id uuid primary key`
+* `processing_run_id uuid not null references processing_runs`
+* `document_version_id uuid not null references document_versions`
+* `failed_step text not null`
+* `error_code text not null`
+* `error_message text not null`
+* `attempt_count integer not null`
+* `retryable boolean not null`
+* `status text not null default 'open'`
+* `created_at timestamptz not null default now()`
+* `resolved_at timestamptz null`
+
+Statuses:
+
+* open
+* retrying
+* resolved
+
+# 10. SYNTHETIC DATA
+
+Create a deterministic fixture generator.
+
+Use a fixed Faker seed.
+
+Generate 20 source files.
+
+## Composition
+
+Generate:
+
+* 14 unique PDF version-1 reports;
+* 2 unique DOCX version-1 reports;
+* 2 exact byte-for-byte duplicates;
+* 2 corrected version-2 files.
+
+Final totals:
+
+* 20 files;
+* 16 PDF;
+* 4 DOCX.
+
+Each unique report should contain roughly 2–4 pages worth of information.
+
+Total corpus should be approximately 50–70 pages.
+
+## Subject matter
+
+Use generic fictional operational/business reports.
+
+Each should contain some combination of:
+
+* report title;
+* report number;
+* issuing organization;
+* publication date;
+* subject organizations;
+* key findings;
+* recommendations;
+* monetary amounts;
+* operational findings.
+
+Do not use real confidential businesses.
+
+Fictional names are preferred.
+
+## Planted edge cases
+
+The fixtures must explicitly include:
+
+1. missing publication date;
+2. conflicting monetary figure between summary and appendix;
+3. ambiguous recommendation owner;
+4. abbreviation introduced before organization name;
+5. duplicate recommendation expressed twice;
+6. corrected document version with changed amount;
+7. exact duplicate file;
+8. date written as `4 Sept. 26`;
+9. negation such as `the review found no evidence of a shipment delay`;
+10. unrelated monetary distractor in appendix.
+
+Store expected truth separately from documents.
+
+Path:
+
+```text
+fixtures/truth/<logical-key>-v<version>.json
+```
+
+Each truth record must contain:
+
+* logical key;
+* version;
+* expected structured record;
+* expected source evidence;
+* expected source locator;
+* uncertain fields;
+* duplicate expectation;
+* supersession expectation.
+
+# 11. INGESTION
+
+Upload accepts:
+
+* PDF;
+* DOCX.
+
+Maximum file size:
+
+10 MB.
+
+Maximum PDF pages:
+
+50.
+
+At upload:
+
+1. validate MIME/extension;
+2. compute SHA-256 on raw bytes;
+3. check existing hashes;
+4. determine logical document;
+5. determine whether duplicate or new version;
+6. persist file;
+7. create DB records;
+8. start processing run.
+
+## Duplicate rule
+
+If identical hash already exists:
+
+* do not create a new document version;
+* do not parse;
+* do not call an LLM;
+* log `duplicate_detected`;
+* return link/reference to existing version.
+
+## Corrected version rule
+
+If logical key already exists but raw hash differs:
+
+* create next `version_number`;
+* set previous `is_current=false`;
+* set new `is_current=true`;
+* populate `supersedes_version_id`.
+
+# 12. DOCUMENT PARSING
+
+## PDF
+
+Use `pdfjs-dist`.
+
+Create one `source_block` per page.
+
+Store:
+
+* raw text;
+* normalized text;
+* page number;
+* character boundaries.
+
+## DOCX
+
+Use `mammoth`.
+
+Create one source block per paragraph.
+
+Store:
+
+* raw text;
+* normalized text;
+* paragraph number;
+* character boundaries.
+
+## Scanned document rule
+
+Do not implement OCR.
+
+If more than 50% of PDF pages contain fewer than 100 extracted characters:
+
+set:
+
+`parse_status=unsupported`
+
+Create a manual review/error state:
+
+`unsupported_scanned_document`
+
+Show this clearly in UI.
+
+# 13. SOURCE BLOCK IDENTIFIERS
+
+UI should display a human-readable provenance locator.
+
+Example:
+
+`OPS-2026-004 v2 · page 3`
+
+Internal UUID remains canonical.
+
+Where useful, also generate display IDs such as:
+
+`SRC-OPS-2026-004-V2-P03`
+
+These display IDs are not primary keys.
+
+# 14. CHUNKING
+
+After parsing:
+
+1. normalize whitespace;
+2. preserve original text;
+3. estimate tokens;
+4. create chunks of approximately 800 tokens;
+5. overlap 120 tokens;
+6. never combine separate documents in one chunk;
+7. preserve first/last source-block references;
+8. preserve document version.
+
+# 15. STRUCTURED EXTRACTION SCHEMA
+
+Extract this record.
+
+## Top-level fields
+
+### `report_title`
+
+* string or null
+
+### `report_number`
+
+* string or null
+
+### `issuing_organization`
+
+* string or null
+
+### `publication_date`
+
+* ISO `YYYY-MM-DD` or null
+
+### `document_type`
+
+Enum:
+
+* operational_review
+* audit_report
+* evaluation
+* investigation
+* guidance
+* other
+
+### `subject_entities`
+
+Array of objects:
+
+* `name`
+
+### `key_findings`
+
+Array:
+
+* `finding`
+* `severity`
+
+Severity enum:
+
+* info
+* low
+* medium
+* high
+
+### `recommendations`
+
+Array:
+
+* `recommendation`
+* `target_entity`
+* `status_if_stated`
+
+### `monetary_amounts`
+
+Array:
+
+* `amount`
+* `currency`
+* `context`
+
+Every non-null field/list item returned by the extractor must include:
+
+* `source_block_ids`
+* `evidence_quotes`
+* `ambiguity`
+
+# 16. EXTRACTION PROMPT
+
+Use this system prompt verbatim unless technical structured-output wrappers require formatting changes around it.
+
+## System prompt
+
+You are EvidenceOps Extractor, a structured information extraction system.
+
+Your job is to extract only information that is explicitly supported by the source blocks supplied to you.
+
+Rules:
+
+1. Never use outside knowledge.
+2. Never infer a missing value from what would normally be true.
+3. If a value is absent, return null or an empty list according to the schema.
+4. Every non-null scalar value and every extracted list item must cite one or more source_block_ids.
+5. Every cited item must include a short verbatim evidence_quote copied from the supplied source block.
+6. Do not silently resolve contradictions. If two source passages conflict, return the most contextually authoritative candidate only when the document explicitly identifies it as corrected, revised, final, or superseding. Otherwise mark the field ambiguous.
+7. Preserve negation. “No evidence of delay” must never become “delay occurred.”
+8. Monetary values must be represented numerically with a separate ISO-style currency code when stated.
+9. Dates must be normalized to YYYY-MM-DD only when the document gives enough information to determine the exact date. Otherwise return null.
+10. Return only JSON matching the supplied schema.
+11. Do not include commentary outside the JSON.
+
+## User prompt template
+
+```text
+Extract the operational-report record from the source blocks below.
+
+DOCUMENT LOGICAL KEY:
+{{logical_key}}
+
+DOCUMENT VERSION:
+{{version_number}}
+
+ALLOWED DOCUMENT TYPES:
+- operational_review
+- audit_report
+- evaluation
+- investigation
+- guidance
+- other
+
+SOURCE BLOCKS:
+{{source_blocks_json}}
+
+Return this structure:
+
+{
+  "report_title": {
+    "value": "string or null",
+    "source_block_ids": ["string"],
+    "evidence_quotes": ["string"],
+    "ambiguity": "string or null"
+  },
+  "report_number": {
+    "value": "string or null",
+    "source_block_ids": ["string"],
+    "evidence_quotes": ["string"],
+    "ambiguity": "string or null"
+  },
+  "issuing_organization": {
+    "value": "string or null",
+    "source_block_ids": ["string"],
+    "evidence_quotes": ["string"],
+    "ambiguity": "string or null"
+  },
+  "publication_date": {
+    "value": "YYYY-MM-DD or null",
+    "source_block_ids": ["string"],
+    "evidence_quotes": ["string"],
+    "ambiguity": "string or null"
+  },
+  "document_type": {
+    "value": "operational_review | audit_report | evaluation | investigation | guidance | other",
+    "source_block_ids": ["string"],
+    "evidence_quotes": ["string"],
+    "ambiguity": "string or null"
+  },
+  "subject_entities": [
+    {
+      "name": "string",
+      "source_block_ids": ["string"],
+      "evidence_quotes": ["string"],
+      "ambiguity": "string or null"
+    }
+  ],
+  "key_findings": [
+    {
+      "finding": "string",
+      "severity": "info | low | medium | high",
+      "source_block_ids": ["string"],
+      "evidence_quotes": ["string"],
+      "ambiguity": "string or null"
+    }
+  ],
+  "recommendations": [
+    {
+      "recommendation": "string",
+      "target_entity": "string or null",
+      "status_if_stated": "string or null",
+      "source_block_ids": ["string"],
+      "evidence_quotes": ["string"],
+      "ambiguity": "string or null"
+    }
+  ],
+  "monetary_amounts": [
+    {
+      "amount": 0,
+      "currency": "string",
+      "context": "string",
+      "source_block_ids": ["string"],
+      "evidence_quotes": ["string"],
+      "ambiguity": "string or null"
+    }
+  ]
+}
+```
+
+Use structured output / JSON schema enforcement through the OpenAI SDK.
+
+# 17. DETERMINISTIC VALIDATION
+
+Do not send extraction directly into review routing.
+
+Run code-based checks first.
+
+For each field:
+
+* confirm required structure;
+* confirm expected type;
+* validate enums;
+* validate normalized dates;
+* validate monetary amount shape;
+* validate currency string;
+* verify each referenced source block exists;
+* verify each evidence quote occurs in the referenced source;
+* normalize whitespace before evidence matching;
+* detect repeated identical list items;
+* detect impossible/malformed values.
+
+Store validation results.
+
+Deterministic validation component score:
+
+* all validation passes → `1.0`
+* only noncritical warning → `0.5`
+* material validation failure → `0.0`
+
+# 18. INDEPENDENT VERIFICATION
+
+Do not use extractor self-confidence.
+
+Run an independent verifier.
+
+The verifier must not be told an extractor confidence value.
+
+## Verification system prompt
+
+You are EvidenceOps Verifier.
+
+You independently verify a candidate extracted value against its cited source evidence and surrounding context.
+
+Do not trust the candidate simply because another model produced it.
+
+Use only the source material supplied in this request.
+
+Classify the candidate as:
+
+SUPPORTED:
+The candidate is directly supported by the source.
+
+PARTIALLY_SUPPORTED:
+The source supports the core meaning, but the candidate adds, omits, normalizes, or resolves something that is not completely explicit.
+
+UNSUPPORTED:
+The candidate is not supported or is contradicted.
+
+Rules:
+
+1. Preserve negation.
+2. Check numbers, units, currency and dates carefully.
+3. Check whether the evidence is about the same entity as the candidate.
+4. If the source explicitly marks another value as revised, corrected, final or superseding, use the revised value.
+5. Do not use external knowledge.
+6. If a corrected value can be stated exactly from the supplied evidence, return it.
+7. evidence_specificity must be between 0 and 1:
+
+   * 1.0 = direct, explicit support
+   * 0.75 = clear contextual support
+   * 0.4 = broad or weak support
+   * 0.0 = no support
+8. Return only JSON matching the schema.
+
+## User prompt
+
+```text
+FIELD:
+{{field_path}}
+
+FIELD DEFINITION:
+{{field_definition}}
+
+CANDIDATE VALUE:
+{{candidate_json}}
+
+CITED EVIDENCE:
+{{evidence_json}}
+
+SURROUNDING SOURCE CONTEXT:
+{{context_json}}
+
+Return:
+
+{
+  "status": "supported | partially_supported | unsupported",
+  "corrected_value": null,
+  "contradiction_detected": false,
+  "evidence_specificity": 0.0,
+  "reason": "one concise sentence"
+}
+```
+
+Verifier support score:
+
+* supported → `1.0`
+* partially_supported → `0.5`
+* unsupported → `0.0`
+
+# 19. CONFIDENCE FORMULA
+
+Compute confidence in application code.
+
+Do not ask an LLM for final confidence.
+
+Formula:
+
+```text
+confidence =
+0.30 × evidence_exact_match
++ 0.20 × deterministic_validation
++ 0.25 × verifier_support
++ 0.15 × cross_pass_agreement
++ 0.10 × evidence_specificity
+```
+
+## `evidence_exact_match`
+
+* `1.0` if normalized evidence quote exists in the cited source block;
+* `0.0` otherwise.
+
+## `deterministic_validation`
+
+* `1.0`: all validators pass;
+* `0.5`: warnings only;
+* `0.0`: material failure.
+
+## `verifier_support`
+
+* supported = 1.0
+* partially supported = 0.5
+* unsupported = 0.0
+
+## `cross_pass_agreement`
+
+* exact normalized candidate/verifier agreement = `1.0`;
+* semantically equivalent formatting-only difference = `0.75`;
+* materially different corrected value = `0.0`.
+
+For deterministic fields such as monetary amounts and normalized dates, formatting normalization should occur before equality testing.
+
+## `evidence_specificity`
+
+Use verifier output directly:
+
+* direct evidence = 1.0
+* contextual evidence = 0.75
+* weak evidence = 0.4
+* no evidence = 0.0
+
+# 20. ROUTING RULES
+
+## Auto-approved
+
+If:
+
+```text
+confidence >= 0.86
+```
+
+AND:
+
+* verifier does not detect contradiction;
+* verifier status is not unsupported;
+* deterministic validation is not zero.
+
+Route:
+
+`auto_approved`
+
+## Human review
+
+If:
+
+```text
+0.65 <= confidence < 0.86
+```
+
+or verifier returns:
+
+`partially_supported`
+
+Route:
+
+`review`
+
+## Blocked/manual review
+
+If:
+
+```text
+confidence < 0.65
+```
+
+or:
+
+* verifier = unsupported;
+* contradiction detected;
+* evidence source does not exist;
+* evidence quote cannot be found.
+
+Route:
+
+`blocked`
+
+Blocked values should still appear in the review interface but should have high priority.
+
+# 21. HUMAN REVIEW
+
+Create route:
+
+`/review`
+
+## Queue table
+
+Columns:
+
+* document;
+* source version;
+* field;
+* candidate;
+* confidence;
+* reason;
+* priority;
+* age;
+* status.
+
+Allow filtering by:
+
+* confidence range;
+* field;
+* document;
+* priority;
+* status.
+
+## Review detail
+
+Use split-screen layout.
+
+### Left
+
+Show:
+
+* document title;
+* version;
+* source locator;
+* exact evidence highlighted;
+* approximately 500 characters surrounding evidence;
+* source block ID;
+* file hash or shortened hash;
+* button to inspect full parsed source.
+
+### Right
+
+Show:
+
+* field path;
+* candidate value;
+* total confidence;
+* confidence breakdown:
+
+  * evidence match;
+  * deterministic validation;
+  * verifier support;
+  * cross-pass agreement;
+  * evidence specificity;
+* verifier status;
+* verifier reason;
+* verifier corrected value where present;
+* validation warnings.
+
+## Buttons
+
+Provide exactly:
+
+* `Accept`
+* `Edit & Accept`
+* `Reject`
+* `Needs More Source`
+* `Next Item`
+
+Keyboard shortcuts:
+
+* A = Accept
+* E = Edit
+* R = Reject
+* N = Next
+
+## Review action behavior
+
+### Accept
+
+Mark candidate accepted.
+
+Create a new record version only if necessary to preserve immutable reviewed state. Prefer creating a reviewed record version so review provenance remains explicit.
+
+### Edit & Accept
+
+Reviewer enters corrected value.
+
+Create a new immutable `record_version`.
+
+Persist original and corrected values.
+
+### Reject
+
+Store rejection.
+
+Field becomes rejected/null in resulting reviewed version.
+
+### Needs More Source
+
+Item stays unresolved.
+
+Status:
+
+`needs_source`
+
+## Concurrency
+
+Use optimistic concurrency.
+
+If record version changed after reviewer opened item:
+
+reject stale review update and instruct UI to reload current state.
+
+# 22. VERSIONING
+
+There are two distinct types of versions.
+
+## Source versions
+
+A corrected uploaded file creates a new `document_version`.
+
+Example:
+
+```text
+OPS-2026-004 v1
+OPS-2026-004 v2
+```
+
+v2 supersedes v1.
+
+## Record versions
+
+Model extraction and human corrections create `record_versions`.
+
+Example:
+
+```text
+Record v1 — model extraction
+Record v2 — reviewer correction
+Record v3 — later reprocessing
+```
+
+Never overwrite old record data.
+
+Store parent relationship.
+
+UI must show exactly what changed between versions.
+
+# 23. EMBEDDINGS
+
+Embed all chunks after parsing.
+
+Use:
+
+`text-embedding-3-small`
+
+Dimensions:
+
+`768`
+
+Embedding idempotency key:
+
+```text
+sha256(chunk_text + embedding_model + embedding_dimensions)
+```
+
+Avoid recomputing embedding if matching stored output exists.
+
+# 24. HYBRID RAG
+
+Use hybrid retrieval.
+
+Default:
+
+* vector weight = 0.75
+* lexical PostgreSQL FTS weight = 0.25
+* retrieve top 8.
+
+Normalize both scores before combining.
+
+Combined score:
+
+```text
+combined_score =
+0.75 * normalized_vector_score
++ 0.25 * normalized_lexical_score
+```
+
+By default retrieve only chunks belonging to `document_versions.is_current = true`.
+
+Provide toggle:
+
+`Include superseded versions`
+
+Historical version retrieval must be off by default.
+
+# 25. RAG PROMPT
+
+## System
+
+You are EvidenceOps Evidence-Bound Analyst.
+
+Answer questions only from the retrieved source blocks supplied to you.
+
+Rules:
+
+1. Do not use outside knowledge.
+2. Every factual claim must be supported by one or more supplied source blocks.
+3. Cite claims using this exact format:
+   [{{logical_key}} v{{version}} {{locator}}]
+4. Prefer current document versions.
+5. If the retrieved evidence is insufficient to answer the question, return exactly:
+   "Insufficient evidence in the indexed corpus."
+6. Do not guess.
+7. If evidence conflicts, explain the conflict and cite both sources.
+8. Clearly distinguish direct evidence from your synthesis.
+9. Keep the answer concise unless the question asks for detailed analysis.
+
+## User
+
+```text
+QUESTION:
+{{question}}
+
+RETRIEVED SOURCE BLOCKS:
+{{retrieved_blocks_json}}
+
+Answer the question using only those source blocks.
+```
+
+# 26. DRAFTING
+
+Support four modes in `/rag`:
+
+* Answer
+* Executive Brief
+* Findings Summary
+* Recommendation Summary
+
+## Draft system prompt
+
+You are EvidenceOps Drafting Agent.
+
+Create an evidence-bound first draft using only the retrieved source blocks supplied to you.
+
+Rules:
+
+1. No factual statement may rely on outside knowledge.
+2. Every factual paragraph must contain one or more citations.
+3. Use citations in this exact form:
+   [{{logical_key}} v{{version}} {{locator}}]
+4. Do not invent recommendations.
+5. If evidence is incomplete, explicitly identify the limitation.
+6. Distinguish document findings from your organizational synthesis.
+7. Preserve contradictions rather than resolving them without evidence.
+
+## Draft user prompt
+
+```text
+MODE:
+{{mode}}
+
+REQUEST:
+{{request}}
+
+RETRIEVED SOURCE BLOCKS:
+{{retrieved_blocks_json}}
+
+For executive_brief, use:
+
+Title
+Executive Summary
+Key Findings
+Recommendations Stated in the Sources
+Risks / Contradictions
+Evidence Limitations
+
+For findings_summary, use:
+
+Title
+Findings
+Supporting Evidence
+Open Questions
+
+For recommendation_summary, use:
+
+Title
+Recommendations
+Target Entity
+Supporting Evidence
+Unresolved Ambiguities
+```
+
+# 27. RAG CITATIONS
+
+Each answer must persist retrieved chunks and claim citations.
+
+Citation UI must be clickable.
+
+Clicking a citation opens:
+
+* logical document;
+* source version;
+* source page/paragraph;
+* supporting source text.
+
+Do not rely only on citation text generated by the LLM.
+
+Validate citations programmatically against supplied retrieval IDs.
+
+# 28. GOLDEN EVALUATION SET
+
+Create exactly 40 RAG test cases.
+
+## 20 single-document answerable
+
+Questions where answer exists within one current source.
+
+## 10 cross-document answerable
+
+Questions requiring evidence from multiple reports.
+
+## 10 unanswerable
+
+Questions whose answer does not exist.
+
+The required output for insufficient evidence is exactly:
+
+`Insufficient evidence in the indexed corpus.`
+
+Store golden fixtures under:
+
+`fixtures/golden/`
+
+# 29. EXTRACTION EVALUATION
+
+Evaluate against synthetic truth.
+
+Metrics:
+
+## Scalar exact accuracy
+
+Fields:
+
+* title;
+* number;
+* organization;
+* date;
+* document type.
+
+Normalize whitespace/case where appropriate.
+
+## List/object F1
+
+Use micro precision/recall/F1 for:
+
+* entities;
+* findings;
+* recommendations;
+* monetary amounts.
+
+Use normalized key representations for matching.
+
+## Classification accuracy
+
+Exact document-type classification.
+
+## Provenance validity
+
+A field counts valid only when:
+
+* cited block exists;
+* cited quote occurs in cited block;
+* cited block belongs to correct source version.
+
+# 30. REVIEW EVALUATION
+
+Truth fixtures identify expected uncertain fields.
+
+Calculate:
+
+## Review recall
+
+```text
+correctly_routed_uncertain_fields /
+total_planted_uncertain_fields
+```
+
+Target >= 0.90.
+
+## Review precision
+
+```text
+true_uncertain_fields_in_review /
+all_fields_routed_to_review
+```
+
+Target >= 0.75.
+
+# 31. RAG EVALUATION
+
+Metrics:
+
+## Recall@5
+
+A case passes retrieval when expected evidence appears within top 5 retrieved chunks.
+
+## Citation precision
+
+```text
+supported_citations /
+all_answer_citations
+```
+
+Target >= 0.95.
+
+## Unsupported/refusal accuracy
+
+Unanswerable cases must refuse.
+
+Target >= 0.95.
+
+## Semantic answer score
+
+Use an LLM judge.
+
+Target average >= 0.90.
+
+# 32. EVALUATION JUDGE
+
+Use this system prompt.
+
+You are EvidenceOps Evaluation Judge.
+
+You are evaluating an AI answer against a deterministic golden answer and the source evidence.
+
+Do not reward eloquence.
+
+Score only:
+
+CORRECTNESS:
+Does the candidate convey the expected factual answer?
+
+EVIDENCE_SUPPORT:
+Are its factual statements supported by the provided source evidence?
+
+COMPLETENESS:
+Does it include the important expected information without material omission?
+
+Each score must be from 0.0 to 1.0.
+
+A candidate containing a material unsupported factual claim cannot receive an evidence_support score greater than 0.5.
+
+If the golden result is UNANSWERABLE, the candidate receives correctness 1.0 only if it refuses to answer rather than guessing.
+
+Return JSON only.
+
+User prompt:
+
+```text
+QUESTION:
+{{question}}
+
+EXPECTED:
+{{expected_answer}}
+
+CANDIDATE:
+{{candidate_answer}}
+
+SOURCE EVIDENCE:
+{{source_evidence}}
+
+Return:
+
+{
+  "correctness": 0.0,
+  "evidence_support": 0.0,
+  "completeness": 0.0,
+  "passed": false,
+  "reason": "one concise sentence"
+}
+```
+
+Individual case passes when:
+
+* correctness >= 0.90;
+* evidence support >= 0.95;
+* completeness >= 0.85.
+
+# 33. REGRESSION RULES
+
+Each eval run compares against designated baseline.
+
+Mark overall regression failure when any applies:
+
+* scalar extraction accuracy falls by >2 percentage points;
+* provenance validity falls by >1 percentage point;
+* review recall falls by >5 percentage points;
+* Recall@5 falls by >3 percentage points;
+* refusal accuracy <95%;
+* citation precision <95%;
+* average semantic answer score <0.90;
+* duplicate detection test fails;
+* corrected-version handling test fails;
+* resumability test fails.
+
+UI must display:
+
+* baseline;
+* current;
+* delta;
+* threshold;
+* pass/fail.
+
+# 34. PROCESSING WORKFLOW
+
+Use an Inngest pipeline.
+
+Logical sequence:
+
+```text
+upload
+→ parse
+→ chunk
+→ extract
+→ deterministic_validate
+→ independent_verify
+→ calculate_confidence
+→ route_review
+→ embed
+→ finalize
+```
+
+Evaluation can then run separately:
+
+```text
+evaluate_extraction
+→ evaluate_review
+→ evaluate_retrieval
+→ evaluate_answers
+→ compare_baseline
+→ generate_qa_report
+```
+
+Each step must be persisted.
+
+# 35. RETRIES
+
+Default delays:
+
+* attempt 1 retry: 2 seconds;
+* attempt 2 retry: 8 seconds;
+* attempt 3 retry: 30 seconds.
+
+After final retry:
+
+* create dead-letter record;
+* mark step failed;
+* expose error in run UI.
+
+Do not silently swallow errors.
+
+# 36. IDEMPOTENCY
+
+Every expensive processing step gets an idempotency key:
+
+```text
+{document_version_id}:{step_name}:{pipeline_version}:{model_config_hash}
+```
+
+Before executing:
+
+* check `run_steps`;
+* if successful compatible output exists, reuse it.
+
+Model config hash must include:
+
+* model;
+* prompt version;
+* material generation parameters;
+* schema version.
+
+Embedding idempotency uses chunk text hash + model + dimensions.
+
+# 37. RESUMABILITY
+
+A user/admin can retry a failed run.
+
+Retry starts from the earliest incomplete or failed durable step.
+
+Do not rerun completed steps with valid matching idempotency output.
+
+Implement manual button:
+
+`Retry Failed Step`
+
+Also support:
+
+```bash
+pnpm process:one <document-id>
+```
+
+for local debugging without Inngest.
+
+# 38. OBSERVABILITY
+
+Do not add a third-party observability SaaS.
+
+Store application-level observability in PostgreSQL.
+
+For every run record:
+
+* run ID;
+* pipeline version;
+* status;
+* start/end;
+* documents;
+* retries;
+* failures;
+* review count;
+* tokens;
+* estimated cost.
+
+For every step:
+
+* name;
+* status;
+* attempt;
+* duration;
+* model where relevant;
+* token usage where relevant;
+* error.
+
+For every event:
+
+* timestamp;
+* level;
+* document;
+* step/event type;
+* message;
+* structured metadata.
+
+# 39. COST TRACKING
+
+Store provider/model cost configuration centrally.
+
+Do not hard-code model price inside business logic.
+
+Use configuration that can be updated independently.
+
+Track:
+
+* input tokens;
+* output tokens;
+* embedding tokens;
+* estimated extraction cost;
+* verifier cost;
+* RAG cost;
+* evaluation cost;
+* run total.
+
+Display run-cost warning when:
+
+```text
+estimated_cost_usd > 0.25
+```
+
+for the demo corpus.
+
+Do not fail the run solely because of this warning.
+
+# 40. UI
+
+Build a clean operational application.
+
+Avoid excessive visual effects.
+
+Prioritize:
+
+* hierarchy;
+* data density;
+* explainability;
+* operational status;
+* provenance.
+
+# 41. DASHBOARD
+
+Route:
+
+`/`
+
+KPI cards:
+
+* Current Documents
+* Current Source Versions
+* Open Review Items
+* Latest Extraction Accuracy
+* Latest RAG Citation Precision
+* Latest Run Cost
+* Latest Run Status
+
+Recent Runs table:
+
+* Run ID
+* Type
+* Started
+* Documents
+* Review Items
+* Failures
+* Cost
+* Status
+
+Quality trend chart:
+
+* extraction accuracy;
+* citation precision;
+* Recall@5.
+
+# 42. DOCUMENTS SCREEN
+
+Route:
+
+`/documents`
+
+Columns:
+
+* Logical Key
+* Document Title
+* Current Version
+* Format
+* Publication Date
+* Document Type
+* Extraction Status
+* Review Count
+* Average Confidence
+* Last Processed
+
+Filters:
+
+* status;
+* document type;
+* has review;
+* version count.
+
+# 43. DOCUMENT DETAIL
+
+Route:
+
+`/documents/[id]`
+
+Tabs:
+
+## Structured Record
+
+Show all fields.
+
+Each value displays:
+
+* value;
+* confidence;
+* routing/review status;
+* citation control.
+
+## Source
+
+Full parsed text organized by page/paragraph.
+
+## Provenance
+
+Columns:
+
+* Field
+* Value
+* Source Locator
+* Evidence
+* Exact Match
+
+## Versions
+
+Show:
+
+### Source versions
+
+* version;
+* filename;
+* hash;
+* date;
+* superseded/current.
+
+### Record versions
+
+* version;
+* source: model/reviewer/reprocess;
+* model configuration;
+* changed fields;
+* timestamp.
+
+## Processing
+
+Show:
+
+* step;
+* status;
+* attempts;
+* latency;
+* tokens;
+* errors.
+
+# 44. REVIEW SCREEN
+
+Route:
+
+`/review`
+
+Implement exactly as described in Human Review above.
+
+Confidence should be visually broken into its five components.
+
+Never show only one mysterious score.
+
+# 45. RAG SCREEN
+
+Route:
+
+`/rag`
+
+Controls:
+
+* question/request input;
+* mode selector:
+
+  * Answer
+  * Executive Brief
+  * Findings Summary
+  * Recommendation Summary
+* toggle:
+
+  * Current versions only
+  * Include superseded versions
+* Run button.
+
+Results:
+
+* generated text;
+* citations;
+* expandable retrieved evidence;
+* model;
+* latency;
+* estimated cost.
+
+# 46. EVALUATION SCREEN
+
+Route:
+
+`/evals`
+
+Header:
+
+* Baseline Run
+* Latest Run
+* PASS / REGRESSION
+
+Metric table:
+
+* Scalar Extraction Accuracy
+* List/Object F1
+* Classification Accuracy
+* Provenance Validity
+* Review Recall
+* Review Precision
+* Duplicate/Version Accuracy
+* Retrieval Recall@5
+* Citation Precision
+* Refusal Accuracy
+* Semantic Answer Score
+* Cost
+* p95 Latency
+
+Charts:
+
+* baseline vs latest;
+* confidence distribution;
+* failed cases by category.
+
+Case table:
+
+* Case
+* Type
+* Expected
+* Actual
+* Score
+* Pass/Fail
+* Inspect
+
+# 47. RUN OBSERVABILITY SCREEN
+
+Route:
+
+`/runs/[id]`
+
+Header:
+
+* Run ID
+* Status
+* Pipeline Version
+* Models
+* Start
+* End
+* Total Cost
+
+Timeline:
+
+* upload
+* parse
+* chunk
+* extract
+* validate
+* verify
+* confidence
+* review_route
+* embed
+* evaluate
+* report
+
+Each step:
+
+* status;
+* attempts;
+* latency;
+* token usage;
+* error.
+
+Logs:
+
+* timestamp;
+* level;
+* document;
+* event;
+* message.
+
+Filters:
+
+* level;
+* document;
+* step.
+
+# 48. QA REPORT
+
+Generate downloadable HTML:
+
+```text
+evidenceops_run_<run-id>_qa.html
+```
+
+Sections in this exact order:
+
+## 1. Run Identity
+
+* run ID;
+* pipeline version;
+* timestamp;
+* corpus version;
+* model configuration;
+* prompt versions.
+
+## 2. Executive Quality Summary
+
+* overall PASS/FAIL;
+* documents;
+* review items;
+* regressions;
+* estimated cost;
+* critical failures.
+
+## 3. Corpus
+
+* files;
+* PDF count;
+* DOCX count;
+* page/paragraph counts;
+* duplicates;
+* corrected versions.
+
+## 4. Processing Reliability
+
+* completion rate;
+* retry count;
+* dead letters;
+* failed steps;
+* resumability result.
+
+## 5. Extraction Quality
+
+* scalar exact accuracy;
+* list/object F1;
+* classification accuracy.
+
+## 6. Provenance
+
+* total claims;
+* valid evidence references;
+* exact evidence matches;
+* invalid references.
+
+## 7. Confidence & Review
+
+* auto-approved count;
+* review count;
+* blocked count;
+* review recall;
+* review precision;
+* confidence histogram.
+
+## 8. Duplicate & Version Handling
+
+* duplicate detections;
+* corrected versions;
+* supersession chains;
+* reprocess count.
+
+## 9. RAG Retrieval
+
+* Recall@5;
+* average evidence rank;
+* failures.
+
+## 10. Answer Quality
+
+* citation precision;
+* evidence support;
+* semantic correctness;
+* refusal accuracy.
+
+## 11. Regression Comparison
+
+For every metric:
+
+* baseline;
+* current;
+* delta;
+* threshold;
+* pass/fail.
+
+## 12. Cost
+
+Break down:
+
+* extraction;
+* verification;
+* embeddings;
+* RAG;
+* evaluation;
+* total.
+
+## 13. Latency
+
+Show p50 and p95 by major step.
+
+## 14. Errors
+
+* document;
+* step;
+* attempts;
+* error;
+* final disposition.
+
+## 15. Per-Document Results
+
+Columns:
+
+* document;
+* version;
+* status;
+* average confidence;
+* review count;
+* validation failures;
+* cost.
+
+## 16. Reproducibility
+
+* git commit;
+* pipeline version;
+* model identifiers;
+* prompt versions;
+* fixture seed;
+* environment mode.
+
+# 49. FAILURE INJECTION
+
+Implement:
+
+```bash
+FAILURE_INJECTION_STEP=
+```
+
+Allowed useful values:
+
+* parse
+* extract
+* verify
+* embed
+* report
+
+If configured, intentionally fail the named step once per test run in a deterministic way.
+
+This must be usable in E2E tests.
+
+# 50. TESTS
+
+Create comprehensive tests.
+
+## Unit tests
+
+### Hashing/versioning
+
+* identical file → identical hash;
+* changed bytes → changed hash;
+* duplicate does not create new source version;
+* corrected file creates next version;
+* old current version becomes false.
+
+### PDF parsing
+
+* pages separated correctly;
+* locator correct;
+* corrupt file fails;
+* scanned/low-text detection works.
+
+### DOCX parsing
+
+* paragraphs ordered;
+* source positions preserved.
+
+### Chunking
+
+* chunk target approximately 800;
+* overlap approximately 120;
+* source references preserved;
+* documents never mixed.
+
+### Evidence validation
+
+* exact evidence succeeds;
+* normalized whitespace succeeds;
+* hallucinated quote fails;
+* wrong source block fails.
+
+### Date validation
+
+Test:
+
+* ISO date;
+* `4 Sept. 26`;
+* invalid date.
+
+### Currency validation
+
+Test valid/invalid values.
+
+### Confidence
+
+Test exact numerical outputs.
+
+Include:
+
+* 1.0;
+* exact 0.86;
+* exact 0.65;
+* contradiction;
+* unsupported evidence.
+
+### Routing
+
+Test thresholds exactly.
+
+### Retrieval scoring
+
+Test vector/lexical combination.
+
+### Version filtering
+
+Current versions excluded/included correctly.
+
+### Cost calculation
+
+Use deterministic token fixture.
+
+## Integration tests
+
+* upload → storage → DB;
+* ingest → parse → source blocks;
+* extraction → validation;
+* extraction → verifier;
+* verifier → confidence;
+* confidence → review;
+* review action → new record version;
+* chunks → embedding persistence;
+* question → retrieval → answer;
+* answer → citations;
+* eval → metrics;
+* eval → regression result;
+* QA report generation;
+* failed step → dead letter;
+* retry → successful resume.
+
+Mock OpenAI where necessary so tests are deterministic and inexpensive.
+
+## E2E tests
+
+### Clean extraction
+
+Upload clean fixture.
+
+Expect:
+
+* complete;
+* structured record;
+* citations;
+* no unnecessary review.
+
+### Ambiguous monetary amount
+
+Expect:
+
+* review item;
+* evidence shown;
+* edit & accept;
+* new record version.
+
+### Duplicate
+
+Upload same file twice.
+
+Expect:
+
+* duplicate notice;
+* no second extraction.
+
+### Corrected source
+
+Upload v1 then v2.
+
+Expect:
+
+* version chain;
+* v2 current;
+* v1 retained.
+
+### Answerable RAG
+
+Expect correct cited answer.
+
+### Unanswerable RAG
+
+Expected exact response:
+
+`Insufficient evidence in the indexed corpus.`
+
+### Failure/resume
+
+Inject failure at verify.
+
+Expect:
+
+* extract succeeded;
+* verify fails/retries;
+* after injection removed, verify resumes;
+* extraction output reused.
+
+### Regression
+
+Introduce deterministic bad mocked output.
+
+Expect:
+
+* evaluation regression;
+* QA report flags it.
+
+# 51. DEMO SEED
+
+Create a production demo seed.
+
+Public demo should already contain:
+
+* 20 fixture source files;
+* completed ingestion history;
+* at least 1 duplicate detection;
+* at least 2 source-version chains;
+* multiple auto-approved values;
+* at least 4 review examples;
+* at least 1 reviewer-corrected record;
+* at least 1 failed/retried run example;
+* latest PASS evaluation;
+* baseline evaluation;
+* several precomputed RAG answers;
+* one precomputed refusal example;
+* downloadable QA report.
+
+# 52. PUBLIC DEMO MODE
+
+Production portfolio deployment must default to:
+
+```bash
+PUBLIC_DEMO_MODE=true
+DEMO_MUTATIONS_ENABLED=false
+```
+
+When enabled, unauthenticated/public users may:
+
+* view dashboard;
+* view seeded documents;
+* inspect provenance;
+* inspect review examples;
+* inspect version history;
+* inspect runs;
+* inspect evaluations;
+* inspect precomputed RAG answers;
+* open QA report.
+
+They may not:
+
+* upload arbitrary files;
+* trigger paid LLM calls;
+* resolve review items;
+* create new RAG requests;
+* reprocess documents;
+* start evaluations.
+
+Private/admin mode should allow those actions after login.
+
+# 53. SECURITY
+
+Implement basic production hygiene.
+
+* secrets server-side only;
+* never expose service-role key;
+* RLS for workspace tables;
+* validate file extension and MIME;
+* enforce file size;
+* sanitize filenames;
+* use generated storage paths;
+* no public raw storage bucket;
+* use signed URLs where required;
+* escape source text in HTML report;
+* validate LLM structured output;
+* rate-limit private mutation endpoints reasonably;
+* protect admin/reviewer actions.
+
+This is not a formal security-audit product.
+
+Do not claim SOC 2 or enterprise security compliance.
+
+# 54. LOCAL DEVELOPMENT
+
+README must include exact setup.
+
+Expected flow:
+
+```bash
+git clone <repo-url>
+cd evidenceops
+
+corepack enable
+pnpm install
+
+cp .env.example .env.local
+
+supabase start
+pnpm db:reset
+
+pnpm fixtures:generate
+pnpm demo:seed
+```
+
+Terminal 1:
+
+```bash
+pnpm dev
+```
+
+Terminal 2:
+
+```bash
+pnpm inngest:dev
+```
+
+Useful commands:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:integration
+pnpm test:e2e
+pnpm fixtures:generate
+pnpm demo:seed
+pnpm eval
+pnpm process:one <document-id>
+pnpm build
+```
+
+Create corresponding scripts in `package.json`.
+
+# 55. DEPLOYMENT
+
+Target:
+
+## Web
+
+Vercel.
+
+## Database/storage/auth
+
+Supabase.
+
+## Background workflows
+
+Inngest Cloud.
+
+## LLM
+
+OpenAI API.
+
+Prepare repository so deployment requires only environment variables and migrations.
+
+Do not add cron jobs. This product is event-triggered.
+
+# 56. README
+
+README must contain all of these sections.
+
+1. EvidenceOps
+2. What It Is
+3. The Problem
+4. What This Demo Proves
+5. Architecture
+6. Processing Pipeline
+7. Human Review
+8. Confidence Formula
+9. Provenance Model
+10. Document & Record Versioning
+11. RAG
+12. Evaluation
+13. Regression Gates
+14. Failure Handling
+15. Resumability & Idempotency
+16. Data & Synthetic Corpus
+17. Results
+18. Screenshots
+19. Running Locally
+20. Environment Variables
+21. Testing
+22. Deployment
+23. Security & Privacy
+24. Limitations
+25. What I Would Add for a Client
+
+Under Data explicitly state:
+
+**All demo documents are synthetic and generated in-repository.**
+
+Under Limitations explicitly list:
+
+* no OCR;
+* no scanned-document interpretation;
+* no image extraction;
+* no complex table reconstruction;
+* synthetic corpus;
+* no legal/compliance function;
+* no tariff/HTS logic.
+
+# 57. PORTFOLIO METRICS
+
+Do not fabricate metrics.
+
+Populate README metrics only from the actual evaluation output.
+
+Report:
+
+* documents processed;
+* source versions;
+* fields evaluated;
+* scalar extraction accuracy;
+* list/object F1;
+* provenance validity;
+* review recall;
+* review precision;
+* retrieval Recall@5;
+* citation precision;
+* refusal accuracy;
+* semantic answer score;
+* duplicate-detection accuracy;
+* corrected-version handling;
+* p50 latency;
+* p95 latency;
+* total evaluation/demo cost.
+
+# 58. SCREENSHOTS TO PREPARE
+
+Ensure the UI supports capturing these screenshots.
+
+## Screenshot 1 — Dashboard
+
+Must show:
+
+* latest quality metrics;
+* recent run;
+* review count.
+
+## Screenshot 2 — Provenance
+
+Must show:
+
+* extracted field;
+* confidence;
+* citation;
+* highlighted evidence.
+
+## Screenshot 3 — Human Review
+
+Must show:
+
+* candidate;
+* source;
+* confidence breakdown;
+* verifier status;
+* review controls.
+
+## Screenshot 4 — Version History
+
+Must show:
+
+* model-created record;
+* reviewer-corrected version;
+* changed field.
+
+## Screenshot 5 — RAG
+
+Must show:
+
+* answer;
+* evidence citations;
+* source panel.
+
+## Screenshot 6 — Evaluation
+
+Must show:
+
+* extraction accuracy;
+* Recall@5;
+* citation precision;
+* review recall;
+* overall PASS.
+
+## Screenshot 7 — Run Observability
+
+Must show:
+
+* processing timeline;
+* attempts;
+* tokens;
+* latency;
+* cost.
+
+## Screenshot 8 — QA Report
+
+Must show:
+
+* provenance;
+* regression;
+* errors or reliability section.
+
+# 59. DESIGN PRINCIPLES
+
+This should look like an operational engineering tool, not an AI marketing landing page.
+
+Prefer:
+
+* white/light neutral surfaces;
+* compact data tables;
+* restrained badges;
+* obvious status;
+* clear hierarchy;
+* legible evidence panels;
+* useful density.
+
+Avoid:
+
+* giant gradients;
+* glowing AI imagery;
+* excessive animation;
+* fake dashboards;
+* placeholder charts;
+* decorative complexity;
+* excessive rounded-card layouts.
+
+The UI should communicate:
+
+**inspectability and control.**
+
+# 60. REUSABLE HOUSE PATTERN
+
+There is an existing completed K-12 data acquisition project with:
+
+* per-field provenance;
+* confidence grading;
+* low-confidence review;
+* resumable runs;
+* HTML QA reports.
+
+If its repository is available, reuse/adapt only generic code that cleanly applies here, such as:
+
+* confidence display patterns;
+* provenance structures;
+* review interactions;
+* retry utilities;
+* run state;
+* report scaffolding;
+* logging conventions.
+
+Do not import scraper-specific logic that does not belong in EvidenceOps.
+
+Do not make EvidenceOps depend on the K-12 repository at runtime.
+
+EvidenceOps must remain independently deployable.
+
+# 61. IMPLEMENTATION ORDER
+
+Build in this order.
+
+## Phase 1 — Foundation
+
+1. Next.js app.
+2. Supabase migrations.
+3. auth/RLS.
+4. Inngest.
+5. fixture generation.
+6. upload/hash/version handling.
+
+## Phase 2 — Document pipeline
+
+1. PDF parsing.
+2. DOCX parsing.
+3. source blocks.
+4. chunking.
+5. structured extraction.
+6. deterministic validation.
+7. provenance.
+
+## Phase 3 — Reliability
+
+1. independent verifier;
+2. confidence calculator;
+3. review routing;
+4. review UI;
+5. immutable record versions;
+6. failure injection;
+7. retries;
+8. dead letters;
+9. resumability.
+
+## Phase 4 — RAG
+
+1. embeddings;
+2. pgvector;
+3. PostgreSQL FTS;
+4. hybrid retrieval;
+5. evidence-bound answering;
+6. drafting;
+7. citation validation/UI.
+
+## Phase 5 — Evaluation
+
+1. truth-based extraction evaluation;
+2. review evaluation;
+3. 40-case RAG set;
+4. semantic judge;
+5. baseline comparison;
+6. regression gates.
+
+## Phase 6 — Reporting
+
+1. observability screens;
+2. cost tracking;
+3. HTML QA report.
+
+## Phase 7 — Ship
+
+1. E2E tests;
+2. production seed;
+3. public read-only mode;
+4. README;
+5. deployment configuration;
+6. final visual cleanup.
+
+# 62. FIVE-DAY DELIVERY TARGET
+
+Treat this as a five-day portfolio build.
+
+## Day 1 target
+
+Complete:
+
+* repository;
+* database schema;
+* Supabase;
+* Inngest;
+* fixtures;
+* hashing;
+* source versioning;
+* duplicate detection.
+
+End-of-day proof:
+
+Fixture generator works and duplicate/version tests pass.
+
+## Day 2 target
+
+Complete:
+
+* parsers;
+* source blocks;
+* chunking;
+* extraction;
+* provenance;
+* deterministic validation.
+
+End-of-day proof:
+
+Five fixtures reach structured records with source citations.
+
+## Day 3 target
+
+Complete:
+
+* verifier;
+* confidence;
+* routing;
+* review queue;
+* review actions;
+* record history;
+* failure injection.
+
+End-of-day proof:
+
+Planted ambiguous monetary value enters review and can be corrected into a new version.
+
+## Day 4 target
+
+Complete:
+
+* embeddings;
+* hybrid retrieval;
+* RAG;
+* drafting;
+* evaluation harness;
+* regression comparisons;
+* run observability.
+
+End-of-day proof:
+
+`pnpm eval` runs and an answerable and unanswerable RAG query both behave correctly.
+
+## Day 5 target
+
+Complete:
+
+* QA HTML;
+* final E2E;
+* seeded demo;
+* public demo mode;
+* UI cleanup;
+* README;
+* deploy readiness.
+
+End-of-day proof:
+
+All required commands pass.
+
+# 63. SCOPE FALLBACKS
+
+If time becomes constrained, cut features in this exact order:
+
+1. prompt configuration UI;
+2. saved RAG questions;
+3. side-by-side extraction comparison;
+4. CSV export;
+5. webhook notifications;
+6. dark mode.
+
+Do not cut:
+
+* provenance;
+* verification;
+* confidence;
+* review;
+* version history;
+* hybrid RAG;
+* evals;
+* regression;
+* retries;
+* resumability;
+* QA report;
+* tests.
+
+# 64. FINAL VERIFICATION
+
+Before calling the project complete:
+
+1. run fixture generation from clean state;
+2. reset database;
+3. seed demo;
+4. run full processing flow;
+5. verify duplicates;
+6. verify corrected versions;
+7. resolve one review item;
+8. verify record history;
+9. ask one answerable RAG question;
+10. ask one unanswerable question;
+11. run evaluations;
+12. confirm latest evaluation is PASS;
+13. inject failure;
+14. verify retry/resume;
+15. generate QA report;
+16. verify cost metrics;
+17. test public read-only mode;
+18. run:
+
+* lint
+* typecheck
+* unit tests
+* integration tests
+* E2E tests
+* eval
+* production build.
+
+# 65. FINAL RESPONSE REQUIRED FROM CODING AGENT
+
+After implementation, report:
+
+## 1. What was built
+
+Concise architecture and feature summary.
+
+## 2. Repository structure
+
+Major files/modules added.
+
+## 3. Data model
+
+Migrations/tables implemented.
+
+## 4. Demo data
+
+What synthetic fixtures were generated.
+
+## 5. Evaluation results
+
+Report actual measured:
+
+* scalar extraction accuracy;
+* list F1;
+* classification accuracy;
+* provenance validity;
+* review recall;
+* review precision;
+* Recall@5;
+* citation precision;
+* refusal accuracy;
+* semantic answer score.
+
+Do not invent values.
+
+## 6. Reliability verification
+
+State whether:
+
+* duplicate handling passed;
+* corrected version handling passed;
+* idempotency passed;
+* intentional failure/retry passed;
+* resumability passed.
+
+## 7. Tests
+
+Provide exact output/results for:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:integration
+pnpm test:e2e
+pnpm eval
+pnpm build
+```
+
+## 8. Cost
+
+Report actual observed model/API cost for the final eval run.
+
+## 9. Deployment
+
+List the required production environment variables and whether the project is ready for Vercel/Supabase/Inngest deployment.
+
+## 10. Known limitations
+
+Only real limitations remaining after implementation.
+
+Do not describe features from this specification as implemented unless they actually exist.
+
+# 66. PRODUCT STANDARD
+
+The finished application should make this statement visibly true:
+
+**EvidenceOps does not merely produce AI output. It shows where the output came from, how confident the system should be, what a human changed, whether quality regressed, what failed, what was retried, and what the run cost.**
+
+That is the product.
+
+Build it accordingly.
