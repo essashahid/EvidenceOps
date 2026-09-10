@@ -1,0 +1,346 @@
+{
+  "logical_key": "AUD-2026-003",
+  "version": 1,
+  "format": "pdf",
+  "filename": "AUD-2026-003-v1-orchard-valley-audit-report.pdf",
+  "display_name": "Orchard Valley procurement card audit",
+  "record": {
+    "report_title": "Internal Audit of Procurement Card Controls",
+    "report_number": "AUD-2026-003",
+    "issuing_organization": "Orchard Valley Regional Hospital",
+    "publication_date": "2026-01-27",
+    "document_type": "audit_report",
+    "subject_entities": [
+      {
+        "name": "Orchard Valley Regional Hospital"
+      },
+      {
+        "name": "Procurement Office"
+      },
+      {
+        "name": "Ridgeline Medical Supplies"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Nine procurement cards remained active for staff who had left the hospital.",
+        "severity": "high"
+      },
+      {
+        "finding": "Monthly card statements were approved by the cardholder's own line manager in only 58 percent of cases sampled.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Ridgeline Medical Supplies was paid twice for 31 invoices between June and November 2025.",
+        "severity": "high"
+      },
+      {
+        "finding": "Card spending limits had not been reviewed since 2022.",
+        "severity": "low"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Deactivate procurement cards within two working days of an employee's departure.",
+        "target_entity": "Procurement Office",
+        "status_if_stated": "Completed"
+      },
+      {
+        "recommendation": "Recover the duplicated payments from Ridgeline Medical Supplies and offset any remaining balance against future invoices.",
+        "target_entity": "Orchard Valley Finance Department",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Review all card spending limits annually and document the review.",
+        "target_entity": "Procurement Office",
+        "status_if_stated": null
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 512000,
+        "currency": "USD",
+        "context": "recoverable overpayment to Ridgeline Medical Supplies"
+      },
+      {
+        "amount": 2300000,
+        "currency": "USD",
+        "context": "annual procurement card spend in the 2025 fiscal year"
+      },
+      {
+        "amount": 45000,
+        "currency": "USD",
+        "context": "estimated cost of the card management system upgrade"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P01"
+      ],
+      "quotes": [
+        "Internal Audit of Procurement Card Controls"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P01"
+      ],
+      "quotes": [
+        "Report No. AUD-2026-003"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Orchard Valley Regional Hospital"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 27 January 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P01"
+      ],
+      "quotes": [
+        "This internal audit tested the design and operation of procurement card controls at Orchard Valley Regional Hospital for the 2025 fiscal year."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P01"
+      ],
+      "quotes": [
+        "This internal audit tested the design and operation of procurement card controls at Orchard Valley Regional Hospital for the 2025 fiscal year."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P01"
+      ],
+      "quotes": [
+        "The Procurement Office administers 212 active cards across 38 departments."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P01"
+      ],
+      "quotes": [
+        "Overpayments to Ridgeline Medical Supplies identified by the audit total USD 480,000."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Nine procurement cards remained active for staff who had left the hospital.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Monthly card statements were approved by the cardholder's own line manager in only 58 percent of cases sampled.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Ridgeline Medical Supplies was paid twice for 31 invoices between June and November 2025.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[3]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P02"
+      ],
+      "quotes": [
+        "Finding 4: Card spending limits had not been reviewed since 2022.",
+        "Severity: Low."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Deactivate procurement cards within two working days of an employee's departure.",
+        "Target: Procurement Office.",
+        "Status: Completed."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Recover the duplicated payments from Ridgeline Medical Supplies and offset any remaining balance against future invoices.",
+        "Target: Orchard Valley Finance Department.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P03"
+      ],
+      "quotes": [
+        "Recommendation 3: Review all card spending limits annually and document the review.",
+        "Target: Procurement Office."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P03"
+      ],
+      "quotes": [
+        "Following reconciliation of the March credit notes, the recoverable overpayment to Ridgeline Medical Supplies is revised to USD 512,000, not USD 480,000 as stated in the Executive Summary."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P03"
+      ],
+      "quotes": [
+        "Annual spending on procurement cards was $2.3 million in the 2025 fiscal year."
+      ]
+    },
+    "monetary_amounts[2]": {
+      "locators": [
+        "SRC-AUD-2026-003-V1-P03"
+      ],
+      "quotes": [
+        "The card management system upgrade needed to enforce approval routing is estimated to cost USD 45,000."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "monetary_amounts[0]",
+      "kind": "conflicting_amount",
+      "reason": "The Executive Summary states USD 480,000 but Appendix B corrects the recoverable overpayment to USD 512,000; the truth holds the appendix figure.",
+      "extractor_value": {
+        "amount": 480000,
+        "currency": "USD",
+        "context": "recoverable overpayment to Ridgeline Medical Supplies"
+      },
+      "extractor_quotes": [
+        "Overpayments to Ridgeline Medical Supplies identified by the audit total USD 480,000."
+      ],
+      "extractor_ambiguity": null,
+      "verifier": {
+        "status": "unsupported",
+        "corrected_value": {
+          "amount": 512000,
+          "currency": "USD",
+          "context": "recoverable overpayment to Ridgeline Medical Supplies"
+        },
+        "contradiction_detected": true,
+        "evidence_specificity": 0.75
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-AUD-2026-003-V1-P01"
+      ]
+    },
+    {
+      "field_path": "subject_entities[1]",
+      "kind": "weak_evidence",
+      "reason": "The entity is correct but the cited sentence refers only to 'the office' and does not name it.",
+      "extractor_value": {
+        "name": "Procurement Office"
+      },
+      "extractor_quotes": [
+        "The office also maintains the approved supplier list and issues the monthly statements."
+      ],
+      "extractor_ambiguity": "The cited sentence does not name the office.",
+      "verifier": {
+        "status": "supported",
+        "corrected_value": null,
+        "contradiction_detected": false,
+        "evidence_specificity": 0.4
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-AUD-2026-003-V1-P01"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Internal Audit of Procurement Card Controls",
+      "paragraphs": [
+        "Report No. AUD-2026-003",
+        "Issued by Orchard Valley Regional Hospital",
+        "Publication date: 27 January 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This internal audit tested the design and operation of procurement card controls at Orchard Valley Regional Hospital for the 2025 fiscal year. The audit examined card issuance, monthly statement approval, spending limits and supplier payments made through the card programme.",
+        "Overpayments to Ridgeline Medical Supplies identified by the audit total USD 480,000. The audit rates two findings as high, concerning cards that remained active after staff departures and duplicate payments to a single supplier. Three recommendations are made and one has been completed during the audit."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Orchard Valley Regional Hospital is a 410 bed teaching hospital with an annual operating budget of USD 610 million. The Procurement Office administers 212 active cards across 38 departments. The office also maintains the approved supplier list and issues the monthly statements.",
+        "Ridgeline Medical Supplies is the hospital's largest card supplier for consumables and received 1,140 card payments during the year. The audit was the first review of the card programme since the hospital moved to a new card management system in 2023.",
+        "The work was led by Creola Abernathy and supported by Austyn Swaniawski. The team conducted 19 structured interviews, examined a sample of 125 records and reviewed 216 internal documents between 19 January 2026 and 28 March 2026. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Nine procurement cards remained active for staff who had left the hospital. Two of the nine cards recorded transactions after the cardholder's departure date, totalling USD 3,900. Severity: High.",
+        "Finding 2: Monthly card statements were approved by the cardholder's own line manager in only 58 percent of cases sampled. In the remaining cases statements were approved by a delegate or by the cardholder, contrary to the card policy. Severity: Medium.",
+        "Finding 3: Ridgeline Medical Supplies was paid twice for 31 invoices between June and November 2025. The duplicates arose when invoices were paid by card and later paid again through the accounts payable system. Severity: High.",
+        "Finding 4: Card spending limits had not been reviewed since 2022. Twenty six cards carried monthly limits above USD 20,000 although their average monthly spend was below USD 4,000. Severity: Low."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Deactivate procurement cards within two working days of an employee's departure. Target: Procurement Office. Status: Completed.",
+        "Recommendation 2: Recover the duplicated payments from Ridgeline Medical Supplies and offset any remaining balance against future invoices. Target: Orchard Valley Finance Department. Status: In progress.",
+        "Recommendation 3: Review all card spending limits annually and document the review. Target: Procurement Office."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The financial figures below are drawn from the card management system and the general ledger; the recoverable overpayment is addressed in Appendix B. Annual spending on procurement cards was $2.3 million in the 2025 fiscal year. The card management system upgrade needed to enforce approval routing is estimated to cost USD 45,000."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 216 internal documents reviewed included 53 purchase orders, 79 invoices and 33 items of correspondence, all indexed under working reference NU6UM0.",
+        "Appendix B: Correction. Following reconciliation of the March credit notes, the recoverable overpayment to Ridgeline Medical Supplies is revised to USD 512,000, not USD 480,000 as stated in the Executive Summary. The revised figure includes 31 duplicated invoices and four partial credits that had not been applied when the summary was drafted.",
+        "Appendix C: Sample design. The audit sampled 120 monthly statements and 260 individual transactions using a stratified random sample weighted towards departments with the highest card spend.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion."
+      ]
+    }
+  ]
+}

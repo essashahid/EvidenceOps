@@ -1,12 +1,16 @@
 "use server";
 
+import { assertMutation } from "@/lib/access";
+
 import { redirect } from "next/navigation";
 import { askQuestion } from "@/lib/rag/answer";
 import { ANSWER_MODES, type AnswerMode } from "@/lib/db/schema";
 import { requireWorkspace } from "@/lib/workspace";
 
 export async function askAction(formData: FormData): Promise<void> {
-  const { user, workspace } = await requireWorkspace();
+  const context = await requireWorkspace();
+  await assertMutation(context, "rag", ["admin", "reviewer"]);
+  const { user, workspace } = context;
   const question = String(formData.get("question") ?? "").trim();
   const modeRaw = String(formData.get("mode") ?? "answer");
   const mode: AnswerMode = (ANSWER_MODES as readonly string[]).includes(modeRaw) ? (modeRaw as AnswerMode) : "answer";

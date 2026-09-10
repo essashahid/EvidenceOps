@@ -1,177 +1,112 @@
 import { z } from "zod";
 
 /**
- * The demo extraction target: an operational report record. Every leaf value the
- * model produces must be accompanied by evidence (a source locator plus a verbatim quote).
+ * The extraction target: an operational-report record (spec section 15).
+ * The extractor returns every scalar and every list item wrapped with provenance:
+ * source_block_ids (display locators), evidence_quotes (verbatim) and ambiguity.
  */
-export const DOCUMENT_TYPES = [
-  "operational_review",
-  "audit_report",
-  "incident_report",
-  "financial_review",
-  "compliance_assessment",
-  "project_status_report",
-] as const;
+export const DOCUMENT_TYPES = ["operational_review", "audit_report", "evaluation", "investigation", "guidance", "other"] as const;
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
 
-export const ENTITY_TYPES = ["organization", "facility", "program", "vendor", "system", "person"] as const;
-export const SEVERITIES = ["low", "medium", "high", "critical"] as const;
-export const PRIORITIES = ["low", "medium", "high"] as const;
-export const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "PKR", "AED"] as const;
+export const SEVERITIES = ["info", "low", "medium", "high"] as const;
+export type Severity = (typeof SEVERITIES)[number];
 
-export const LIST_LIMITS = {
-  subject_entities: 10,
-  key_findings: 12,
-  recommendations: 12,
-  monetary_amounts: 15,
-} as const;
+export const LIST_LIMITS = { subject_entities: 15, key_findings: 15, recommendations: 15, monetary_amounts: 20 } as const;
 
-/** Evidence reference emitted by the extractor for each leaf value. */
-export const evidenceRefSchema = z.object({
-  locator: z.string().describe("Source block locator exactly as shown in the input, e.g. SRC-OPS-2026-004-V1-P02"),
-  quote: z.string().describe("Verbatim quote from that source block that supports the value"),
-});
-export type EvidenceRef = z.infer<typeof evidenceRefSchema>;
+const provenance = {
+  source_block_ids: z.array(z.string()).describe("Display locators of the cited source blocks, e.g. SRC-OPS-2026-004-V1-P02"),
+  evidence_quotes: z.array(z.string()).describe("Short verbatim quotes copied from the cited blocks"),
+  ambiguity: z.string().nullable().describe("Why the value is uncertain, or null"),
+};
 
-const withEvidence = <T extends z.ZodTypeAny>(value: T) =>
-  z.object({ value, evidence: evidenceRefSchema });
+const scalar = <T extends z.ZodTypeAny>(value: T) => z.object({ value, ...provenance });
 
-/** Extractor output shape: each leaf carries its own evidence. */
 export const extractionOutputSchema = z.object({
-  report_title: withEvidence(z.string()),
-  report_number: withEvidence(z.string()),
-  issuing_organization: withEvidence(z.string()),
-  publication_date: withEvidence(z.string().describe("ISO date YYYY-MM-DD")),
-  document_type: withEvidence(z.enum(DOCUMENT_TYPES)),
-  subject_entities: z.array(
-    z.object({
-      name: withEvidence(z.string()),
-      entity_type: withEvidence(z.enum(ENTITY_TYPES)),
-    }),
-  ),
-  key_findings: z.array(
-    z.object({
-      text: withEvidence(z.string()),
-      severity: withEvidence(z.enum(SEVERITIES)),
-    }),
-  ),
-  recommendations: z.array(
-    z.object({
-      text: withEvidence(z.string()),
-      priority: withEvidence(z.enum(PRIORITIES)),
-    }),
-  ),
-  monetary_amounts: z.array(
-    z.object({
-      amount: withEvidence(z.number()),
-      currency: withEvidence(z.enum(CURRENCIES)),
-      label: withEvidence(z.string()),
-    }),
-  ),
+  report_title: scalar(z.string().nullable()),
+  report_number: scalar(z.string().nullable()),
+  issuing_organization: scalar(z.string().nullable()),
+  publication_date: scalar(z.string().nullable().describe("YYYY-MM-DD or null")),
+  document_type: scalar(z.enum(DOCUMENT_TYPES)),
+  subject_entities: z.array(z.object({ name: z.string(), ...provenance })),
+  key_findings: z.array(z.object({ finding: z.string(), severity: z.enum(SEVERITIES), ...provenance })),
+  recommendations: z.array(z.object({ recommendation: z.string(), target_entity: z.string().nullable(), status_if_stated: z.string().nullable(), ...provenance })),
+  monetary_amounts: z.array(z.object({ amount: z.number(), currency: z.string(), context: z.string(), ...provenance })),
 });
 export type ExtractionOutput = z.infer<typeof extractionOutputSchema>;
+export type Provenance = { source_block_ids: string[]; evidence_quotes: string[]; ambiguity: string | null };
 
-/** Plain business record (no evidence) as stored in record_versions.payload_json and fixtures. */
+/** Plain business record without provenance (record_versions.payload_json, fixtures/truth). */
+export const subjectEntitySchema = z.object({ name: z.string() });
+export const keyFindingSchema = z.object({ finding: z.string(), severity: z.enum(SEVERITIES) });
+export const recommendationSchema = z.object({ recommendation: z.string(), target_entity: z.string().nullable(), status_if_stated: z.string().nullable() });
+export const monetaryAmountSchema = z.object({ amount: z.number(), currency: z.string(), context: z.string() });
+
 export const reportRecordSchema = z.object({
   report_title: z.string().nullable(),
   report_number: z.string().nullable(),
   issuing_organization: z.string().nullable(),
   publication_date: z.string().nullable(),
   document_type: z.enum(DOCUMENT_TYPES).nullable(),
-  // List item leaves are nullable because a reviewer may reject a single leaf value.
-  subject_entities: z.array(z.object({ name: z.string().nullable(), entity_type: z.enum(ENTITY_TYPES).nullable() })),
-  key_findings: z.array(z.object({ text: z.string().nullable(), severity: z.enum(SEVERITIES).nullable() })),
-  recommendations: z.array(z.object({ text: z.string().nullable(), priority: z.enum(PRIORITIES).nullable() })),
-  monetary_amounts: z.array(z.object({ amount: z.number().nullable(), currency: z.enum(CURRENCIES).nullable(), label: z.string().nullable() })),
+  // list items are nullable because a reviewer may reject an item
+  subject_entities: z.array(subjectEntitySchema.nullable()),
+  key_findings: z.array(keyFindingSchema.nullable()),
+  recommendations: z.array(recommendationSchema.nullable()),
+  monetary_amounts: z.array(monetaryAmountSchema.nullable()),
 });
 export type ReportRecord = z.infer<typeof reportRecordSchema>;
 
-export const SCALAR_FIELDS = [
-  "report_title",
-  "report_number",
-  "issuing_organization",
-  "publication_date",
-  "document_type",
-] as const;
+export const SCALAR_FIELDS = ["report_title", "report_number", "issuing_organization", "publication_date", "document_type"] as const;
 export type ScalarField = (typeof SCALAR_FIELDS)[number];
-
 export const LIST_FIELDS = ["subject_entities", "key_findings", "recommendations", "monetary_amounts"] as const;
 export type ListField = (typeof LIST_FIELDS)[number];
 
 export const LIST_ITEM_KEYS: Record<ListField, readonly string[]> = {
-  subject_entities: ["name", "entity_type"],
-  key_findings: ["text", "severity"],
-  recommendations: ["text", "priority"],
-  monetary_amounts: ["amount", "currency", "label"],
+  subject_entities: ["name"],
+  key_findings: ["finding", "severity"],
+  recommendations: ["recommendation", "target_entity", "status_if_stated"],
+  monetary_amounts: ["amount", "currency", "context"],
 };
 
-/** Field used to match list items between two records (for diffs and eval F1). */
+/** Key used to match list items between two records (diffs, eval F1). */
 export const LIST_MATCH_KEY: Record<ListField, string> = {
   subject_entities: "name",
-  key_findings: "text",
-  recommendations: "text",
-  monetary_amounts: "label",
+  key_findings: "finding",
+  recommendations: "recommendation",
+  monetary_amounts: "amount",
 };
 
-export const REQUIRED_FIELDS: ReadonlySet<string> = new Set([
-  "report_title",
-  "report_number",
-  "issuing_organization",
-  "publication_date",
-  "document_type",
-]);
+/** No field is strictly required by the schema (nulls are legal), but these are the ones the record is useless without. */
+export const CORE_FIELDS: ReadonlySet<string> = new Set(["report_title", "issuing_organization", "document_type"]);
 
-export type FieldKind = "string" | "date" | "enum" | "number";
+export type FieldKind = "string" | "date" | "enum" | "item";
 
 export function fieldKind(fieldPath: string): FieldKind {
-  const leaf = fieldPath.replace(/^.*\./, "");
-  if (leaf === "publication_date") return "date";
-  if (leaf === "amount") return "number";
-  if (["document_type", "entity_type", "severity", "priority", "currency"].includes(leaf)) return "enum";
+  if (fieldPath === "publication_date") return "date";
+  if (fieldPath === "document_type") return "enum";
+  if (/\[\d+\]$/.test(fieldPath)) return "item";
   return "string";
 }
 
-export function enumValuesFor(fieldPath: string): readonly string[] | null {
-  const leaf = fieldPath.replace(/^.*\./, "");
-  switch (leaf) {
-    case "document_type":
-      return DOCUMENT_TYPES;
-    case "entity_type":
-      return ENTITY_TYPES;
-    case "severity":
-      return SEVERITIES;
-    case "priority":
-      return PRIORITIES;
-    case "currency":
-      return CURRENCIES;
-    default:
-      return null;
-  }
-}
+/** One reviewable unit: a scalar field or a whole list item, with its provenance. */
+export type LeafField = { fieldPath: string; value: unknown; provenance: Provenance; core: boolean };
 
-export type LeafField = { fieldPath: string; value: unknown; evidence: EvidenceRef; required: boolean };
-
-/** Flatten an extraction output into leaf fields with paths like `key_findings[2].severity`. */
 export function flattenExtraction(out: ExtractionOutput): LeafField[] {
   const leaves: LeafField[] = [];
   for (const f of SCALAR_FIELDS) {
-    const leaf = out[f];
-    leaves.push({ fieldPath: f, value: leaf.value, evidence: leaf.evidence, required: REQUIRED_FIELDS.has(f) });
+    const s = out[f];
+    leaves.push({ fieldPath: f, value: s.value, provenance: { source_block_ids: s.source_block_ids, evidence_quotes: s.evidence_quotes, ambiguity: s.ambiguity }, core: CORE_FIELDS.has(f) });
   }
   for (const f of LIST_FIELDS) {
-    const items = out[f] as Array<Record<string, { value: unknown; evidence: EvidenceRef }>>;
+    const items = out[f] as Array<Record<string, unknown> & Provenance>;
     items.forEach((item, i) => {
-      for (const key of LIST_ITEM_KEYS[f]) {
-        const leaf = item[key];
-        if (!leaf) continue;
-        leaves.push({ fieldPath: `${f}[${i}].${key}`, value: leaf.value, evidence: leaf.evidence, required: false });
-      }
+      const value: Record<string, unknown> = {};
+      for (const k of LIST_ITEM_KEYS[f]) value[k] = item[k];
+      leaves.push({ fieldPath: `${f}[${i}]`, value, provenance: { source_block_ids: item.source_block_ids, evidence_quotes: item.evidence_quotes, ambiguity: item.ambiguity }, core: false });
     });
   }
   return leaves;
 }
 
-/** Strip evidence from an extraction output to obtain the plain record. */
 export function toRecord(out: ExtractionOutput): ReportRecord {
   return {
     report_title: out.report_title.value,
@@ -179,42 +114,35 @@ export function toRecord(out: ExtractionOutput): ReportRecord {
     issuing_organization: out.issuing_organization.value,
     publication_date: out.publication_date.value,
     document_type: out.document_type.value,
-    subject_entities: out.subject_entities.map((e) => ({ name: e.name.value, entity_type: e.entity_type.value })),
-    key_findings: out.key_findings.map((e) => ({ text: e.text.value, severity: e.severity.value })),
-    recommendations: out.recommendations.map((e) => ({ text: e.text.value, priority: e.priority.value })),
-    monetary_amounts: out.monetary_amounts.map((e) => ({
-      amount: e.amount.value,
-      currency: e.currency.value,
-      label: e.label.value,
-    })),
+    subject_entities: out.subject_entities.map((e) => ({ name: e.name })),
+    key_findings: out.key_findings.map((e) => ({ finding: e.finding, severity: e.severity })),
+    recommendations: out.recommendations.map((e) => ({ recommendation: e.recommendation, target_entity: e.target_entity, status_if_stated: e.status_if_stated })),
+    monetary_amounts: out.monetary_amounts.map((e) => ({ amount: e.amount, currency: e.currency, context: e.context })),
   };
 }
 
-export function parseFieldPath(fieldPath: string): { root: string; index: number | null; key: string | null } {
-  const m = /^([a-z_]+)(?:\[(\d+)\]\.([a-z_]+))?$/.exec(fieldPath);
+export function parseFieldPath(fieldPath: string): { root: string; index: number | null } {
+  const m = /^([a-z_]+)(?:\[(\d+)\])?$/.exec(fieldPath);
   if (!m) throw new Error(`invalid field path: ${fieldPath}`);
-  return { root: m[1]!, index: m[2] !== undefined ? Number(m[2]) : null, key: m[3] ?? null };
+  return { root: m[1]!, index: m[2] !== undefined ? Number(m[2]) : null };
 }
 
 export function getFieldValue(record: ReportRecord, fieldPath: string): unknown {
-  const { root, index, key } = parseFieldPath(fieldPath);
+  const { root, index } = parseFieldPath(fieldPath);
   const rootVal = (record as Record<string, unknown>)[root];
   if (index === null) return rootVal;
-  const arr = rootVal as Array<Record<string, unknown>> | undefined;
-  const item = arr?.[index];
-  return item && key ? item[key] : undefined;
+  return (rootVal as unknown[] | undefined)?.[index];
 }
 
-/** Return a new record with one leaf updated (null removes a scalar; null on a list item leaf nulls that key). */
+/** Return a new record with one field (scalar or list item) replaced. */
 export function setFieldValue(record: ReportRecord, fieldPath: string, value: unknown): ReportRecord {
   const next = structuredClone(record) as unknown as Record<string, unknown>;
-  const { root, index, key } = parseFieldPath(fieldPath);
-  if (index === null) {
-    next[root] = value;
-  } else {
-    const arr = next[root] as Array<Record<string, unknown>>;
-    const item = arr[index];
-    if (item && key) item[key] = value;
+  const { root, index } = parseFieldPath(fieldPath);
+  if (index === null) next[root] = value;
+  else {
+    const arr = next[root] as unknown[];
+    while (arr.length <= index) arr.push(null);
+    arr[index] = value;
   }
   return next as unknown as ReportRecord;
 }
@@ -231,10 +159,27 @@ export const EMPTY_RECORD: ReportRecord = {
   monetary_amounts: [],
 };
 
-/** Human labels for the UI. */
 export function fieldLabel(fieldPath: string): string {
-  return fieldPath
-    .replace(/\[(\d+)\]/g, (_, i) => ` #${Number(i) + 1}`)
-    .replace(/\./g, " › ")
-    .replace(/_/g, " ");
+  return fieldPath.replace(/\[(\d+)\]/g, (_, i) => ` #${Number(i) + 1}`).replace(/_/g, " ");
+}
+
+/** Definitions shown to the verifier and in the UI. */
+export const FIELD_DEFINITIONS: Record<string, string> = {
+  report_title: "The full title of the report as printed in its title block.",
+  report_number: "The report identifier printed in the title block (e.g. OPS-2026-004 or OPS-2026-004-R1).",
+  issuing_organization: "The organization that issued or authored the report.",
+  publication_date: "The publication date of this edition as an ISO date YYYY-MM-DD, only when the document gives enough information to determine the exact date.",
+  document_type: `One of ${DOCUMENT_TYPES.join(", ")}.`,
+  subject_entities: "A named organization, facility, program, vendor or system the report is about.",
+  key_findings: "One finding stated in the report with its stated severity (info, low, medium, high).",
+  recommendations: "One recommendation stated in the report, the entity it targets if stated, and its status if stated.",
+  monetary_amounts: "A monetary amount stated in the report as a number, its ISO currency code, and what it refers to.",
+};
+
+export function fieldDefinition(fieldPath: string): string {
+  return FIELD_DEFINITIONS[parseFieldPath(fieldPath).root] ?? "";
+}
+
+export function enumValuesFor(fieldPath: string): readonly string[] | null {
+  return fieldPath === "document_type" ? DOCUMENT_TYPES : null;
 }

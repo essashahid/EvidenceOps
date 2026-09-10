@@ -13,7 +13,7 @@ export async function login(page: Page, user = ADMIN) {
 }
 
 export function corpusFile(name: string) {
-  return path.resolve(process.cwd(), "fixtures/corpus", name);
+  return path.resolve(process.cwd(), "fixtures/documents", name);
 }
 
 export async function uploadFiles(page: Page, files: string[]) {

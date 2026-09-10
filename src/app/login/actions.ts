@@ -7,7 +7,7 @@ export type LoginState = { error: string | null };
 
 function safeNext(value: FormDataEntryValue | null): string {
   const s = typeof value === "string" ? value : "";
-  return s.startsWith("/") && !s.startsWith("//") ? s : "/";
+  return s.startsWith("/") && !/^\/[\\/]/.test(s) ? s : "/";
 }
 
 export async function loginAction(_prev: LoginState, formData: FormData): Promise<LoginState> {

@@ -1,54 +1,107 @@
 {
   "provider": "mock",
-  "modelConfigHash": "52a369d594e3dc66",
-  "evalRunId": "6fb77647-b068-45e9-a182-31147a34933d",
-  "recordedAt": "2026-09-10T07:16:43.751Z",
+  "modelConfigHash": "6aa77b80dd866a49",
+  "corpusVersion": "c6dc84752cdaea3b",
+  "evalRunId": "924d8482-bc97-4724-a619-cb1f03b94a02",
+  "recordedAt": "2026-09-10T10:31:39.731Z",
   "metrics": {
     "extraction": {
-      "scalar_exact_accuracy": 0.9777777777777777,
-      "list_micro_f1": 0.972972972972973,
-      "evidence_validity": 0.9914236706689536,
+      "scalar_exact_accuracy": 0.9666666666666667,
+      "list_micro_f1": 0.9701149425287356,
       "classification_accuracy": 1,
+      "provenance_validity": 0.9967741935483871,
       "documents": 18,
-      "scalar_fields": 90
+      "scalar_fields": 90,
+      "provenance_claims": 310,
+      "provenance_valid": 309,
+      "provenance_exact": 309,
+      "provenance_invalid": 1
     },
     "review": {
       "recall": 1,
-      "precision": 0.8,
-      "planted": 12,
-      "planted_caught": 12,
-      "routed": 15,
-      "below_threshold_missing": 0
+      "precision": 1,
+      "planted": 16,
+      "planted_caught": 16,
+      "routed": 16,
+      "below_threshold_missing": 0,
+      "auto_approved": 294,
+      "review": 3,
+      "blocked": 13
     },
     "rag": {
-      "retrieval_recall_at_5": 0.984375,
+      "retrieval_recall_at_5": 0.9833333333333333,
+      "average_evidence_rank": 1.0333333333333334,
       "citation_precision": 1,
       "evidence_supported_rate": 1,
       "refusal_accuracy": 1,
-      "semantic_score": 1,
+      "semantic_score": 0.9888888888888889,
+      "correctness": 1,
+      "evidence_support": 0.9666666666666667,
+      "completeness": 1,
       "false_refusal_rate": 0,
-      "answer_cases": 32,
-      "refusal_cases": 8,
-      "retrieval_cases": 32
+      "single_document_cases": 20,
+      "cross_document_cases": 10,
+      "unanswerable_cases": 10,
+      "retrieval_failures": 1
     },
     "integrity": {
       "duplicate_cases_passed": 2,
       "duplicate_cases": 2,
       "version_cases_passed": 2,
       "version_cases": 2,
-      "duplicate_records": 0
+      "duplicate_records": 0,
+      "resumability_passed": true,
+      "reprocess_count": 0
     },
     "cost": {
       "estimated_cost_usd": 0,
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "latency_p50_ms": 0,
-      "latency_p95_ms": 4
+      "input_tokens": 89349,
+      "output_tokens": 4436,
+      "latency_p50_ms": 1,
+      "latency_p95_ms": 17
     },
     "cases": {
-      "total": 148,
-      "passed": 142,
-      "failed": 6
+      "total": 146,
+      "passed": 140,
+      "failed": 6,
+      "by_type": {
+        "extraction": {
+          "total": 18,
+          "passed": 15
+        },
+        "provenance": {
+          "total": 18,
+          "passed": 17
+        },
+        "classification": {
+          "total": 18,
+          "passed": 18
+        },
+        "review_routing": {
+          "total": 18,
+          "passed": 18
+        },
+        "duplicate": {
+          "total": 2,
+          "passed": 2
+        },
+        "version": {
+          "total": 2,
+          "passed": 2
+        },
+        "retrieval": {
+          "total": 30,
+          "passed": 29
+        },
+        "answer": {
+          "total": 30,
+          "passed": 29
+        },
+        "refusal": {
+          "total": 10,
+          "passed": 10
+        }
+      }
     }
   }
 }

@@ -1,0 +1,296 @@
+{
+  "logical_key": "EVL-2026-007",
+  "version": 1,
+  "format": "pdf",
+  "filename": "EVL-2026-007-v1-kestrel-apprenticeship-evaluation.pdf",
+  "display_name": "Kestrel composite technician apprenticeship evaluation",
+  "record": {
+    "report_title": "Evaluation of the Composite Technician Apprenticeship",
+    "report_number": "EVL-2026-007",
+    "issuing_organization": "Kestrel Aerospace Training Academy",
+    "publication_date": "2026-04-08",
+    "document_type": "evaluation",
+    "subject_entities": [
+      {
+        "name": "Kestrel Aerospace Training Academy"
+      },
+      {
+        "name": "Composite Technician Apprenticeship"
+      },
+      {
+        "name": "Falcon Ridge Aerostructures"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Apprentice completion was 84 percent for the 2024 cohort against a target of 80 percent.",
+        "severity": "info"
+      },
+      {
+        "finding": "Mentor allocation was undocumented for 19 of the 52 apprentices placed with Falcon Ridge Aerostructures.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Assessment results were recorded on average 27 days after the assessment date.",
+        "severity": "low"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Publish a written mentor allocation standard and record the assigned mentor for every apprentice.",
+        "target_entity": "Kestrel Aerospace Training Academy",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Record assessment results in the registry within five working days of each assessment.",
+        "target_entity": "Kestrel Aerospace Training Academy Registry",
+        "status_if_stated": "Not started"
+      },
+      {
+        "recommendation": "Increase the 2027 intake to 70 apprentices subject to confirmed employer demand.",
+        "target_entity": "Falcon Ridge Aerostructures",
+        "status_if_stated": "Under discussion"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 640000,
+        "currency": "USD",
+        "context": "annual apprenticeship delivery cost in 2025"
+      },
+      {
+        "amount": 12500,
+        "currency": "USD",
+        "context": "cost per completing apprentice"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P01"
+      ],
+      "quotes": [
+        "Evaluation of the Composite Technician Apprenticeship"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P01"
+      ],
+      "quotes": [
+        "Report No. EVL-2026-007"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Kestrel Aerospace Training Academy"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 8 April 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P01"
+      ],
+      "quotes": [
+        "This evaluation reviews the Composite Technician Apprenticeship delivered by the Kestrel Aerospace Training Academy in partnership with Falcon Ridge Aerostructures."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P01"
+      ],
+      "quotes": [
+        "This evaluation reviews the Composite Technician Apprenticeship delivered by the Kestrel Aerospace Training Academy in partnership with Falcon Ridge Aerostructures."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P01"
+      ],
+      "quotes": [
+        "This evaluation reviews the Composite Technician Apprenticeship delivered by the Kestrel Aerospace Training Academy in partnership with Falcon Ridge Aerostructures."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P01"
+      ],
+      "quotes": [
+        "This evaluation reviews the Composite Technician Apprenticeship delivered by the Kestrel Aerospace Training Academy in partnership with Falcon Ridge Aerostructures."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Apprentice completion was 84 percent for the 2024 cohort against a target of 80 percent.",
+        "Severity: Info."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Mentor allocation was undocumented for 19 of the 52 apprentices placed with Falcon Ridge Aerostructures.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Assessment results were recorded on average 27 days after the assessment date.",
+        "Severity: Low."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Publish a written mentor allocation standard and record the assigned mentor for every apprentice.",
+        "Target: Kestrel Aerospace Training Academy.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Record assessment results in the registry within five working days of each assessment.",
+        "Target: Kestrel Aerospace Training Academy Registry.",
+        "Status: Not started."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 3: Increase the 2027 intake to 70 apprentices subject to confirmed employer demand.",
+        "Target: Falcon Ridge Aerostructures.",
+        "Status: Under discussion."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P03"
+      ],
+      "quotes": [
+        "Annual delivery cost of the apprenticeship was USD 640,000 in 2025."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-EVL-2026-007-V1-P03"
+      ],
+      "quotes": [
+        "The cost per completing apprentice was USD 12,500."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "recommendations[3]",
+      "kind": "duplicate_recommendation",
+      "reason": "Appendix C restates Recommendation 1 in different wording; the truth lists the recommendation once but an extractor may emit it twice.",
+      "extractor_value": {
+        "recommendation": "Adopt a documented mentor allocation standard so that every apprentice has a named mentor on record.",
+        "target_entity": "Kestrel Aerospace Training Academy",
+        "status_if_stated": null
+      },
+      "extractor_quotes": [
+        "The panel reiterates that the Academy should adopt a documented mentor allocation standard so that every apprentice has a named mentor on record."
+      ],
+      "extractor_ambiguity": null,
+      "verifier": {
+        "status": "partially_supported",
+        "corrected_value": null,
+        "contradiction_detected": false,
+        "evidence_specificity": 0.75
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-EVL-2026-007-V1-P03"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Evaluation of the Composite Technician Apprenticeship",
+      "paragraphs": [
+        "Report No. EVL-2026-007",
+        "Issued by Kestrel Aerospace Training Academy",
+        "Publication date: 8 April 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This evaluation reviews the Composite Technician Apprenticeship delivered by the Kestrel Aerospace Training Academy in partnership with Falcon Ridge Aerostructures. It covers the 2023 and 2024 cohorts and examines completion, mentoring, assessment practice and cost per completer.",
+        "Completion exceeded target, but mentor allocation was poorly documented and assessment results were recorded late. The evaluation panel makes three recommendations and notes that the employer partner supports a larger intake in 2027."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "The Kestrel Aerospace Training Academy trains technicians for the regional aerospace cluster. The Composite Technician Apprenticeship is a two year programme combining classroom instruction at the academy with supervised placement at Falcon Ridge Aerostructures, the principal employer partner.",
+        "Each apprentice is meant to be assigned a workplace mentor at the start of the placement, and assessment outcomes are meant to be entered into the academy registry so that progress can be tracked by the programme board.",
+        "The work was led by Judson Bernhard and supported by Mariano Swaniawski. The team conducted 18 structured interviews, examined a sample of 177 records and reviewed 144 internal documents between 24 November 2025 and 28 December 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Apprentice completion was 84 percent for the 2024 cohort against a target of 80 percent. Completion for the 2023 cohort was 79 percent, and most non-completers left for employment before finishing. Severity: Info.",
+        "Finding 2: Mentor allocation was undocumented for 19 of the 52 apprentices placed with Falcon Ridge Aerostructures. Interviews indicated that mentors were usually assigned informally but that the assignment was not recorded anywhere. Severity: Medium.",
+        "Finding 3: Assessment results were recorded on average 27 days after the assessment date. Late recording meant that the programme board reviewed out of date progress information at two of its four meetings. Severity: Low."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Publish a written mentor allocation standard and record the assigned mentor for every apprentice. Target: Kestrel Aerospace Training Academy. Status: In progress.",
+        "Recommendation 2: Record assessment results in the registry within five working days of each assessment. Target: Kestrel Aerospace Training Academy Registry. Status: Not started.",
+        "Recommendation 3: Increase the 2027 intake to 70 apprentices subject to confirmed employer demand. Target: Falcon Ridge Aerostructures. Status: Under discussion."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "Programme costs are drawn from the academy's management accounts for 2025. Annual delivery cost of the apprenticeship was USD 640,000 in 2025. The cost per completing apprentice was USD 12,500."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 144 internal documents reviewed included 48 purchase orders, 31 invoices and 39 items of correspondence, all indexed under working reference B722UY.",
+        "Appendix B: Cohort data. The 2023 cohort enrolled 48 apprentices and the 2024 cohort enrolled 52; both cohorts were placed with Falcon Ridge Aerostructures at its Millbrook and Stanton plants.",
+        "Appendix C: Panel note. The panel reiterates that the Academy should adopt a documented mentor allocation standard so that every apprentice has a named mentor on record. This point was raised by the employer partner as well as by apprentices interviewed during the evaluation.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion.",
+        "The sampling approach was intended to describe the matters selected for examination. It was not designed to estimate the frequency of an issue across records outside that selection. Readers should therefore interpret a finding in relation to its stated scope, period and subject. Silence about another activity does not imply that the activity was examined or found satisfactory.",
+        "This appendix explains the preparation of the evidence file. It does not introduce additional recommendations or change the responsibility assigned in the recommendations section. Any later correction to the source must be issued as a separately identified edition. Earlier editions remain part of the record so that differences can be inspected without overwriting the originally published statements."
+      ]
+    }
+  ]
+}

@@ -4,35 +4,38 @@ import { LIST_FIELDS, LIST_ITEM_KEYS, LIST_MATCH_KEY, SCALAR_FIELDS, type Report
 export type ScalarComparison = { field: string; expected: unknown; actual: unknown; correct: boolean };
 export type ListComparison = { field: string; tp: number; fp: number; fn: number; details: { expected: unknown; actual: unknown; matched: boolean; correct: boolean }[] };
 
-export function valuesEqual(fieldPath: string, expected: unknown, actual: unknown): boolean {
-  if (expected === null || expected === undefined) return actual === null || actual === undefined || actual === "";
-  const leaf = fieldPath.replace(/^.*\./, "");
-  if (leaf === "amount") return Math.abs(Number(expected) - Number(actual)) < 0.5;
-  if (leaf === "publication_date" || ["document_type", "entity_type", "severity", "priority", "currency"].includes(leaf)) return String(expected) === String(actual);
-  const a = canonical(expected);
-  const b = canonical(actual);
-  if (a === b) return true;
-  // free text: tolerate small wording drift (token F1 >= 0.85)
-  const at = tokenize(String(expected));
-  const bt = tokenize(String(actual));
-  if (at.length === 0 || bt.length === 0) return false;
+function tokenF1(a: string, b: string): number {
+  const at = tokenize(a);
+  const bt = tokenize(b);
+  if (at.length === 0 || bt.length === 0) return 0;
   const bset = new Set(bt);
   const overlap = at.filter((t) => bset.has(t)).length;
   const p = overlap / bt.length;
   const r = overlap / at.length;
-  const f1 = p + r === 0 ? 0 : (2 * p * r) / (p + r);
-  return f1 >= 0.85;
+  return p + r === 0 ? 0 : (2 * p * r) / (p + r);
+}
+
+/** Field-aware equality: exact for dates, enums, currencies and amounts; case/whitespace tolerant for identifiers; token-F1 tolerant for prose. */
+export function valuesEqual(key: string, expected: unknown, actual: unknown): boolean {
+  const e = expected === undefined ? null : expected;
+  const a = actual === undefined ? null : actual;
+  if (e === null || e === "") return a === null || a === "";
+  if (a === null) return false;
+  if (key === "amount") return Math.abs(Number(e) - Number(a)) < 0.5;
+  if (["publication_date", "document_type", "severity", "currency"].includes(key)) return String(e) === String(a);
+  if (["report_number", "name", "target_entity", "status_if_stated", "issuing_organization"].includes(key)) return canonical(e) === canonical(a) || tokenF1(String(e), String(a)) >= 0.9;
+  return canonical(e) === canonical(a) || tokenF1(String(e), String(a)) >= 0.85;
 }
 
 export function compareScalars(expected: ReportRecord, actual: ReportRecord): ScalarComparison[] {
-  return SCALAR_FIELDS.map((f) => ({ field: f, expected: expected[f], actual: actual[f], correct: valuesEqual(f, expected[f], actual[f]) }));
+  return SCALAR_FIELDS.map((f) => ({ field: f, expected: expected[f], actual: actual[f], correct: canonical(expected[f]) === canonical(actual[f]) }));
 }
 
-/** Greedy item matching on the list's match key; an item counts as a true positive only if every key matches. */
+/** Greedy item matching on the list's match key; an item counts as correct only if every key matches. */
 export function compareLists(expected: ReportRecord, actual: ReportRecord): ListComparison[] {
   return LIST_FIELDS.map((field) => {
-    const exp = [...(expected[field] as Record<string, unknown>[])];
-    const act = [...(actual[field] as Record<string, unknown>[])];
+    const exp = (expected[field] as (Record<string, unknown> | null)[]).filter((x): x is Record<string, unknown> => x !== null);
+    const act = (actual[field] as (Record<string, unknown> | null)[]).filter((x): x is Record<string, unknown> => x !== null);
     const matchKey = LIST_MATCH_KEY[field];
     const used = new Set<number>();
     const details: ListComparison["details"] = [];
@@ -42,7 +45,9 @@ export function compareLists(expected: ReportRecord, actual: ReportRecord): List
       let best = -1;
       for (let i = 0; i < exp.length; i++) {
         if (used.has(i)) continue;
-        if (valuesEqual(`${field}[0].${matchKey}`, exp[i]![matchKey], a[matchKey])) {
+        const e = exp[i]!;
+        const keyMatch = field === "monetary_amounts" ? valuesEqual("amount", e.amount, a.amount) && valuesEqual("currency", e.currency, a.currency) : valuesEqual(matchKey, e[matchKey], a[matchKey]);
+        if (keyMatch) {
           best = i;
           break;
         }
@@ -54,7 +59,7 @@ export function compareLists(expected: ReportRecord, actual: ReportRecord): List
       }
       used.add(best);
       const e = exp[best]!;
-      const correct = LIST_ITEM_KEYS[field].every((k) => valuesEqual(`${field}[0].${k}`, e[k], a[k]));
+      const correct = LIST_ITEM_KEYS[field].every((k) => valuesEqual(k, e[k], a[k]));
       if (correct) tp++;
       else fp++;
       details.push({ expected: e, actual: a, matched: true, correct });

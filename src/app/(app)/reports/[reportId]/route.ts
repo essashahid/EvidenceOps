@@ -13,7 +13,7 @@ export async function GET(request: Request, ctx: RouteContext<"/reports/[reportI
   if (row.report.status !== "generated") return new Response(`Report is ${row.report.status}${row.report.errorMessage ? `: ${row.report.errorMessage}` : ""}`, { status: 409 });
   const html = await loadQaReportHtml(reportId);
   if (html === null) return new Response("Report file is missing from storage", { status: 404 });
-  const headers = new Headers({ "content-type": "text/html; charset=utf-8", "cache-control": "private, no-store" });
+  const headers = new Headers({ "content-type": "text/html; charset=utf-8", "cache-control": "private, no-store", "x-content-type-options": "nosniff", "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'" });
   if (new URL(request.url).searchParams.get("download") === "1") {
     headers.set("content-disposition", `attachment; filename="evidenceops_run_${row.processingRunId}_qa.html"`);
   }

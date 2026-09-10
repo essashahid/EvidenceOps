@@ -1,10 +1,10 @@
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Next 16 request proxy (the successor of middleware.ts). Redirects unauthenticated
  * app requests to /login. The local driver verifies the HMAC cookie with Web Crypto
- * (no node:crypto so this also works on the edge runtime); the supabase driver only
- * checks that an auth cookie is present and lets server components do the real check.
+ * (no node:crypto so this also works on the edge runtime); the Supabase driver validates the session and refreshes its cookies.
  */
 
 const SESSION_COOKIE = "eo_session";
@@ -52,25 +52,35 @@ async function verifyLocalSession(token: string | undefined, secret: string): Pr
   }
 }
 
-function hasSupabaseCookie(req: NextRequest): boolean {
-  return req.cookies.getAll().some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
-}
-
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (isPublic(pathname)) return NextResponse.next();
-
-  const driver = process.env.AUTH_DRIVER === "supabase" ? "supabase" : "local";
-  const authed =
-    driver === "supabase"
-      ? hasSupabaseCookie(req)
-      : await verifyLocalSession(req.cookies.get(SESSION_COOKIE)?.value, process.env.AUTH_SECRET ?? "evidenceops-dev-secret-change-me");
-  if (authed) return NextResponse.next();
-
+  if (isPublic(pathname) && pathname !== "/login") return NextResponse.next();
+  let response = NextResponse.next({ request: req });
+  let authed = false;
+  if (process.env.AUTH_DRIVER === "supabase") {
+    const sb = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      cookies: {
+        getAll: () => req.cookies.getAll(),
+        setAll(cookies, headers) {
+          for (const { name, value } of cookies) req.cookies.set(name, value);
+          response = NextResponse.next({ request: req });
+          for (const { name, value, options } of cookies) response.cookies.set(name, value, options);
+          if (headers) for (const [name, value] of Object.entries(headers)) response.headers.set(name, value);
+        },
+      },
+    });
+    const { data } = await sb.auth.getUser();
+    authed = Boolean(data.user);
+  } else {
+    authed = await verifyLocalSession(req.cookies.get(SESSION_COOKIE)?.value, process.env.AUTH_SECRET ?? "evidenceops-dev-secret-change-me");
+  }
+  if (authed || pathname === "/login" || process.env.PUBLIC_DEMO_MODE === "true") return response;
   const url = req.nextUrl.clone();
   url.pathname = "/login";
   url.search = pathname !== "/" ? `?next=${encodeURIComponent(pathname)}` : "";
-  return NextResponse.redirect(url);
+  const redirect = NextResponse.redirect(url);
+  for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+  return redirect;
 }
 
 export const config = {

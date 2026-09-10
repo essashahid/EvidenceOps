@@ -18,8 +18,8 @@ export function fmtDate(value: Date | string | null | undefined, withSeconds = f
   if (!value) return "";
   const d = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(d.getTime())) return "";
-  const base = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  return withSeconds ? `${base}:${pad(d.getSeconds())}` : base;
+  const base = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  return (withSeconds ? `${base}:${pad(d.getUTCSeconds())}` : base) + " UTC";
 }
 
 export function fmtUsd(value: number | string | null | undefined): string {

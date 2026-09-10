@@ -92,7 +92,7 @@ export default async function EvalsPage({ searchParams }: { searchParams: Promis
                 <Td align="right">{m ? `${m.cases.passed} / ${m.cases.total}` : ""}</Td>
                 <Td align="right">{m ? fmtPct(m.extraction.scalar_exact_accuracy, 1) : ""}</Td>
                 <Td align="right">{m ? fmtPct(m.extraction.list_micro_f1, 1) : ""}</Td>
-                <Td align="right">{m ? fmtPct(m.extraction.evidence_validity, 1) : ""}</Td>
+                <Td align="right">{m ? fmtPct(m.extraction.provenance_validity, 1) : ""}</Td>
                 <Td align="right">{m ? fmtPct(m.review.recall, 1) : ""}</Td>
                 <Td align="right">{m ? fmtPct(m.rag.retrieval_recall_at_5, 1) : ""}</Td>
                 <Td align="right">{m ? fmtPct(m.rag.citation_precision, 1) : ""}</Td>

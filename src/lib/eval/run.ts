@@ -3,23 +3,28 @@ import path from "node:path";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db/client";
 import { getLlm, modelConfigHash } from "@/lib/llm";
-import { ROUTING_THRESHOLDS, JUDGE_PROMPT_VERSION, estimateCostUsd } from "@/lib/config";
+import { SUCCESS_TARGETS, EVAL_PROMPT_VERSION, INSUFFICIENT_EVIDENCE, JUDGE_PASS, ROUTING_THRESHOLDS, estimateCostUsd } from "@/lib/config";
 import { sha256 } from "@/lib/hash";
+import { canonical } from "@/lib/text";
 import { reportRecordSchema, type ReportRecord } from "@/lib/schema/report";
 import { retrieve } from "@/lib/rag/retrieve";
 import { askQuestion } from "@/lib/rag/answer";
 import { recordLlmCall } from "@/lib/pipeline/llm-log";
-import { FIXTURES_DIR } from "./cases";
+import { DOCUMENTS_DIR, corpusFingerprint } from "./cases";
 import { compareLists, compareScalars, mean, microF1, percentile } from "./metrics";
 import { evaluateRegression, type AggregateMetrics, type RegressionReport } from "./regression";
 import { readBaselineFile, writeBaselineFile } from "./baseline";
+import { runResumabilityTest, type ResumabilityResult } from "./resumability";
 
 export type EvalOptions = {
   workspaceId: string;
+  evalRunId?: string;
+  checkpoint?: <T>(name: string, fn: () => Promise<T>) => Promise<T>;
   userId?: string | null;
   processingRunId?: string | null;
   setBaseline?: boolean;
   reuseCachedAnswers?: boolean;
+  skipResumability?: boolean;
   log?: (msg: string) => void;
 };
 
@@ -27,6 +32,8 @@ export type EvalOutcome = {
   evalRunId: string;
   metrics: AggregateMetrics;
   regression: RegressionReport;
+  targetsMet: boolean;
+  resumability: ResumabilityResult | null;
   results: { caseKey: string; caseType: string; passed: boolean; metric: Record<string, unknown> }[];
 };
 
@@ -42,11 +49,12 @@ type VersionInfo = {
   modelRecord: ReportRecord | null;
   modelRecordVersionId: string | null;
   fields: (typeof schema.fieldValues.$inferSelect)[];
-  evidence: Map<string, typeof schema.fieldEvidence.$inferSelect>;
+  evidence: Map<string, (typeof schema.fieldEvidence.$inferSelect)[]>;
   reviewItems: (typeof schema.reviewItems.$inferSelect)[];
+  blockLocators: Set<string>;
 };
 
-class EvalFixtureError extends Error {
+export class EvalFixtureError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "EvalFixtureError";
@@ -70,8 +78,11 @@ async function loadCorpus(workspaceId: string): Promise<Map<string, VersionInfo>
       .limit(1);
     const fields = modelRecord ? await db.select().from(schema.fieldValues).where(eq(schema.fieldValues.recordVersionId, modelRecord.id)) : [];
     const evidenceRows = fields.length ? await db.select().from(schema.fieldEvidence).where(inArray(schema.fieldEvidence.fieldValueId, fields.map((f) => f.id))) : [];
+    const evidence = new Map<string, (typeof schema.fieldEvidence.$inferSelect)[]>();
+    for (const e of evidenceRows) evidence.set(e.fieldValueId, [...(evidence.get(e.fieldValueId) ?? []), e]);
     const reviewItems = modelRecord ? await db.select().from(schema.reviewItems).where(eq(schema.reviewItems.recordVersionId, modelRecord.id)) : [];
-    out.set(`${d.logicalKey}.v${v.versionNumber}`, {
+    const blocks = await db.select({ locator: schema.sourceBlocks.locator }).from(schema.sourceBlocks).where(eq(schema.sourceBlocks.documentVersionId, v.id));
+    out.set(`${d.logicalKey}-v${v.versionNumber}`, {
       versionId: v.id,
       documentId: d.id,
       logicalKey: d.logicalKey,
@@ -81,17 +92,18 @@ async function loadCorpus(workspaceId: string): Promise<Map<string, VersionInfo>
       modelRecord: modelRecord ? (reportRecordSchema.parse(modelRecord.payloadJson) as ReportRecord) : null,
       modelRecordVersionId: modelRecord?.id ?? null,
       fields,
-      evidence: new Map(evidenceRows.map((e) => [e.fieldValueId, e])),
+      evidence,
       reviewItems,
+      blockLocators: new Set(blocks.map((b) => b.locator)),
     });
   }
   return out;
 }
 
 /**
- * Run the golden evaluation suite against the workspace corpus, persist per-case results,
- * aggregate metrics, compare against the baseline and return the outcome. Missing fixtures
- * fail loudly instead of silently lowering scores.
+ * Run the golden evaluation suite (spec sections 28 to 33): per-case results, aggregates, the
+ * failure-injection resumability test, baseline comparison and regression verdict.
+ * Missing fixtures fail loudly instead of silently lowering scores.
  */
 export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
   const db = getDb();
@@ -101,13 +113,12 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
   const cases = await db.select().from(schema.evalCases).where(eq(schema.evalCases.active, true));
   if (cases.length === 0) throw new EvalFixtureError("no eval cases are seeded; run `pnpm db:seed`");
   const corpus = await loadCorpus(opts.workspaceId);
-  const corpusVersion = sha256([...corpus.values()].map((v) => v.contentHash).sort().join("|")).slice(0, 16);
+  const corpusVersion = sha256(`${corpusFingerprint()}|${[...corpus.values()].map((v) => v.contentHash).sort().join("|")}`).slice(0, 16);
 
-  const [evalRun] = await db
-    .insert(schema.evalRuns)
-    .values({ workspaceId: opts.workspaceId, processingRunId: opts.processingRunId ?? null, provider: llm.name, modelConfigHash: configHash, status: "running" })
-    .returning();
-  const evalRunId = evalRun!.id;
+  const checkpoint = opts.checkpoint ?? (async <T>(_name: string, fn: () => Promise<T>) => fn());
+  const evalRunId = opts.evalRunId ?? (await createEvaluationRun(opts)).id;
+  const [existingRun] = await db.select().from(schema.evalRuns).where(and(eq(schema.evalRuns.id, evalRunId), eq(schema.evalRuns.workspaceId, opts.workspaceId)));
+  if (!existingRun || existingRun.modelConfigHash !== configHash) throw new EvalFixtureError("Evaluation configuration changed; start a new evaluation.");
   log(`eval run ${evalRunId} (${llm.name}, config ${configHash}, corpus ${corpusVersion}, ${cases.length} cases)`);
 
   const results: EvalOutcome["results"] = [];
@@ -118,27 +129,38 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
 
   const scalarHits: boolean[] = [];
   const listComparisons: ReturnType<typeof compareLists> = [];
-  const provenanceFlags: boolean[] = [];
   const classificationHits: boolean[] = [];
+  let provClaims = 0;
+  let provValid = 0;
+  let provExact = 0;
   let planted = 0;
   let plantedCaught = 0;
   let routed = 0;
   let belowThresholdMissing = 0;
+  let autoApproved = 0;
+  let reviewCount = 0;
+  let blockedCount = 0;
   const retrievalRecalls: number[] = [];
+  const evidenceRanks: number[] = [];
+  let retrievalFailures = 0;
   let citationsValid = 0;
   let citationsTotal = 0;
   const supportedAnswers: boolean[] = [];
-  const semanticScores: number[] = [];
+  const correctness: number[] = [];
+  const evidenceSupport: number[] = [];
+  const completeness: number[] = [];
+  const semantic: number[] = [];
   let falseRefusals = 0;
   const refusalHits: boolean[] = [];
   let dupPassed = 0;
   let dupCases = 0;
   let verPassed = 0;
   let verCases = 0;
+  const byType: Record<string, { total: number; passed: number }> = {};
 
   const cachedResult = async (c: CaseRow) => {
-    if (opts.reuseCachedAnswers === false) return null;
-    const key = `${c.id}:${corpusVersion}:${configHash}`;
+    const key = `${c.id}:${corpusVersion}:${configHash}:citation-v3`;
+    if (opts.reuseCachedAnswers === false) return { key, result: null };
     const [prior] = await db
       .select({ r: schema.evalResults })
       .from(schema.evalResults)
@@ -146,26 +168,45 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
       .where(and(eq(schema.evalResults.evalCaseId, c.id), eq(schema.evalRuns.status, "completed"), sql`${schema.evalResults.metricJson}->>'cache_key' = ${key}`))
       .orderBy(desc(schema.evalResults.createdAt))
       .limit(1);
-    return prior ? { key, result: prior.r } : { key, result: null };
+    return { key, result: prior?.r ?? null };
   };
 
   const record = async (c: CaseRow, passed: boolean, metric: Record<string, unknown>, actual: unknown, latencyMs: number, cost: number, judgeReason: string | null = null) => {
     latencies.push(latencyMs);
     costTotal += cost;
-    await db.insert(schema.evalResults).values({ evalRunId, evalCaseId: c.id, passed, metricJson: metric, expectedJson: c.expectedJson as object, actualJson: actual as object, judgeReason, latencyMs, estimatedCostUsd: cost.toFixed(6) });
+    await db.transaction(async tx => {
+      await tx.delete(schema.evalResults).where(and(eq(schema.evalResults.evalRunId, evalRunId), eq(schema.evalResults.evalCaseId, c.id)));
+      await tx.insert(schema.evalResults).values({ evalRunId, evalCaseId: c.id, passed, metricJson: metric, expectedJson: c.expectedJson as object, actualJson: (actual ?? {}) as object, judgeReason, latencyMs, estimatedCostUsd: cost.toFixed(6) });
+    });
     results.push({ caseKey: c.caseKey, caseType: c.caseType, passed, metric });
+    const t = (byType[c.caseType] ??= { total: 0, passed: 0 });
+    t.total++;
+    if (passed) t.passed++;
   };
 
   const versionFor = (c: CaseRow): VersionInfo => {
     const exp = c.expectedJson as { version?: number };
-    const key = `${c.documentLogicalKey}.v${exp.version ?? 1}`;
+    const key = `${c.documentLogicalKey}-v${exp.version ?? 1}`;
     const v = corpus.get(key);
     if (!v) throw new EvalFixtureError(`fixture ${key} is not ingested in this workspace; run \`pnpm ingest:corpus\``);
     if (!v.modelRecord) throw new EvalFixtureError(`fixture ${key} has no extracted record; processing did not complete`);
     return v;
   };
 
+  const evidenceTextFor = (keys: string[]): string => {
+    const texts: string[] = [];
+    for (const key of keys) {
+      const v = [...corpus.values()].find((x) => x.logicalKey === key && x.isCurrent);
+      if (v?.modelRecord) texts.push(JSON.stringify(v.modelRecord));
+    }
+    return texts.join("\n");
+  };
+
   for (const c of cases) {
+    let executed = false;
+    const delta = await checkpoint(`case-${c.caseKey}`, async () => {
+      executed = true;
+      const before = { results: results.length, latencies: latencies.length, scalarHits: scalarHits.length, listComparisons: listComparisons.length, classificationHits: classificationHits.length, retrievalRecalls: retrievalRecalls.length, evidenceRanks: evidenceRanks.length, supportedAnswers: supportedAnswers.length, correctness: correctness.length, evidenceSupport: evidenceSupport.length, completeness: completeness.length, semantic: semantic.length, refusalHits: refusalHits.length, costTotal, inputTokens, outputTokens, provClaims, provValid, provExact, planted, plantedCaught, routed, belowThresholdMissing, autoApproved, reviewCount, blockedCount, retrievalFailures, citationsValid, citationsTotal, falseRefusals, dupPassed, dupCases, verPassed, verCases };
     const started = Date.now();
     try {
       switch (c.caseType) {
@@ -178,20 +219,28 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
           listComparisons.push(...lists);
           const f1 = microF1(lists);
           const passed = scalars.every((s) => s.correct) && f1.f1 >= 0.9;
-          await record(c, passed, { scalars, list_f1: f1.f1, list_tp: f1.tp, list_fp: f1.fp, list_fn: f1.fn }, v.modelRecord, Date.now() - started, 0);
+          await record(c, passed, { scalars, list_f1: f1.f1, list_tp: f1.tp, list_fp: f1.fp, list_fn: f1.fn, lists: lists.map((l) => ({ field: l.field, tp: l.tp, fp: l.fp, fn: l.fn })) }, v.modelRecord, Date.now() - started, 0);
           break;
         }
         case "provenance": {
           const v = versionFor(c);
-          let ok = 0;
+          let valid = 0;
+          let exact = 0;
+          let claims = 0;
           for (const f of v.fields) {
-            const ev = v.evidence.get(f.id);
-            const valid = Boolean(ev && ev.sourceBlockId && ev.exactMatch);
-            provenanceFlags.push(valid);
-            if (valid) ok++;
+            if (f.valueJson === null) continue;
+            claims++;
+            const evs = v.evidence.get(f.id) ?? [];
+            // valid: cited block exists, belongs to this version, and the quote occurs in it
+            const ok = evs.length > 0 && evs.every((e) => e.sourceBlockId && v.blockLocators.has(e.sourceLocator) && e.exactMatch);
+            if (ok) valid++;
+            if (evs.length > 0 && evs.every((e) => e.exactMatch)) exact++;
           }
-          const rate = v.fields.length ? ok / v.fields.length : 0;
-          await record(c, rate >= 0.98, { fields: v.fields.length, valid: ok, validity: rate }, { validity: rate }, Date.now() - started, 0);
+          provClaims += claims;
+          provValid += valid;
+          provExact += exact;
+          const rate = claims ? valid / claims : 1;
+          await record(c, rate >= 0.98, { claims, valid, exact, validity: rate }, { validity: rate }, Date.now() - started, 0);
           break;
         }
         case "classification": {
@@ -204,62 +253,91 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
         }
         case "review_routing": {
           const v = versionFor(c);
-          const raw = c.expectedJson as { planted: { field_path: string; kind: string; verifier_status?: string }[] };
-          // Planted readings the verifier fully supports (formatting variants) are expected to auto-approve.
-          const exp = { planted: raw.planted.filter((p) => p.verifier_status !== "supported") };
+          const exp = c.expectedJson as { uncertain_fields: { field_path: string; kind: string; expect_routed: boolean }[] };
+          const expected = exp.uncertain_fields.filter((u) => u.expect_routed);
           const routedPaths = new Set(v.fields.filter((f) => f.routingStatus === "review" || f.routingStatus === "blocked").map((f) => f.fieldPath));
           routed += routedPaths.size;
-          const caught = exp.planted.filter((p) => routedPaths.has(p.field_path));
-          planted += exp.planted.length;
+          autoApproved += v.fields.filter((f) => f.routingStatus === "auto_approved").length;
+          reviewCount += v.fields.filter((f) => f.routingStatus === "review").length;
+          blockedCount += v.fields.filter((f) => f.routingStatus === "blocked").length;
+          const caught = expected.filter((u) => routedPaths.has(u.field_path));
+          planted += expected.length;
           plantedCaught += caught.length;
-          const missingReview = v.fields.filter((f) => Number(f.confidence) < ROUTING_THRESHOLDS.autoApprove && !v.reviewItems.some((r) => r.fieldValueId === f.id));
+          const missingReview = v.fields.filter((f) => Number(f.confidence) < ROUTING_THRESHOLDS.autoApprove && f.routingStatus === "auto_approved");
           belowThresholdMissing += missingReview.length;
-          const passed = caught.length === exp.planted.length && missingReview.length === 0;
-          await record(c, passed, { planted: exp.planted.length, caught: caught.length, routed: routedPaths.size, missing_review_items: missingReview.length, missed: exp.planted.filter((p) => !routedPaths.has(p.field_path)).map((p) => p.field_path) }, { routed: [...routedPaths] }, Date.now() - started, 0);
+          const passed = caught.length === expected.length && missingReview.length === 0;
+          await record(c, passed, { planted: expected.length, caught: caught.length, routed: routedPaths.size, missing_review_items: missingReview.length, missed: expected.filter((u) => !routedPaths.has(u.field_path)).map((u) => `${u.field_path} (${u.kind})`) }, { routed: [...routedPaths] }, Date.now() - started, 0);
           break;
         }
         case "retrieval": {
-          const exp = c.expectedJson as { expected_documents: string[] };
+          const exp = c.expectedJson as { expected_documents: string[]; expected_locators: string[] };
           const r = await retrieve({ workspaceId: opts.workspaceId, query: c.question ?? "", topK: 5 });
-          const gotKeys = new Set(r.results.map((x) => x.logicalKey));
-          const hit = exp.expected_documents.filter((k) => gotKeys.has(k)).length;
-          const recall = exp.expected_documents.length ? hit / exp.expected_documents.length : 1;
+          const gotKeys = r.results.map((x) => x.logicalKey);
+          const hitDocs = exp.expected_documents.filter((k) => gotKeys.includes(k));
+          const recall = exp.expected_documents.length ? hitDocs.length / exp.expected_documents.length : 1;
+          const firstRank = r.results.findIndex((x) => exp.expected_documents.includes(x.logicalKey));
+          if (firstRank >= 0) evidenceRanks.push(firstRank + 1);
           retrievalRecalls.push(recall);
-          await record(c, recall >= 1 - 1e-9, { recall_at_5: recall, expected: exp.expected_documents, retrieved: r.results.map((x) => `${x.logicalKey}.v${x.versionNumber}#${x.chunkIndex}`) }, { retrieved: r.results.map((x) => x.logicalKey) }, Date.now() - started, estimateCostUsd(r.usage.model, r.usage.inputTokens, 0));
+          const passed = recall >= 1 - 1e-9;
+          if (!passed) retrievalFailures++;
+          await record(c, passed, { recall_at_5: recall, first_rank: firstRank >= 0 ? firstRank + 1 : null, expected: exp.expected_documents, retrieved: r.results.map((x) => `${x.logicalKey}-v${x.versionNumber}#${x.chunkIndex}`) }, { retrieved: gotKeys }, Date.now() - started, estimateCostUsd(r.usage.model, r.usage.inputTokens, 0));
           break;
         }
         case "answer": {
-          const exp = c.expectedJson as { expected_documents: string[]; expected_facts: string[]; reference_answer: string };
+          const exp = c.expectedJson as { expected_documents: string[]; expected_facts: string[]; expected_answer: string };
           const cache = await cachedResult(c);
           let metric: Record<string, unknown>;
           let actual: unknown;
           let cost = 0;
           let judgeReason: string | null = null;
-          if (cache?.result) {
+          if (cache.result) {
             metric = { ...(cache.result.metricJson as Record<string, unknown>), cache_hit: true };
             actual = cache.result.actualJson;
             judgeReason = cache.result.judgeReason;
           } else {
             const a = await askQuestion({ workspaceId: opts.workspaceId, userId: opts.userId ?? null, question: c.question ?? "", mode: "answer" });
-            const total = a.claims.reduce((n, cl) => n + cl.citations.length, 0);
-            const valid = a.claims.reduce((n, cl) => n + cl.citations.filter((x) => x.valid).length, 0);
-            const supported = a.sufficient && a.claims.length > 0 && a.claims.every((cl) => cl.supported);
-            const judge = await llm.judge({ question: c.question ?? "", referenceAnswer: exp.reference_answer, expectedFacts: exp.expected_facts, answer: a.answerText });
-            await recordLlmCall({ workspaceId: opts.workspaceId, provider: llm.name }, "judge", judge.usage, { promptVersion: JUDGE_PROMPT_VERSION });
+            const total = a.citations.length;
+            const valid = a.citations.filter((x) => x.valid).length;
+            const sourceEvidence = a.retrieved.map((r) => `[${r.logicalKey} v${r.versionNumber} ${r.humanLocator}] ${r.text}`).join("\n") || evidenceTextFor(exp.expected_documents);
+            const judge = await llm.judge({
+              question: c.question ?? "",
+              expectedAnswer: llm.name === "mock" ? exp.expected_facts.join("||") : `${exp.expected_answer}\nExpected facts: ${exp.expected_facts.join("; ")}`,
+              candidateAnswer: a.answerText,
+              sourceEvidence,
+              unanswerable: false,
+            });
+            await recordLlmCall({ workspaceId: opts.workspaceId, provider: llm.name }, "judge", judge.usage, { promptVersion: EVAL_PROMPT_VERSION });
             cost = a.usage.costUsd + estimateCostUsd(judge.usage.model, judge.usage.inputTokens, judge.usage.outputTokens);
             inputTokens += a.usage.inputTokens + judge.usage.inputTokens;
             outputTokens += a.usage.outputTokens + judge.usage.outputTokens;
             judgeReason = judge.reason;
-            metric = { cache_key: cache?.key, cache_hit: false, sufficient: a.sufficient, citations_total: total, citations_valid: valid, supported, semantic_score: judge.score, refused: !a.sufficient, answer_id: a.answerId };
-            actual = { answer: a.answerText, refusal_reason: a.refusalReason, citations: a.citations.map((x) => x.sourceLocator) };
+            const semanticScore = (judge.correctness + judge.evidenceSupport + judge.completeness) / 3;
+            metric = {
+              cache_key: cache.key,
+              cache_hit: false,
+              sufficient: a.sufficient,
+              refused: !a.sufficient,
+              citations_total: total,
+              citations_valid: valid,
+              supported: a.sufficient && total > 0 && valid === total,
+              correctness: judge.correctness,
+              evidence_support: judge.evidenceSupport,
+              completeness: judge.completeness,
+              semantic_score: semanticScore,
+              judge_passed: judge.correctness >= JUDGE_PASS.correctness && judge.evidenceSupport >= JUDGE_PASS.evidenceSupport && judge.completeness >= JUDGE_PASS.completeness,
+              answer_id: a.answerId,
+            };
+            actual = { answer: a.answerText, refusal_reason: a.refusalReason, citations: a.storedCitations.map((x) => x.sourceLocator) };
           }
           citationsTotal += Number(metric.citations_total ?? 0);
           citationsValid += Number(metric.citations_valid ?? 0);
           supportedAnswers.push(Boolean(metric.supported));
-          semanticScores.push(Number(metric.semantic_score ?? 0));
+          correctness.push(Number(metric.correctness ?? 0));
+          evidenceSupport.push(Number(metric.evidence_support ?? 0));
+          completeness.push(Number(metric.completeness ?? 0));
+          semantic.push(Number(metric.semantic_score ?? 0));
           if (metric.refused) falseRefusals++;
-          const passed = Boolean(metric.supported) && Number(metric.semantic_score ?? 0) >= 0.5;
-          await record(c, passed, metric, actual, Date.now() - started, cost, judgeReason);
+          await record(c, Boolean(metric.judge_passed) && Boolean(metric.supported), metric, actual, Date.now() - started, cost, judgeReason);
           break;
         }
         case "refusal": {
@@ -267,7 +345,7 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
           let metric: Record<string, unknown>;
           let actual: unknown;
           let cost = 0;
-          if (cache?.result) {
+          if (cache.result) {
             metric = { ...(cache.result.metricJson as Record<string, unknown>), cache_hit: true };
             actual = cache.result.actualJson;
           } else {
@@ -275,7 +353,8 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
             cost = a.usage.costUsd;
             inputTokens += a.usage.inputTokens;
             outputTokens += a.usage.outputTokens;
-            metric = { cache_key: cache?.key, cache_hit: false, refused: !a.sufficient, answer_id: a.answerId };
+            const exactRefusal = canonical(a.answerText) === canonical(INSUFFICIENT_EVIDENCE);
+            metric = { cache_key: cache.key, cache_hit: false, refused: !a.sufficient, exact_refusal_string: exactRefusal, answer_id: a.answerId };
             actual = { answer: a.answerText, refusal_reason: a.refusalReason };
           }
           refusalHits.push(Boolean(metric.refused));
@@ -285,14 +364,15 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
         case "duplicate": {
           dupCases++;
           const exp = c.expectedJson as { filename: string; duplicate_of: string };
-          const file = path.join(FIXTURES_DIR, "corpus", exp.filename);
+          const file = path.join(DOCUMENTS_DIR, exp.filename);
           if (!fs.existsSync(file)) throw new EvalFixtureError(`fixture file missing: ${exp.filename}`);
           const hash = sha256(fs.readFileSync(file));
           const versions = [...corpus.values()].filter((v) => v.contentHash === hash);
           const [event] = await db
             .select()
             .from(schema.runEvents)
-            .where(and(eq(schema.runEvents.eventType, "duplicate_detected"), sql`${schema.runEvents.payloadJson}->>'filename' = ${exp.filename}`))
+            .innerJoin(schema.processingRuns, eq(schema.processingRuns.id, schema.runEvents.processingRunId))
+            .where(and(eq(schema.processingRuns.workspaceId, opts.workspaceId), eq(schema.runEvents.eventType, "duplicate_detected"), sql`${schema.runEvents.payloadJson}->>'filename' = ${exp.filename}`))
             .limit(1);
           const passed = versions.length === 1 && Boolean(event);
           if (passed) dupPassed++;
@@ -324,14 +404,72 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
       await record(c, false, { error: message }, null, Date.now() - started, 0);
       if (c.caseType === "answer") {
         supportedAnswers.push(false);
-        semanticScores.push(0);
+        semantic.push(0);
+        correctness.push(0);
+        evidenceSupport.push(0);
+        completeness.push(0);
       }
       if (c.caseType === "refusal") refusalHits.push(false);
-      if (c.caseType === "retrieval") retrievalRecalls.push(0);
+      if (c.caseType === "retrieval") {
+        retrievalRecalls.push(0);
+        retrievalFailures++;
+      }
+    }
+      return { results: results.slice(before.results), latencies: latencies.slice(before.latencies), scalarHits: scalarHits.slice(before.scalarHits), listComparisons: listComparisons.slice(before.listComparisons), classificationHits: classificationHits.slice(before.classificationHits), retrievalRecalls: retrievalRecalls.slice(before.retrievalRecalls), evidenceRanks: evidenceRanks.slice(before.evidenceRanks), supportedAnswers: supportedAnswers.slice(before.supportedAnswers), correctness: correctness.slice(before.correctness), evidenceSupport: evidenceSupport.slice(before.evidenceSupport), completeness: completeness.slice(before.completeness), semantic: semantic.slice(before.semantic), refusalHits: refusalHits.slice(before.refusalHits), costTotal: costTotal - before.costTotal, inputTokens: inputTokens - before.inputTokens, outputTokens: outputTokens - before.outputTokens, provClaims: provClaims - before.provClaims, provValid: provValid - before.provValid, provExact: provExact - before.provExact, planted: planted - before.planted, plantedCaught: plantedCaught - before.plantedCaught, routed: routed - before.routed, belowThresholdMissing: belowThresholdMissing - before.belowThresholdMissing, autoApproved: autoApproved - before.autoApproved, reviewCount: reviewCount - before.reviewCount, blockedCount: blockedCount - before.blockedCount, retrievalFailures: retrievalFailures - before.retrievalFailures, citationsValid: citationsValid - before.citationsValid, citationsTotal: citationsTotal - before.citationsTotal, falseRefusals: falseRefusals - before.falseRefusals, dupPassed: dupPassed - before.dupPassed, dupCases: dupCases - before.dupCases, verPassed: verPassed - before.verPassed, verCases: verCases - before.verCases };
+    });
+    // Inngest replays completed cases from their compact aggregate contributions.
+    if (!executed) {
+      results.push(...delta.results);
+      latencies.push(...delta.latencies);
+      scalarHits.push(...delta.scalarHits);
+      listComparisons.push(...delta.listComparisons);
+      classificationHits.push(...delta.classificationHits);
+      retrievalRecalls.push(...delta.retrievalRecalls);
+      evidenceRanks.push(...delta.evidenceRanks);
+      supportedAnswers.push(...delta.supportedAnswers);
+      correctness.push(...delta.correctness);
+      evidenceSupport.push(...delta.evidenceSupport);
+      completeness.push(...delta.completeness);
+      semantic.push(...delta.semantic);
+      refusalHits.push(...delta.refusalHits);
+      costTotal += delta.costTotal;
+      inputTokens += delta.inputTokens;
+      outputTokens += delta.outputTokens;
+      provClaims += delta.provClaims;
+      provValid += delta.provValid;
+      provExact += delta.provExact;
+      planted += delta.planted;
+      plantedCaught += delta.plantedCaught;
+      routed += delta.routed;
+      belowThresholdMissing += delta.belowThresholdMissing;
+      autoApproved += delta.autoApproved;
+      reviewCount += delta.reviewCount;
+      blockedCount += delta.blockedCount;
+      retrievalFailures += delta.retrievalFailures;
+      citationsValid += delta.citationsValid;
+      citationsTotal += delta.citationsTotal;
+      falseRefusals += delta.falseRefusals;
+      dupPassed += delta.dupPassed;
+      dupCases += delta.dupCases;
+      verPassed += delta.verPassed;
+      verCases += delta.verCases;
+      for (const result of delta.results) {
+        const counts = (byType[result.caseType] ??= { total: 0, passed: 0 });
+        counts.total++; if (result.passed) counts.passed++;
+      }
     }
   }
 
-  // Integrity: no duplicate model records per document version.
+  let resumability: ResumabilityResult | null = null;
+  if (!opts.skipResumability) {
+    try {
+      resumability = await checkpoint("resumability", () => runResumabilityTest({ log }));
+    } catch (err) {
+      log(`resumability test errored: ${err instanceof Error ? err.message : String(err)}`);
+      resumability = { passed: false, checks: [{ name: "test executed", passed: false, detail: err instanceof Error ? err.message : String(err) }], processingRunId: null };
+    }
+  }
+
   const dupRecords = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(
@@ -343,59 +481,73 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
         .having(sql`count(*) > 1`)
         .as("dups"),
     );
+  const [reprocess] = await db.select({ n: sql<number>`count(*)::int` }).from(schema.processingRuns).where(and(eq(schema.processingRuns.workspaceId, opts.workspaceId), eq(schema.processingRuns.runType, "reprocess")));
 
   const f1 = microF1(listComparisons);
+  const catCount = (cat: string) => cases.filter((c) => (c.caseType === "answer" || c.caseType === "refusal") && (c.tags ?? []).includes(cat)).length;
   const metrics: AggregateMetrics = {
     extraction: {
       scalar_exact_accuracy: scalarHits.length ? scalarHits.filter(Boolean).length / scalarHits.length : 0,
       list_micro_f1: f1.f1,
-      evidence_validity: provenanceFlags.length ? provenanceFlags.filter(Boolean).length / provenanceFlags.length : 0,
       classification_accuracy: classificationHits.length ? classificationHits.filter(Boolean).length / classificationHits.length : 0,
+      provenance_validity: provClaims ? provValid / provClaims : 0,
       documents: classificationHits.length,
       scalar_fields: scalarHits.length,
+      provenance_claims: provClaims,
+      provenance_valid: provValid,
+      provenance_exact: provExact,
+      provenance_invalid: provClaims - provValid,
     },
-    review: {
-      recall: planted ? plantedCaught / planted : 1,
-      precision: routed ? plantedCaught / routed : 1,
-      planted,
-      planted_caught: plantedCaught,
-      routed,
-      below_threshold_missing: belowThresholdMissing,
-    },
+    review: { recall: planted ? plantedCaught / planted : 1, precision: routed ? plantedCaught / routed : 1, planted, planted_caught: plantedCaught, routed, below_threshold_missing: belowThresholdMissing, auto_approved: autoApproved, review: reviewCount, blocked: blockedCount },
     rag: {
       retrieval_recall_at_5: mean(retrievalRecalls),
+      average_evidence_rank: mean(evidenceRanks),
       citation_precision: citationsTotal ? citationsValid / citationsTotal : 1,
       evidence_supported_rate: supportedAnswers.length ? supportedAnswers.filter(Boolean).length / supportedAnswers.length : 0,
       refusal_accuracy: refusalHits.length ? refusalHits.filter(Boolean).length / refusalHits.length : 1,
-      semantic_score: mean(semanticScores),
+      semantic_score: mean(semantic),
+      correctness: mean(correctness),
+      evidence_support: mean(evidenceSupport),
+      completeness: mean(completeness),
       false_refusal_rate: supportedAnswers.length ? falseRefusals / supportedAnswers.length : 0,
-      answer_cases: supportedAnswers.length,
-      refusal_cases: refusalHits.length,
-      retrieval_cases: retrievalRecalls.length,
+      single_document_cases: catCount("single_document"),
+      cross_document_cases: catCount("cross_document"),
+      unanswerable_cases: catCount("unanswerable"),
+      retrieval_failures: retrievalFailures,
     },
-    integrity: { duplicate_cases_passed: dupPassed, duplicate_cases: dupCases, version_cases_passed: verPassed, version_cases: verCases, duplicate_records: dupRecords[0]?.n ?? 0 },
-    cost: { estimated_cost_usd: costTotal, input_tokens: inputTokens, output_tokens: outputTokens, latency_p50_ms: percentile(latencies, 50), latency_p95_ms: percentile(latencies, 95) },
-    cases: { total: results.length, passed: results.filter((r) => r.passed).length, failed: results.filter((r) => !r.passed).length },
+    integrity: { duplicate_cases_passed: dupPassed, duplicate_cases: dupCases, version_cases_passed: verPassed, version_cases: verCases, duplicate_records: dupRecords[0]?.n ?? 0, resumability_passed: resumability ? resumability.passed : null, reprocess_count: reprocess?.n ?? 0 },
+    cost: { cached_answer_cases: results.filter(r => r.metric.cache_hit === true).length, estimated_cost_usd: costTotal, input_tokens: inputTokens, output_tokens: outputTokens, latency_p50_ms: percentile(latencies, 50), latency_p95_ms: percentile(latencies, 95) },
+    cases: { total: results.length, passed: results.filter((r) => r.passed).length, failed: results.filter((r) => !r.passed).length, by_type: byType },
   };
 
-  // Baseline: most recent baseline eval run for this provider in the DB, else the committed file.
   const [baselineRun] = await db
     .select()
     .from(schema.evalRuns)
-    .where(and(eq(schema.evalRuns.workspaceId, opts.workspaceId), eq(schema.evalRuns.provider, llm.name), eq(schema.evalRuns.isBaseline, true), eq(schema.evalRuns.status, "completed")))
+    .where(and(eq(schema.evalRuns.workspaceId, opts.workspaceId), eq(schema.evalRuns.provider, llm.name), eq(schema.evalRuns.isBaseline, true), eq(schema.evalRuns.status, "completed"), sql`${schema.evalRuns.aggregateMetricsJson}->>'corpus_version' = ${corpusVersion}`))
     .orderBy(desc(schema.evalRuns.completedAt))
     .limit(1);
-  const fileBaseline = readBaselineFile(llm.name);
+  const candidateBaseline = readBaselineFile(llm.name);
+  const fileBaseline = candidateBaseline?.corpusVersion === corpusVersion ? candidateBaseline : null;
   const baselineMetrics = (baselineRun?.aggregateMetricsJson as AggregateMetrics | undefined) ?? fileBaseline?.metrics ?? null;
   const regression = evaluateRegression(metrics, baselineMetrics, baselineRun?.id ?? fileBaseline?.evalRunId ?? null);
-  const becomeBaseline = Boolean(opts.setBaseline) || baselineMetrics === null;
+  const targetsMet = metrics.extraction.scalar_exact_accuracy >= SUCCESS_TARGETS.scalarExactAccuracy
+    && metrics.extraction.list_micro_f1 >= SUCCESS_TARGETS.listMicroF1
+    && metrics.extraction.classification_accuracy >= SUCCESS_TARGETS.classificationAccuracy
+    && metrics.extraction.provenance_validity >= SUCCESS_TARGETS.provenanceValidity
+    && metrics.review.recall >= SUCCESS_TARGETS.reviewRecall && metrics.review.precision >= SUCCESS_TARGETS.reviewPrecision
+    && metrics.rag.retrieval_recall_at_5 >= SUCCESS_TARGETS.retrievalRecallAt5
+    && metrics.rag.citation_precision >= SUCCESS_TARGETS.citationPrecision
+    && metrics.rag.evidence_supported_rate >= SUCCESS_TARGETS.evidenceSupportedRate
+    && metrics.rag.refusal_accuracy >= SUCCESS_TARGETS.refusalAccuracy && metrics.rag.semantic_score >= SUCCESS_TARGETS.semanticScore
+    && metrics.integrity.duplicate_records === 0 && metrics.review.below_threshold_missing === 0;
+  const becomeBaseline = (Boolean(opts.setBaseline) || baselineMetrics === null) && targetsMet && regression.passed;
 
   await db
     .update(schema.evalRuns)
     .set({
       status: "completed",
       completedAt: new Date(),
-      aggregateMetricsJson: metrics as unknown as Record<string, unknown>,
+      aggregateMetricsJson: { ...(metrics as unknown as Record<string, unknown>), resumability, corpus_version: corpusVersion },
       regressionJson: regression as unknown as Record<string, unknown>,
       regressionPassed: regression.passed,
       baselineEvalRunId: baselineRun?.id ?? null,
@@ -404,9 +556,15 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
     .where(eq(schema.evalRuns.id, evalRunId));
   if (becomeBaseline) {
     if (baselineRun) await db.update(schema.evalRuns).set({ isBaseline: false }).where(eq(schema.evalRuns.id, baselineRun.id));
-    writeBaselineFile({ provider: llm.name, modelConfigHash: configHash, evalRunId, recordedAt: new Date().toISOString(), metrics });
+    if (!process.env.VERCEL) writeBaselineFile({ provider: llm.name, modelConfigHash: configHash, corpusVersion, evalRunId, recordedAt: new Date().toISOString(), metrics });
     log(`baseline ${baselineMetrics === null ? "initialized" : "updated"} for provider ${llm.name}`);
   }
   log(`eval complete: ${metrics.cases.passed}/${metrics.cases.total} cases passed; regression ${regression.passed ? "PASSED" : "FAILED"}`);
-  return { evalRunId, metrics, regression, results };
+  return { evalRunId, metrics, regression, targetsMet, resumability, results };
+}
+
+export async function createEvaluationRun(opts: { workspaceId: string; processingRunId?: string | null }) {
+  const llm = getLlm();
+  const [run] = await getDb().insert(schema.evalRuns).values({ workspaceId: opts.workspaceId, processingRunId: opts.processingRunId ?? null, provider: llm.name, modelConfigHash: modelConfigHash(llm), status: "running" }).returning();
+  return run!;
 }

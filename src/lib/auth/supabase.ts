@@ -31,7 +31,7 @@ async function client() {
   });
 }
 
-/** Mirror the Supabase auth user into app_users and guarantee a workspace membership. */
+/** Mirror authenticated identity. Workspace membership must be granted explicitly. */
 async function ensureAppUser(authUser: { id: string; email?: string; user_metadata?: Record<string, unknown> }): Promise<AuthUser> {
   const db = getDb();
   const email = (authUser.email ?? `${authUser.id}@supabase.local`).toLowerCase();
@@ -40,11 +40,6 @@ async function ensureAppUser(authUser: { id: string; email?: string; user_metada
   const [existing] = await db.select().from(schema.appUsers).where(eq(schema.appUsers.id, authUser.id)).limit(1);
   if (!existing) {
     await db.insert(schema.appUsers).values({ id: authUser.id, email, displayName }).onConflictDoNothing();
-  }
-  const [membership] = await db.select().from(schema.workspaceMembers).where(eq(schema.workspaceMembers.userId, authUser.id)).limit(1);
-  if (!membership) {
-    const [ws] = await db.select().from(schema.workspaces).where(eq(schema.workspaces.slug, "default")).limit(1);
-    if (ws) await db.insert(schema.workspaceMembers).values({ workspaceId: ws.id, userId: authUser.id, role: "viewer" }).onConflictDoNothing();
   }
   const [row] = await db.select().from(schema.appUsers).where(eq(schema.appUsers.id, authUser.id)).limit(1);
   return { id: authUser.id, email: row?.email ?? email, displayName: row?.displayName ?? displayName };

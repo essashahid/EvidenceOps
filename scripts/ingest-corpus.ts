@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./load-env";
 import { closeDb } from "@/lib/db/client";
 import { seedWorkspace } from "@/lib/seed";
 import { ingestCorpus } from "@/lib/eval/corpus";

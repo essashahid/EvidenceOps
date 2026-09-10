@@ -1,0 +1,293 @@
+{
+  "logical_key": "GDN-2026-001",
+  "version": 1,
+  "format": "docx",
+  "filename": "GDN-2026-001-v1-cobalt-ridge-vendor-guidance.docx",
+  "display_name": "Cobalt Ridge vendor onboarding guidance note",
+  "record": {
+    "report_title": "Guidance Note on Vendor Onboarding and Due Diligence",
+    "report_number": "GDN-2026-001",
+    "issuing_organization": "Cobalt Ridge Energy",
+    "publication_date": "2026-09-04",
+    "document_type": "guidance",
+    "subject_entities": [
+      {
+        "name": "Cobalt Ridge Energy"
+      },
+      {
+        "name": "Vendor Onboarding Portal"
+      },
+      {
+        "name": "Brightwater Analytics"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Onboarding files were incomplete for 23 percent of vendors added in 2025.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Sanctions screening was not repeated after initial onboarding for any active vendor.",
+        "severity": "high"
+      },
+      {
+        "finding": "The Vendor Onboarding Portal does not enforce a mandatory tax identification field.",
+        "severity": "low"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Implement a quarterly vendor scorecard for all strategic vendors covering compliance status, insurance and performance.",
+        "target_entity": "Cobalt Ridge Energy Supply Chain Group",
+        "status_if_stated": "Not started"
+      },
+      {
+        "recommendation": "Repeat sanctions screening every twelve months for every active vendor using the Brightwater Analytics screening service.",
+        "target_entity": "Cobalt Ridge Energy Compliance Team",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Make the tax identification field mandatory in the Vendor Onboarding Portal.",
+        "target_entity": "Cobalt Ridge Energy IT Services",
+        "status_if_stated": "Completed"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 65000,
+        "currency": "USD",
+        "context": "annual screening service fee payable to Brightwater Analytics"
+      },
+      {
+        "amount": 120000,
+        "currency": "EUR",
+        "context": "onboarding portal enhancement budget for 2026"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA1"
+      ],
+      "quotes": [
+        "Guidance Note on Vendor Onboarding and Due Diligence"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA2"
+      ],
+      "quotes": [
+        "Report No. GDN-2026-001"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA3"
+      ],
+      "quotes": [
+        "Issued by Cobalt Ridge Energy"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA4"
+      ],
+      "quotes": [
+        "Publication date: 4 Sept. 26"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA6"
+      ],
+      "quotes": [
+        "This guidance note sets out the minimum due diligence that business units of Cobalt Ridge Energy must complete before a new vendor is added to the Vendor Onboarding Portal."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA6"
+      ],
+      "quotes": [
+        "This guidance note sets out the minimum due diligence that business units of Cobalt Ridge Energy must complete before a new vendor is added to the Vendor Onboarding Portal."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA6"
+      ],
+      "quotes": [
+        "This guidance note sets out the minimum due diligence that business units of Cobalt Ridge Energy must complete before a new vendor is added to the Vendor Onboarding Portal."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA7"
+      ],
+      "quotes": [
+        "The guidance sets out three actions with named owners and explains the screening service provided by Brightwater Analytics."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA13"
+      ],
+      "quotes": [
+        "Finding 1: Onboarding files were incomplete for 23 percent of vendors added in 2025.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA14"
+      ],
+      "quotes": [
+        "Finding 2: Sanctions screening was not repeated after initial onboarding for any active vendor.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA15"
+      ],
+      "quotes": [
+        "Finding 3: The Vendor Onboarding Portal does not enforce a mandatory tax identification field.",
+        "Severity: Low."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA17"
+      ],
+      "quotes": [
+        "Recommendation 1: Implement a quarterly vendor scorecard for all strategic vendors covering compliance status, insurance and performance.",
+        "Target: Cobalt Ridge Energy Supply Chain Group.",
+        "Status: Not started."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA18"
+      ],
+      "quotes": [
+        "Recommendation 2: Repeat sanctions screening every twelve months for every active vendor using the Brightwater Analytics screening service.",
+        "Target: Cobalt Ridge Energy Compliance Team.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA19"
+      ],
+      "quotes": [
+        "Recommendation 3: Make the tax identification field mandatory in the Vendor Onboarding Portal.",
+        "Target: Cobalt Ridge Energy IT Services.",
+        "Status: Completed."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA21"
+      ],
+      "quotes": [
+        "The annual screening service fee payable to Brightwater Analytics is USD 65,000."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-GDN-2026-001-V1-PARA21"
+      ],
+      "quotes": [
+        "The onboarding portal enhancement budget for 2026 is EUR 120,000, funded from the European subsidiary's technology allocation."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "publication_date",
+      "kind": "abbreviated_date",
+      "reason": "The date is written as 4 Sept. 26 with a two digit year; the reading 2026-09-04 is correct but should be flagged as uncertain.",
+      "extractor_value": "2026-09-04",
+      "extractor_quotes": [
+        "Publication date: 4 Sept. 26"
+      ],
+      "extractor_ambiguity": "Year is written with two digits and the month is abbreviated.",
+      "verifier": {
+        "status": "supported",
+        "corrected_value": null,
+        "contradiction_detected": false,
+        "evidence_specificity": 0.75
+      },
+      "expect_routed": false,
+      "extractor_locators": [
+        "SRC-GDN-2026-001-V1-PARA4"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [
+    "GDN-2026-001-v1-cobalt-ridge-vendor-guidance-resend.docx"
+  ],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Guidance Note on Vendor Onboarding and Due Diligence",
+      "paragraphs": [
+        "Report No. GDN-2026-001",
+        "Issued by Cobalt Ridge Energy",
+        "Publication date: 4 Sept. 26"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This guidance note sets out the minimum due diligence that business units of Cobalt Ridge Energy must complete before a new vendor is added to the Vendor Onboarding Portal. It replaces the 2023 procedure and responds to weaknesses identified in a compliance self assessment completed in June 2026.",
+        "The self assessment found incomplete onboarding files, sanctions screening that was never repeated after onboarding, and a portal that does not enforce the tax identification field. The guidance sets out three actions with named owners and explains the screening service provided by Brightwater Analytics."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Cobalt Ridge Energy operates wind and solar assets in three states and engages about 900 active vendors, ranging from turbine manufacturers to local civil contractors. All vendors are registered through the Vendor Onboarding Portal, which collects registration documents, bank details and compliance declarations.",
+        "Sanctions and adverse media screening is performed through a subscription service supplied by Brightwater Analytics. Under the 2023 procedure, screening was run once at onboarding and there was no requirement to repeat it while the vendor remained active.",
+        "The work was led by Gregorio Crona and supported by Hassan Simonis. The team conducted 26 structured interviews, examined a sample of 64 records and reviewed 140 internal documents between 18 December 2025 and 13 February 2026. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Onboarding files were incomplete for 23 percent of vendors added in 2025. Missing items were most often the signed code of conduct and evidence of insurance. Severity: Medium.",
+        "Finding 2: Sanctions screening was not repeated after initial onboarding for any active vendor. Some vendors had been active for more than seven years without rescreening. Severity: High.",
+        "Finding 3: The Vendor Onboarding Portal does not enforce a mandatory tax identification field. The field was blank for 61 vendors, which delayed year end tax reporting. Severity: Low."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Implement a quarterly vendor scorecard for all strategic vendors covering compliance status, insurance and performance. Target: Cobalt Ridge Energy Supply Chain Group. Status: Not started.",
+        "Recommendation 2: Repeat sanctions screening every twelve months for every active vendor using the Brightwater Analytics screening service. Target: Cobalt Ridge Energy Compliance Team. Status: In progress.",
+        "Recommendation 3: Make the tax identification field mandatory in the Vendor Onboarding Portal. Target: Cobalt Ridge Energy IT Services. Status: Completed."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The costs of the screening service and the portal changes are set out below. The annual screening service fee payable to Brightwater Analytics is USD 65,000. The onboarding portal enhancement budget for 2026 is EUR 120,000, funded from the European subsidiary's technology allocation."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 140 internal documents reviewed included 25 purchase orders, 55 invoices and 13 items of correspondence, all indexed under working reference TMNHJS.",
+        "Appendix B: Required onboarding documents. Every new vendor must supply a certificate of incorporation, a signed code of conduct, evidence of insurance, bank verification and a completed tax identification form before the portal record is activated.",
+        "Appendix C: Screening workflow. The Brightwater Analytics service returns a screening result within one working day; any potential match must be reviewed by the compliance team and the outcome recorded in the portal before the vendor is activated or retained.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion.",
+        "The sampling approach was intended to describe the matters selected for examination. It was not designed to estimate the frequency of an issue across records outside that selection. Readers should therefore interpret a finding in relation to its stated scope, period and subject. Silence about another activity does not imply that the activity was examined or found satisfactory."
+      ]
+    }
+  ]
+}

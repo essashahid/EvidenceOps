@@ -14,8 +14,8 @@ beforeAll(async () => {
   const seed = await seeded();
   workspaceId = seed.workspaceId;
   reviewerId = seed.reviewerId;
-  const file = "OPS-2026-004-v1-northstar-operational-review.pdf";
-  const { result, up } = await uploadAndProcess(file, fixture(`corpus/${file}`));
+  const file = "AUD-2026-003-v1-orchard-valley-audit-report.pdf";
+  const { result, up } = await uploadAndProcess(file, fixture(`documents/${file}`));
   versionId = up.documentVersionId;
   expect(result.run?.status).toBe("completed_with_review");
 });
@@ -26,7 +26,7 @@ describe("human review", () => {
     expect(items.length).toBeGreaterThan(0);
     const detail = await getReviewItemDetail(workspaceId, items[0]!.item.id);
     expect(detail).not.toBeNull();
-    expect(detail!.evidence?.sourceLocator).toMatch(/^SRC-OPS-2026-004-V1-P\d\d$/);
+    expect(detail!.evidence?.sourceLocator).toMatch(/^SRC-AUD-2026-003-V1-P\d\d$/);
     expect(detail!.block).not.toBeNull();
     expect(detail!.context).not.toBeNull();
     expect(Number(detail!.field.confidence)).toBeLessThan(0.86);
@@ -39,10 +39,10 @@ describe("human review", () => {
 
   it("edit & accept creates a new immutable record version and records the action", async () => {
     const items = await listReviewItems(workspaceId, { status: "open", documentVersionId: versionId });
-    const target = items.find((i) => i.item.fieldPath.endsWith(".amount")) ?? items[0]!;
+    const target = items.find((i) => i.item.fieldPath.startsWith("monetary_amounts[")) ?? items[0]!;
     const detail = await getReviewItemDetail(workspaceId, target.item.id);
     const before = await getDb().select().from(schema.recordVersions).where(eq(schema.recordVersions.documentVersionId, versionId));
-    const newValue = target.item.fieldPath.endsWith(".amount") ? 424242 : "Reviewer corrected value";
+    const newValue = target.item.fieldPath.startsWith("monetary_amounts[") ? { ...(detail!.field.valueJson as object), amount: 512000 } : detail!.field.valueJson;
     const res = await resolveReviewItem({ reviewItemId: target.item.id, reviewerUserId: reviewerId, action: "edit_accept", newValue, comment: "Appendix correction supersedes the summary figure.", expectedRecordVersionId: detail!.currentRecord!.id });
     expect(res.resultingRecordVersionId).toBeTruthy();
     const after = await getDb().select().from(schema.recordVersions).where(eq(schema.recordVersions.documentVersionId, versionId));
@@ -78,16 +78,24 @@ describe("human review", () => {
 
   it("reject nulls the value; needs_source leaves the item unresolved", async () => {
     const open = await listReviewItems(workspaceId, { status: "open", documentVersionId: versionId });
-    if (open.length >= 2) {
-      const a = open[0]!;
-      const r = await resolveReviewItem({ reviewItemId: a.item.id, reviewerUserId: reviewerId, action: "reject" });
-      const [rv] = await getDb().select().from(schema.recordVersions).where(eq(schema.recordVersions.id, r.resultingRecordVersionId!));
-      expect(getFieldValue(reportRecordSchema.parse(rv!.payloadJson), a.item.fieldPath)).toBeNull();
-      const b = open[1]!;
-      const r2 = await resolveReviewItem({ reviewItemId: b.item.id, reviewerUserId: reviewerId, action: "needs_source", comment: "Need the appendix." });
-      expect(r2.resultingRecordVersionId).toBeNull();
-      const [item] = await getDb().select().from(schema.reviewItems).where(eq(schema.reviewItems.id, b.item.id));
-      expect(item!.status).toBe("needs_source");
-    }
+    expect(open.length).toBeGreaterThan(0);
+    const item = open[0]!;
+    const before = await getDb().select().from(schema.fieldValues).where(eq(schema.fieldValues.id, item.field.id));
+    const needs = await resolveReviewItem({ reviewItemId: item.item.id, reviewerUserId: reviewerId, action: "needs_source", comment: "Need the appendix." });
+    expect(needs.resultingRecordVersionId).toBeNull();
+    expect(await getDb().select().from(schema.fieldValues).where(eq(schema.fieldValues.id, item.field.id))).toEqual(before);
+    const [flagged] = await getDb().select().from(schema.reviewItems).where(eq(schema.reviewItems.id, item.item.id));
+    expect(flagged!.status).toBe("needs_source");
+    const rejected = await resolveReviewItem({ reviewItemId: item.item.id, reviewerUserId: reviewerId, action: "reject" });
+    const [record] = await getDb().select().from(schema.recordVersions).where(eq(schema.recordVersions.id, rejected.resultingRecordVersionId!));
+    expect(getFieldValue(reportRecordSchema.parse(record!.payloadJson), item.item.fieldPath)).toBeNull();
   });
+});
+
+it("denies viewer and non-member review mutations before changing any state", async () => {
+  const seed = await seeded();
+  const [item] = await listReviewItems(workspaceId, { status: "all", documentVersionId: versionId });
+  expect(item).toBeTruthy();
+  await expect(resolveReviewItem({ reviewItemId: item!.item.id, reviewerUserId: seed.viewerId, action: "accept" })).rejects.toThrow("access denied");
+  await expect(resolveReviewItem({ reviewItemId: item!.item.id, reviewerUserId: "00000000-0000-4000-8000-000000000099", action: "accept" })).rejects.toThrow("access denied");
 });

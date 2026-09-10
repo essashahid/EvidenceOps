@@ -4,7 +4,7 @@ import type { AggregateMetrics } from "./regression";
 
 export const BASELINE_DIR = path.resolve(process.cwd(), "eval/baselines");
 
-export type BaselineFile = { provider: string; modelConfigHash: string; evalRunId: string | null; recordedAt: string; metrics: AggregateMetrics };
+export type BaselineFile = { provider: string; corpusVersion?: string; modelConfigHash: string; evalRunId: string | null; recordedAt: string; metrics: AggregateMetrics };
 
 export function baselinePath(provider: string): string {
   return path.join(BASELINE_DIR, `${provider}.json`);

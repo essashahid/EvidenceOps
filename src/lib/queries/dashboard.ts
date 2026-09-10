@@ -1,4 +1,4 @@
-import { and, count, desc, eq, sql, sum } from "drizzle-orm";
+import { and, count, desc, eq, inArray, sql, sum } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db/client";
 
 export async function getDashboardStats(workspaceId: string) {
@@ -8,7 +8,7 @@ export async function getDashboardStats(workspaceId: string) {
   const [openReview] = await db
     .select({ n: count() })
     .from(schema.reviewItems)
-    .where(and(eq(schema.reviewItems.workspaceId, workspaceId), eq(schema.reviewItems.status, "open")));
+    .where(and(eq(schema.reviewItems.workspaceId, workspaceId), inArray(schema.reviewItems.status, ["open", "needs_source"])));
   const runsByStatus = await db
     .select({ status: schema.processingRuns.status, n: count() })
     .from(schema.processingRuns)
@@ -50,5 +50,5 @@ export async function getDashboardStats(workspaceId: string) {
 }
 
 export async function listRecentRuns(workspaceId: string, limit = 10) {
-  return getDb().select().from(schema.processingRuns).where(eq(schema.processingRuns.workspaceId, workspaceId)).orderBy(desc(schema.processingRuns.createdAt)).limit(limit);
+  return getDb().select().from(schema.processingRuns).where(and(eq(schema.processingRuns.workspaceId, workspaceId), sql`${schema.processingRuns.documentsTotal} > 0`)).orderBy(desc(schema.processingRuns.createdAt)).limit(limit);
 }

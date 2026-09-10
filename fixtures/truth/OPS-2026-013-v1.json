@@ -1,0 +1,308 @@
+{
+  "logical_key": "OPS-2026-013",
+  "version": 1,
+  "format": "pdf",
+  "filename": "OPS-2026-013-v1-harbor-point-warehouse-review.pdf",
+  "display_name": "Harbor Point Tidewater Import Warehouse operational review",
+  "record": {
+    "report_title": "Operational Review of the Tidewater Import Warehouse",
+    "report_number": "OPS-2026-013",
+    "issuing_organization": "Harbor Point Logistics",
+    "publication_date": "2026-08-11",
+    "document_type": "operational_review",
+    "subject_entities": [
+      {
+        "name": "Harbor Point Logistics"
+      },
+      {
+        "name": "Tidewater Import Warehouse"
+      },
+      {
+        "name": "Cardinal Fleet Services"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Pick accuracy was 99.1 percent, marginally below the 99.5 percent target.",
+        "severity": "low"
+      },
+      {
+        "finding": "Drayage moves by Cardinal Fleet Services from Berth 6 were late in 12 percent of cases against a contractual allowance of 5 percent.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Racking inspections had lapsed for two aisles for more than six months.",
+        "severity": "high"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Implement a monthly carrier scorecard for Cardinal Fleet Services covering on-time drayage, claims and container dwell.",
+        "target_entity": "Harbor Point Logistics Transport Team",
+        "status_if_stated": "Not started"
+      },
+      {
+        "recommendation": "Complete racking inspections for all aisles and schedule quarterly inspections thereafter.",
+        "target_entity": "Tidewater Import Warehouse",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Introduce barcode verification at the packing station to lift pick accuracy above target.",
+        "target_entity": "Tidewater Import Warehouse",
+        "status_if_stated": "Approved"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 540000,
+        "currency": "USD",
+        "context": "annual drayage spending with Cardinal Fleet Services in 2025"
+      },
+      {
+        "amount": 27000,
+        "currency": "USD",
+        "context": "estimated racking remediation cost for the two affected aisles"
+      },
+      {
+        "amount": 185000,
+        "currency": "USD",
+        "context": "customer claims arising from pick errors in 2025"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P01"
+      ],
+      "quotes": [
+        "Operational Review of the Tidewater Import Warehouse"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P01"
+      ],
+      "quotes": [
+        "Report No. OPS-2026-013"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Harbor Point Logistics"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 11 August 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P01"
+      ],
+      "quotes": [
+        "This operational review covers the Tidewater Import Warehouse operated by Harbor Point Logistics for the first half of 2026."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P01"
+      ],
+      "quotes": [
+        "This operational review covers the Tidewater Import Warehouse operated by Harbor Point Logistics for the first half of 2026."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P01"
+      ],
+      "quotes": [
+        "This operational review covers the Tidewater Import Warehouse operated by Harbor Point Logistics for the first half of 2026."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P01"
+      ],
+      "quotes": [
+        "Pick accuracy was close to but below target, drayage moves by Cardinal Fleet Services were late more often than the contract allows, and racking inspections had lapsed in two aisles."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Pick accuracy was 99.1 percent, marginally below the 99.5 percent target.",
+        "Severity: Low."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Drayage moves by Cardinal Fleet Services from Berth 6 were late in 12 percent of cases against a contractual allowance of 5 percent.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Racking inspections had lapsed for two aisles for more than six months.",
+        "Severity: High."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Implement a monthly carrier scorecard for Cardinal Fleet Services covering on-time drayage, claims and container dwell.",
+        "Target: Harbor Point Logistics Transport Team.",
+        "Status: Not started."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Complete racking inspections for all aisles and schedule quarterly inspections thereafter.",
+        "Target: Tidewater Import Warehouse.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 3: Introduce barcode verification at the packing station to lift pick accuracy above target.",
+        "Target: Tidewater Import Warehouse.",
+        "Status: Approved."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P02"
+      ],
+      "quotes": [
+        "Annual drayage spending with Cardinal Fleet Services was USD 540,000 in 2025."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P02"
+      ],
+      "quotes": [
+        "Racking remediation for the two affected aisles is estimated at USD 27,000."
+      ]
+    },
+    "monetary_amounts[2]": {
+      "locators": [
+        "SRC-OPS-2026-013-V1-P02"
+      ],
+      "quotes": [
+        "Customer claims arising from pick errors totalled USD 185,000 in 2025."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "recommendations[3]",
+      "kind": "missing_evidence",
+      "reason": "The document makes three recommendations; an extractor may invent a fourth about redesigning the pick path that appears nowhere in the body.",
+      "extractor_value": {
+        "recommendation": "Engage an external consultant to redesign the pick path.",
+        "target_entity": "Tidewater Import Warehouse",
+        "status_if_stated": null
+      },
+      "extractor_quotes": [
+        "Engage an external consultant to redesign the pick path."
+      ],
+      "extractor_ambiguity": null,
+      "verifier": {
+        "status": "unsupported",
+        "corrected_value": null,
+        "contradiction_detected": false,
+        "evidence_specificity": 0
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-OPS-2026-013-V1-P02"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Operational Review of the Tidewater Import Warehouse",
+      "paragraphs": [
+        "Report No. OPS-2026-013",
+        "Issued by Harbor Point Logistics",
+        "Publication date: 11 August 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This operational review covers the Tidewater Import Warehouse operated by Harbor Point Logistics for the first half of 2026. The warehouse receives containers drayed from Berth 6 at the port of Tidewater and picks orders for regional retailers.",
+        "Pick accuracy was close to but below target, drayage moves by Cardinal Fleet Services were late more often than the contract allows, and racking inspections had lapsed in two aisles. Three recommendations are made and the racking work is under way."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "The Tidewater Import Warehouse is a 38,000 square metre facility adjacent to the port. It handled 41,000 inbound containers in 2025 and employs 190 warehouse staff across two shifts. Drayage between Berth 6 and the warehouse is contracted to Cardinal Fleet Services under a two year agreement that began in January 2025.",
+        "The warehouse management system records every pick against a barcode scan at the pick face but not at the packing station. Racking is inspected by an external inspector on a rolling schedule that is meant to cover every aisle at least twice a year.",
+        "The work was led by Helena Kuhic and supported by Sebastian Armstrong-Grimes. The team conducted 11 structured interviews, examined a sample of 152 records and reviewed 160 internal documents between 26 January 2026 and 21 February 2026. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Pick accuracy was 99.1 percent, marginally below the 99.5 percent target. Most errors were quantity errors on multi-carton lines that were not rechecked at packing. Severity: Low.",
+        "Finding 2: Drayage moves by Cardinal Fleet Services from Berth 6 were late in 12 percent of cases against a contractual allowance of 5 percent. Late moves clustered on Mondays when container availability at the terminal was highest. Severity: Medium.",
+        "Finding 3: Racking inspections had lapsed for two aisles for more than six months. The two aisles hold the heaviest palletised stock and one damaged upright was found during the review. Severity: High."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Implement a monthly carrier scorecard for Cardinal Fleet Services covering on-time drayage, claims and container dwell. Target: Harbor Point Logistics Transport Team. Status: Not started.",
+        "Recommendation 2: Complete racking inspections for all aisles and schedule quarterly inspections thereafter. Target: Tidewater Import Warehouse. Status: In progress.",
+        "Recommendation 3: Introduce barcode verification at the packing station to lift pick accuracy above target. Target: Tidewater Import Warehouse. Status: Approved."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The financial figures below were confirmed against the 2025 management accounts for the warehouse. Annual drayage spending with Cardinal Fleet Services was USD 540,000 in 2025. Racking remediation for the two affected aisles is estimated at USD 27,000. Customer claims arising from pick errors totalled USD 185,000 in 2025."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 160 internal documents reviewed included 34 purchase orders, 20 invoices and 38 items of correspondence, all indexed under working reference LZFCP9.",
+        "Appendix B: Drayage performance by month. Late moves were 9 percent in January, 14 percent in February, 15 percent in March, 11 percent in April, 12 percent in May and 11 percent in June 2026.",
+        "Appendix C: Racking inspection schedule. The external inspector visited the warehouse four times in the twelve months to June 2026 and inspected 14 of the 16 aisles; aisles 9 and 10 were missed on both of the last two visits.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion.",
+        "The sampling approach was intended to describe the matters selected for examination. It was not designed to estimate the frequency of an issue across records outside that selection. Readers should therefore interpret a finding in relation to its stated scope, period and subject. Silence about another activity does not imply that the activity was examined or found satisfactory."
+      ]
+    }
+  ]
+}

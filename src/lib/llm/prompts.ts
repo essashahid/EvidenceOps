@@ -1,93 +1,277 @@
-import { DOCUMENT_TYPES, ENTITY_TYPES, SEVERITIES, PRIORITIES, CURRENCIES } from "@/lib/schema/report";
+/**
+ * Prompts as specified (spec sections 16, 18, 25, 26, 32). System prompts are verbatim; the user
+ * templates are filled in here. Structured-output enforcement wraps them without changing the text.
+ */
+import { DOCUMENT_TYPES } from "@/lib/schema/report";
 
-export const FIELD_DEFINITIONS: Record<string, string> = {
-  report_title: "The full title of the report as printed in the title block.",
-  report_number: "The report identifier or number printed in the title block (e.g. 'OPS-2026-004' or 'OPS-2026-004-R1').",
-  issuing_organization: "The organization that issued or authored the report.",
-  publication_date: "The publication date of this edition of the report, as an ISO date YYYY-MM-DD.",
-  document_type: `One of ${DOCUMENT_TYPES.join(", ")} describing what kind of report this is.`,
-  "subject_entities[].name": "A named organization, facility, program, vendor, system or person the report is about.",
-  "subject_entities[].entity_type": `One of ${ENTITY_TYPES.join(", ")}.`,
-  "key_findings[].text": "One finding stated in the report, as a single sentence close to the source wording.",
-  "key_findings[].severity": `The stated severity of that finding, one of ${SEVERITIES.join(", ")}.`,
-  "recommendations[].text": "One recommendation stated in the report, as a single sentence close to the source wording.",
-  "recommendations[].priority": `The stated priority of that recommendation, one of ${PRIORITIES.join(", ")}.`,
-  "monetary_amounts[].amount": "A monetary amount stated in the report, as a plain number in major currency units (e.g. $1.25 million -> 1250000).",
-  "monetary_amounts[].currency": `ISO currency code, one of ${CURRENCIES.join(", ")}.`,
-  "monetary_amounts[].label": "A short label describing what the amount is (e.g. 'revised program cost').",
+export const EXTRACTOR_SYSTEM_PROMPT = `You are EvidenceOps Extractor, a structured information extraction system.
+
+Your job is to extract only information that is explicitly supported by the source blocks supplied to you.
+
+Rules:
+
+1. Never use outside knowledge.
+2. Never infer a missing value from what would normally be true.
+3. If a value is absent, return null or an empty list according to the schema.
+4. Every non-null scalar value and every extracted list item must cite one or more source_block_ids.
+5. Every cited item must include a short verbatim evidence_quote copied from the supplied source block.
+6. Do not silently resolve contradictions. If two source passages conflict, return the most contextually authoritative candidate only when the document explicitly identifies it as corrected, revised, final, or superseding. Otherwise mark the field ambiguous.
+7. Preserve negation. "No evidence of delay" must never become "delay occurred."
+8. Monetary values must be represented numerically with a separate ISO-style currency code when stated.
+9. Dates must be normalized to YYYY-MM-DD only when the document gives enough information to determine the exact date. Otherwise return null.
+10. Return only JSON matching the supplied schema.
+11. Do not include commentary outside the JSON.`;
+
+export type PromptBlock = { source_block_id: string; locator: string; text: string };
+
+export function extractorUserPrompt(logicalKey: string, versionNumber: number, blocks: PromptBlock[]): string {
+  return `Extract the operational-report record from the source blocks below.
+
+DOCUMENT LOGICAL KEY:
+${logicalKey}
+
+DOCUMENT VERSION:
+${versionNumber}
+
+ALLOWED DOCUMENT TYPES:
+${DOCUMENT_TYPES.map((t) => `- ${t}`).join("\n")}
+
+SOURCE BLOCKS:
+${JSON.stringify(blocks, null, 2)}
+
+Return this structure:
+
+{
+  "report_title": { "value": "string or null", "source_block_ids": ["string"], "evidence_quotes": ["string"], "ambiguity": "string or null" },
+  "report_number": { "value": "string or null", "source_block_ids": ["string"], "evidence_quotes": ["string"], "ambiguity": "string or null" },
+  "issuing_organization": { "value": "string or null", "source_block_ids": ["string"], "evidence_quotes": ["string"], "ambiguity": "string or null" },
+  "publication_date": { "value": "YYYY-MM-DD or null", "source_block_ids": ["string"], "evidence_quotes": ["string"], "ambiguity": "string or null" },
+  "document_type": { "value": "${DOCUMENT_TYPES.join(" | ")}", "source_block_ids": ["string"], "evidence_quotes": ["string"], "ambiguity": "string or null" },
+  "subject_entities": [ { "name": "string", "source_block_ids": ["string"], "evidence_quotes": ["string"], "ambiguity": "string or null" } ],
+  "key_findings": [ { "finding": "string", "severity": "info | low | medium | high", "source_block_ids": ["string"], "evidence_quotes": ["string"], "ambiguity": "string or null" } ],
+  "recommendations": [ { "recommendation": "string", "target_entity": "string or null", "status_if_stated": "string or null", "source_block_ids": ["string"], "evidence_quotes": ["string"], "ambiguity": "string or null" } ],
+  "monetary_amounts": [ { "amount": 0, "currency": "string", "context": "string", "source_block_ids": ["string"], "evidence_quotes": ["string"], "ambiguity": "string or null" } ]
+}`;
+}
+
+export const VERIFIER_SYSTEM_PROMPT = `You are EvidenceOps Verifier.
+
+You independently verify a candidate extracted value against its cited source evidence and surrounding context.
+
+Do not trust the candidate simply because another model produced it.
+
+Use only the source material supplied in this request.
+
+Classify the candidate as:
+
+SUPPORTED:
+The candidate is directly supported by the source.
+
+PARTIALLY_SUPPORTED:
+The source supports the core meaning, but the candidate adds, omits, normalizes, or resolves something that is not completely explicit.
+
+UNSUPPORTED:
+The candidate is not supported or is contradicted.
+
+Rules:
+
+1. Preserve negation.
+2. Check numbers, units, currency and dates carefully.
+3. Check whether the evidence is about the same entity as the candidate.
+4. If the source explicitly marks another value as revised, corrected, final or superseding, use the revised value.
+5. Do not use external knowledge.
+6. If a corrected value can be stated exactly from the supplied evidence, return it.
+7. evidence_specificity must be between 0 and 1:
+
+   * 1.0 = direct, explicit support
+   * 0.75 = clear contextual support
+   * 0.4 = broad or weak support
+   * 0.0 = no support
+8. Return only JSON matching the schema.`;
+
+export type VerifierPromptItem = {
+  fieldPath: string;
+  fieldDefinition: string;
+  candidate: unknown;
+  evidence: { source_block_id: string; quote: string; found_in_block: boolean }[];
+  context: { source_block_id: string; locator: string; text: string }[];
 };
 
-export function fieldDefinition(fieldPath: string): string {
-  const generic = fieldPath.replace(/\[\d+\]/g, "[]");
-  return FIELD_DEFINITIONS[generic] ?? FIELD_DEFINITIONS[fieldPath] ?? "";
+export function verifierUserPrompt(item: VerifierPromptItem): string {
+  return `FIELD:
+${item.fieldPath}
+
+FIELD DEFINITION:
+${item.fieldDefinition}
+
+CANDIDATE VALUE:
+${JSON.stringify(item.candidate)}
+
+CITED EVIDENCE:
+${JSON.stringify(item.evidence, null, 2)}
+
+SURROUNDING SOURCE CONTEXT:
+${JSON.stringify(item.context, null, 2)}
+
+Return:
+
+{
+  "status": "supported | partially_supported | unsupported",
+  "corrected_value": null,
+  "contradiction_detected": false,
+  "evidence_specificity": 0.0,
+  "reason": "one concise sentence"
+}`;
 }
 
-export const EXTRACTOR_SYSTEM_PROMPT = `You are a meticulous document-extraction system. You read an operational report that has been split into source blocks, each labelled with a locator such as SRC-OPS-2026-004-V1-P02. You return a structured record.
+/** Batched variant: several fields from the same document in one request, each with its index. */
+export function verifierBatchUserPrompt(items: VerifierPromptItem[]): string {
+  return items.map((it, i) => `### ITEM ${i}\n${verifierUserPrompt(it)}`).join("\n\n") + `\n\nReturn one result per item, in order, as {"items": [{"index": 0, ...}, ...]}.`;
+}
+
+export const RAG_SYSTEM_PROMPT = `You are EvidenceOps Evidence-Bound Analyst.
+
+Answer questions only from the retrieved source blocks supplied to you.
 
 Rules:
-1. Every value must come from the document. Never invent, infer beyond the text, or use outside knowledge.
-2. Every value must carry evidence: the locator of the block it came from and a VERBATIM quote (a contiguous excerpt copied exactly from that block, one sentence or less, at most 300 characters) that supports the value. Do not paraphrase inside quotes. Do not merge text from two blocks.
-3. If the document states a value in two places with different numbers or dates, prefer the one the document says is corrected or final, and quote that statement.
-4. Use ISO dates (YYYY-MM-DD). Convert amounts to plain numbers in major units ("$1.25 million" -> 1250000). Currency codes are ISO 4217.
-5. Findings and recommendations: one item per stated finding/recommendation, sentence text close to the source wording, severity/priority exactly as stated in the text.
-6. If a scalar field is not present in the document, use an empty string for the value and quote the closest relevant sentence with the correct locator.
 
-Field definitions:
-${Object.entries(FIELD_DEFINITIONS)
-  .map(([k, v]) => `- ${k}: ${v}`)
-  .join("\n")}`;
+1. Do not use outside knowledge.
+2. Every factual claim must be supported by one or more supplied source blocks.
+3. Cite claims using this exact format:
+   [{{logical_key}} v{{version}} {{locator}}]
+4. Prefer current document versions.
+5. If the retrieved evidence is insufficient to answer the question, return exactly:
+   "Insufficient evidence in the indexed corpus."
+6. Do not guess.
+7. If evidence conflicts, explain the conflict and cite both sources.
+8. Clearly distinguish direct evidence from your synthesis.
+9. Keep the answer concise unless the question asks for detailed analysis.`;
 
-export function extractorUserPrompt(documentName: string, blocks: { locator: string; text: string }[]): string {
-  const body = blocks.map((b) => `<<< ${b.locator} >>>\n${b.text}`).join("\n\n");
-  return `Document: ${documentName}\n\nSource blocks:\n\n${body}`;
+export type RetrievedBlockPrompt = {
+  retrieval_id: number;
+  logical_key: string;
+  version: number;
+  locator: string;
+  document: string;
+  is_current: boolean;
+  text: string;
+};
+
+export function ragUserPrompt(question: string, blocks: RetrievedBlockPrompt[]): string {
+  return `QUESTION:
+${question}
+
+RETRIEVED SOURCE BLOCKS:
+${JSON.stringify(blocks, null, 2)}
+
+Answer the question using only those source blocks.`;
 }
 
-export const VERIFIER_SYSTEM_PROMPT = `You are an independent verification system. For each candidate field you receive: the field definition, the candidate value another system extracted, the quote it cited, and the full text of the source block it cited. You do NOT know how confident the other system was and you must not assume it is right.
+export const DRAFT_SYSTEM_PROMPT = `You are EvidenceOps Drafting Agent.
 
-For each item decide:
-- status: "supported" if the cited block clearly and specifically states the candidate value; "partially_supported" if the block relates to the value but does not state it exactly, states it with different wording, or if other text in the block conflicts with it; "unsupported" if the block does not support the value or the quote does not appear in the block.
-- corrected_value: the value you believe is correct based on the block text (same type as the candidate: string, number, or one of the enum values), or null if you cannot determine one. If the candidate is correct, repeat it.
-- agreement: "same" if your corrected value equals the candidate exactly; "equivalent_formatting" if it is the same thing written differently (e.g. "1.15m" vs 1150000, "12 March 2026" vs 2026-03-12); "different" if it is materially different or you could not confirm it.
-- contradiction: true if the block (or the quote) contains a statement that conflicts with the candidate value (e.g. a figure explicitly superseded or corrected elsewhere in the block).
-- specificity: "direct" when the evidence states the value explicitly; "contextual" when it is clear from context but not stated verbatim; "weak" when the evidence is broad or vague; "none" when there is no supporting evidence.
-- reason: one sentence.
-
-Be strict about numbers, dates and enumerations. Be tolerant of harmless formatting differences in free text (capitalization, trailing punctuation).`;
-
-export function verifierUserPrompt(items: { index: number; fieldPath: string; fieldDefinition: string; candidateValue: unknown; quote: string; locator: string; blockText: string; quoteFound: boolean }[]): string {
-  return items
-    .map(
-      (it) =>
-        `### Item ${it.index}\nField: ${it.fieldPath}\nDefinition: ${it.fieldDefinition}\nCandidate value: ${JSON.stringify(it.candidateValue)}\nCited locator: ${it.locator}\nCited quote: ${JSON.stringify(it.quote)}\nQuote found verbatim in block: ${it.quoteFound ? "yes" : "NO"}\nSource block text:\n${it.blockText || "(locator does not exist in this document)"}`,
-    )
-    .join("\n\n");
-}
-
-export const ANSWER_SYSTEM_PROMPT = `You answer questions about a document corpus using ONLY the retrieved evidence chunks provided. Each chunk is labelled with an index, the document name and version, and source locators.
+Create an evidence-bound first draft using only the retrieved source blocks supplied to you.
 
 Rules:
-1. Every claim in your answer must be supported by at least one cited chunk, with a verbatim quote (under 300 characters) from that chunk.
-2. If the chunks do not contain enough evidence to answer the question, set sufficient=false, give a short refusal_reason, and do not guess.
-3. Mark each claim as "direct" when a chunk states it explicitly, or "synthesis" when you combine two or more chunks.
-4. Prefer the current version of a document when a superseded version is also present; say so if figures differ between versions.
-5. Keep the answer concise and factual. Do not add outside knowledge.`;
 
-export const DRAFT_SYSTEM_PROMPT = `You write evidence-bound first drafts from retrieved chunks. Modes:
-- executive_brief: a short brief for leadership.
-- findings: a findings summary.
-- recommendations: a recommendation summary.
+1. No factual statement may rely on outside knowledge.
+2. Every factual paragraph must contain one or more citations.
+3. Use citations in this exact form:
+   [{{logical_key}} v{{version}} {{locator}}]
+4. Do not invent recommendations.
+5. If evidence is incomplete, explicitly identify the limitation.
+6. Distinguish document findings from your organizational synthesis.
+7. Preserve contradictions rather than resolving them without evidence.`;
 
-Rules are identical to question answering: every statement in title, key_evidence, findings and recommendations must be a claim with citations and verbatim quotes from the chunks. The limitations list must state what the evidence does not cover. If the evidence is insufficient for the requested draft, set sufficient=false.`;
+export function draftUserPrompt(mode: string, request: string, blocks: RetrievedBlockPrompt[]): string {
+  return `MODE:
+${mode}
 
-export function answerUserPrompt(question: string, mode: string, chunks: { index: number; documentName: string; versionNumber: number; startLocator: string; endLocator: string; text: string }[]): string {
-  const body = chunks
-    .map((c) => `[${c.index}] ${c.documentName} (v${c.versionNumber}; ${c.startLocator} to ${c.endLocator})\n${c.text}`)
-    .join("\n\n");
-  return `Mode: ${mode}\nQuestion or request: ${question}\n\nRetrieved chunks:\n\n${body}`;
+REQUEST:
+${request}
+
+RETRIEVED SOURCE BLOCKS:
+${JSON.stringify(blocks, null, 2)}
+
+For executive_brief, use:
+
+Title
+Executive Summary
+Key Findings
+Recommendations Stated in the Sources
+Risks / Contradictions
+Evidence Limitations
+
+For findings_summary, use:
+
+Title
+Findings
+Supporting Evidence
+Open Questions
+
+For recommendation_summary, use:
+
+Title
+Recommendations
+Target Entity
+Supporting Evidence
+Unresolved Ambiguities`;
 }
 
-export const JUDGE_SYSTEM_PROMPT = `You grade an answer against a reference answer and a list of expected facts. Return a score from 0 to 1: 1 means the answer conveys the same information as the reference and includes every expected fact (allowing different wording or number formatting); 0 means it is wrong, missing, or refuses when it should answer. Deduct proportionally for missing facts and for claims that contradict the reference. Give a one-sentence reason.`;
+export const JUDGE_SYSTEM_PROMPT = `You are EvidenceOps Evaluation Judge.
 
-export function judgeUserPrompt(input: { question: string; referenceAnswer: string; expectedFacts: string[]; answer: string }): string {
-  return `Question: ${input.question}\nReference answer: ${input.referenceAnswer}\nExpected facts: ${JSON.stringify(input.expectedFacts)}\nCandidate answer: ${input.answer}`;
+You are evaluating an AI answer against a deterministic golden answer and the source evidence.
+
+Do not reward eloquence.
+
+Score only:
+
+CORRECTNESS:
+Does the candidate convey the expected factual answer?
+
+EVIDENCE_SUPPORT:
+Are its factual statements supported by the provided source evidence?
+
+COMPLETENESS:
+Does it include the important expected information without material omission?
+
+Each score must be from 0.0 to 1.0.
+
+A candidate containing a material unsupported factual claim cannot receive an evidence_support score greater than 0.5.
+
+If the golden result is UNANSWERABLE, the candidate receives correctness 1.0 only if it refuses to answer rather than guessing.
+
+Return JSON only.`;
+
+export function judgeUserPrompt(input: { question: string; expectedAnswer: string; candidateAnswer: string; sourceEvidence: string }): string {
+  return `QUESTION:
+${input.question}
+
+EXPECTED:
+${input.expectedAnswer}
+
+CANDIDATE:
+${input.candidateAnswer}
+
+SOURCE EVIDENCE:
+${input.sourceEvidence}
+
+Return:
+
+{
+  "correctness": 0.0,
+  "evidence_support": 0.0,
+  "completeness": 0.0,
+  "passed": false,
+  "reason": "one concise sentence"
+}`;
+}
+
+/** Citation format required by the prompts: [OPS-2026-004 v2 page 3]. */
+export function formatCitation(logicalKey: string, version: number, locator: string): string {
+  return `[${logicalKey} v${version} ${locator}]`;
+}
+
+/** Human-readable locator per spec section 13: "page 3" or "paragraph 17". */
+export function humanLocator(block: { pageNumber: number | null; paragraphNumber: number | null }): string {
+  return block.pageNumber !== null ? `page ${block.pageNumber}` : `paragraph ${block.paragraphNumber ?? "?"}`;
 }

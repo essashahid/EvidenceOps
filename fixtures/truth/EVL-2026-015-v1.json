@@ -1,0 +1,299 @@
+{
+  "logical_key": "EVL-2026-015",
+  "version": 1,
+  "format": "pdf",
+  "filename": "EVL-2026-015-v1-sable-coast-subsidy-evaluation.pdf",
+  "display_name": "Sable Coast cold chain subsidy evaluation",
+  "record": {
+    "report_title": "Evaluation of the Cold Chain Subsidy Scheme",
+    "report_number": "EVL-2026-015",
+    "issuing_organization": "Sable Coast Fisheries Council",
+    "publication_date": "2026-08-21",
+    "document_type": "evaluation",
+    "subject_entities": [
+      {
+        "name": "Sable Coast Fisheries Council"
+      },
+      {
+        "name": "Cold Chain Subsidy Scheme"
+      },
+      {
+        "name": "Halvorsen Cold Chain Logistics"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Subsidised shipments handled by Halvorsen Cold Chain Logistics recorded 6 temperature excursions across 1,240 shipments.",
+        "severity": "low"
+      },
+      {
+        "finding": "Only 38 of 92 eligible small vessels applied for the subsidy in its first year.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Scheme administration cost 14 percent of total disbursements, above the 10 percent target.",
+        "severity": "medium"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Simplify the application form and allow applications to be submitted through harbour offices.",
+        "target_entity": "Sable Coast Fisheries Council",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Cap administration costs at 10 percent of disbursements from 2027.",
+        "target_entity": null,
+        "status_if_stated": null
+      },
+      {
+        "recommendation": "Extend the scheme for a second year with an increased subsidy ceiling.",
+        "target_entity": "Sable Coast Fisheries Council",
+        "status_if_stated": "Approved"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 1750000,
+        "currency": "CAD",
+        "context": "subsidies disbursed in the first year of the scheme"
+      },
+      {
+        "amount": 245000,
+        "currency": "CAD",
+        "context": "scheme administration cost in the first year"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P01"
+      ],
+      "quotes": [
+        "Evaluation of the Cold Chain Subsidy Scheme"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P01"
+      ],
+      "quotes": [
+        "Report No. EVL-2026-015"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Sable Coast Fisheries Council"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 21 August 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P01"
+      ],
+      "quotes": [
+        "This evaluation examines the first year of the Cold Chain Subsidy Scheme run by the Sable Coast Fisheries Council to help small fishing vessels ship chilled catch to inland markets."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P01"
+      ],
+      "quotes": [
+        "This evaluation examines the first year of the Cold Chain Subsidy Scheme run by the Sable Coast Fisheries Council to help small fishing vessels ship chilled catch to inland markets."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P01"
+      ],
+      "quotes": [
+        "This evaluation examines the first year of the Cold Chain Subsidy Scheme run by the Sable Coast Fisheries Council to help small fishing vessels ship chilled catch to inland markets."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P01"
+      ],
+      "quotes": [
+        "The scheme pays part of the cost of refrigerated transport provided by Halvorsen Cold Chain Logistics under a council framework contract."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Subsidised shipments handled by Halvorsen Cold Chain Logistics recorded 6 temperature excursions across 1,240 shipments.",
+        "Severity: Low."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Only 38 of 92 eligible small vessels applied for the subsidy in its first year.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Scheme administration cost 14 percent of total disbursements, above the 10 percent target.",
+        "Severity: Medium."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Simplify the application form and allow applications to be submitted through harbour offices.",
+        "Target: Sable Coast Fisheries Council.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Cap administration costs at 10 percent of disbursements from 2027.",
+        "Target: not assigned."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 3: Extend the scheme for a second year with an increased subsidy ceiling.",
+        "Target: Sable Coast Fisheries Council.",
+        "Status: Approved."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P02"
+      ],
+      "quotes": [
+        "Subsidies disbursed in the first year totalled CAD 1.75 million."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-EVL-2026-015-V1-P02"
+      ],
+      "quotes": [
+        "Scheme administration cost CAD 245,000 in the first year."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "recommendations[1]",
+      "kind": "ambiguous_owner",
+      "reason": "The recommendation states that no owner has been assigned; a naive extractor may attribute it to the issuing council.",
+      "extractor_value": {
+        "recommendation": "Cap administration costs at 10 percent of disbursements from 2027.",
+        "target_entity": "Sable Coast Fisheries Council",
+        "status_if_stated": null
+      },
+      "extractor_quotes": [
+        "Target: not assigned."
+      ],
+      "extractor_ambiguity": "The document says the target is not assigned.",
+      "verifier": {
+        "status": "partially_supported",
+        "corrected_value": {
+          "recommendation": "Cap administration costs at 10 percent of disbursements from 2027.",
+          "target_entity": null,
+          "status_if_stated": null
+        },
+        "contradiction_detected": false,
+        "evidence_specificity": 0.75
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-EVL-2026-015-V1-P02"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Evaluation of the Cold Chain Subsidy Scheme",
+      "paragraphs": [
+        "Report No. EVL-2026-015",
+        "Issued by Sable Coast Fisheries Council",
+        "Publication date: 21 August 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This evaluation examines the first year of the Cold Chain Subsidy Scheme run by the Sable Coast Fisheries Council to help small fishing vessels ship chilled catch to inland markets. The scheme pays part of the cost of refrigerated transport provided by Halvorsen Cold Chain Logistics under a council framework contract.",
+        "The scheme delivered reliable cold chain performance, but uptake among eligible vessels was low and administration cost more than planned. The evaluation makes three recommendations, including a second year of operation with a higher ceiling."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "The Sable Coast Fisheries Council represents 92 small vessels operating from five harbours. Before the scheme, most chilled catch was sold at the harbour because vessel owners could not afford refrigerated transport to inland wholesalers.",
+        "Halvorsen Cold Chain Logistics was appointed through a framework contract in 2025 and collects subsidised consignments from the five harbour cold stores three times a week. Applications for the subsidy are submitted through an online form that many vessel owners found difficult to complete.",
+        "The work was led by Jace Streich and supported by Emory Mraz. The team conducted 30 structured interviews, examined a sample of 87 records and reviewed 229 internal documents between 24 September 2025 and 17 November 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Subsidised shipments handled by Halvorsen Cold Chain Logistics recorded 6 temperature excursions across 1,240 shipments. All six excursions were resolved before delivery and none resulted in a rejected consignment. Severity: Low.",
+        "Finding 2: Only 38 of 92 eligible small vessels applied for the subsidy in its first year. Vessel owners who did not apply cited the online form and uncertainty about eligibility as the main barriers. Severity: Medium.",
+        "Finding 3: Scheme administration cost 14 percent of total disbursements, above the 10 percent target. Manual checking of applications accounted for most of the excess. Severity: Medium."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Simplify the application form and allow applications to be submitted through harbour offices. Target: Sable Coast Fisheries Council. Status: In progress.",
+        "Recommendation 2: Cap administration costs at 10 percent of disbursements from 2027. Target: not assigned.",
+        "Recommendation 3: Extend the scheme for a second year with an increased subsidy ceiling. Target: Sable Coast Fisheries Council. Status: Approved."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The scheme's finances are reported in Canadian dollars from the council's grant accounts. Subsidies disbursed in the first year totalled CAD 1.75 million. Scheme administration cost CAD 245,000 in the first year."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 229 internal documents reviewed included 22 purchase orders, 56 invoices and 7 items of correspondence, all indexed under working reference YXF5ZK.",
+        "Appendix B: Applications by harbour. Applications were received from 14 vessels at Port Marlow, 11 at Kettle Cove, 7 at Anser Bay, 4 at Whitlow and 2 at Grey Point.",
+        "Appendix C: Shipment performance. The 1,240 subsidised shipments carried 3,900 tonnes of chilled catch; average transit time to inland wholesalers was 9.5 hours.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion.",
+        "The sampling approach was intended to describe the matters selected for examination. It was not designed to estimate the frequency of an issue across records outside that selection. Readers should therefore interpret a finding in relation to its stated scope, period and subject. Silence about another activity does not imply that the activity was examined or found satisfactory.",
+        "This appendix explains the preparation of the evidence file. It does not introduce additional recommendations or change the responsibility assigned in the recommendations section. Any later correction to the source must be issued as a separately identified edition. Earlier editions remain part of the record so that differences can be inspected without overwriting the originally published statements."
+      ]
+    }
+  ]
+}

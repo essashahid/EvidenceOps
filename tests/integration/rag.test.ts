@@ -12,8 +12,8 @@ beforeAll(async () => {
   const seed = await seeded();
   workspaceId = seed.workspaceId;
   adminId = seed.adminId;
-  for (const f of ["OPS-2026-004-v1-northstar-operational-review.pdf", "OPS-2026-004-v2-northstar-operational-review-corrected.pdf", "INC-2026-007-v1-harbor-point-incident-report.pdf"]) {
-    const { result } = await uploadAndProcess(f, fixture(`corpus/${f}`));
+  for (const f of ["OPS-2026-004-v1-northstar-operational-review.pdf", "OPS-2026-004-v2-northstar-operational-review-corrected.pdf", "OPS-2026-013-v1-harbor-point-warehouse-review.pdf"]) {
+    const { result } = await uploadAndProcess(f, fixture(`documents/${f}`));
     expect(["completed", "completed_with_review"]).toContain(result.run?.status);
   }
 });
@@ -33,12 +33,12 @@ describe("hybrid retrieval and evidence-bound answers", () => {
   });
 
   it("answers with verbatim citations tied to source blocks and stores everything", async () => {
-    const a = await askQuestion({ workspaceId, userId: adminId, question: "What is the revised program cost in the Northstar operational review?", mode: "answer" });
+    const a = await askQuestion({ workspaceId, userId: adminId, question: "What is the total Dock Optimization Program cost to date according to the current Northstar operational review?", mode: "answer" });
     expect(a.sufficient).toBe(true);
-    expect(a.claims.length).toBeGreaterThan(0);
-    expect(a.claims.every((c) => c.supported)).toBe(true);
+    expect(a.answerText).toContain("1.15 million");
+    expect(a.citations.every((c) => c.valid)).toBe(true);
     expect(a.citations.length).toBeGreaterThan(0);
-    expect(a.citations[0]!.sourceLocator).toMatch(/^SRC-/);
+    expect(a.storedCitations[0]!.sourceLocator).toMatch(/^SRC-/);
     const [stored] = await getDb().select().from(schema.ragAnswers).where(eq(schema.ragAnswers.id, a.answerId));
     expect(stored!.sufficientEvidence).toBe(true);
     expect((stored!.retrievedJson as unknown[]).length).toBeGreaterThan(0);
@@ -54,9 +54,10 @@ describe("hybrid retrieval and evidence-bound answers", () => {
   });
 
   it("produces evidence-bound drafts", async () => {
-    const d = await askQuestion({ workspaceId, userId: adminId, question: "Harbor Point incident report", mode: "executive_brief" });
-    expect(d.draft).not.toBeNull();
-    expect(d.draft!.limitations.length).toBeGreaterThan(0);
-    expect(d.claims.every((c) => c.supported)).toBe(true);
+    const d = await askQuestion({ workspaceId, userId: adminId, question: "Harbor Point warehouse review", mode: "executive_brief" });
+    expect(d.sufficient).toBe(true);
+    expect(d.answerText).toContain("Evidence Limitations");
+    expect(d.citations.length).toBeGreaterThan(0);
+    expect(d.citations.every((c) => c.valid)).toBe(true);
   });
 });

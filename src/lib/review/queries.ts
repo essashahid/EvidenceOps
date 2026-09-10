@@ -3,14 +3,18 @@ import { getDb, schema } from "@/lib/db/client";
 import { excerpt } from "@/lib/text";
 import { fieldLabel } from "@/lib/schema/report";
 
-export type ReviewFilters = { status?: "open" | "resolved" | "rejected" | "needs_source" | "all"; documentVersionId?: string; fieldPath?: string; minConfidence?: number; maxConfidence?: number };
+export type ReviewFilters = { priority?: "normal" | "high"; status?: "open" | "resolved" | "rejected" | "needs_source" | "superseded" | "all"; documentVersionId?: string; fieldPath?: string; minConfidence?: number; maxConfidence?: number };
 
 export async function listReviewItems(workspaceId: string, filters: ReviewFilters = {}) {
   const db = getDb();
   const conds = [eq(schema.reviewItems.workspaceId, workspaceId)];
   if (filters.status && filters.status !== "all") conds.push(eq(schema.reviewItems.status, filters.status));
+  if (filters.priority) conds.push(eq(schema.reviewItems.priority, filters.priority));
   if (filters.documentVersionId) conds.push(eq(schema.reviewItems.documentVersionId, filters.documentVersionId));
-  if (filters.fieldPath) conds.push(sql`${schema.reviewItems.fieldPath} like ${filters.fieldPath.replace(/\[\d+\]/g, "[%]") }`);
+  if (filters.fieldPath) {
+    const pattern = filters.fieldPath.includes("%") ? filters.fieldPath : `${filters.fieldPath.replace(/\[\d+\]$/, "")}%`;
+    conds.push(sql`${schema.reviewItems.fieldPath} like ${pattern}`);
+  }
   if (filters.minConfidence !== undefined) conds.push(sql`${schema.fieldValues.confidence} >= ${filters.minConfidence}`);
   if (filters.maxConfidence !== undefined) conds.push(sql`${schema.fieldValues.confidence} < ${filters.maxConfidence}`);
   const rows = await db
@@ -25,7 +29,7 @@ export async function listReviewItems(workspaceId: string, filters: ReviewFilter
     .innerJoin(schema.documentVersions, eq(schema.documentVersions.id, schema.reviewItems.documentVersionId))
     .innerJoin(schema.documents, eq(schema.documents.id, schema.documentVersions.documentId))
     .where(and(...conds))
-    .orderBy(desc(schema.reviewItems.priority), desc(schema.reviewItems.createdAt));
+    .orderBy(sql`case when ${schema.reviewItems.priority} = 'high' then 0 else 1 end`, desc(schema.reviewItems.createdAt));
   return rows.map((r) => ({ ...r, fieldLabel: fieldLabel(r.item.fieldPath) }));
 }
 
@@ -61,7 +65,7 @@ export async function getReviewItemDetail(workspaceId: string, reviewItemId: str
     .limit(1);
   if (!row) return null;
   const evidence = await db.select().from(schema.fieldEvidence).where(eq(schema.fieldEvidence.fieldValueId, row.field.id));
-  const ev = evidence[0] ?? null;
+  const ev = evidence.find((e) => e.exactMatch) ?? evidence[0] ?? null;
   const block = ev?.sourceBlockId ? (await db.select().from(schema.sourceBlocks).where(eq(schema.sourceBlocks.id, ev.sourceBlockId)).limit(1))[0] ?? null : null;
   const context =
     block && ev && ev.quoteStart !== null && ev.quoteEnd !== null
@@ -87,6 +91,7 @@ export async function getReviewItemDetail(workspaceId: string, reviewItemId: str
     ...row,
     fieldLabel: fieldLabel(row.item.fieldPath),
     evidence: ev,
+    allEvidence: evidence,
     block,
     context,
     extraction: extraction ?? null,

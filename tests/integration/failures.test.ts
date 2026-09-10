@@ -5,7 +5,7 @@ import { fixture, uploadAndProcess } from "./helpers";
 
 describe("parse failure modes", () => {
   it("corrupt PDF becomes parse_failed and a non-retryable dead letter; the run fails loudly", async () => {
-    const { run, result, up } = await uploadAndProcess("corrupt-fixture.pdf", fixture("extras/corrupt.pdf"));
+    const { run, result, up } = await uploadAndProcess("corrupt-fixture.pdf", fixture("documents/extras/corrupt.pdf"));
     expect(result.run?.status).toBe("failed");
     const [v] = await getDb().select().from(schema.documentVersions).where(eq(schema.documentVersions.id, up.documentVersionId));
     expect(v!.parseStatus).toBe("failed");
@@ -17,12 +17,12 @@ describe("parse failure modes", () => {
   });
 
   it("corrupt DOCX becomes parse_failed", async () => {
-    const { result, up } = await uploadAndProcess("corrupt-fixture.docx", fixture("extras/corrupt.docx"));
+    const { result, up } = await uploadAndProcess("corrupt-fixture.docx", fixture("documents/extras/corrupt.docx"));
     expect(result.outcomes[up.documentVersionId]).toBe("failed");
   });
 
   it("scanned/image-only PDF is classified unsupported_scanned_document and routed to the manual queue", async () => {
-    const { run, result, up } = await uploadAndProcess("scanned-fixture.pdf", fixture("extras/scanned-like.pdf"));
+    const { run, result, up } = await uploadAndProcess("scanned-fixture.pdf", fixture("documents/extras/scanned-like.pdf"));
     expect(result.outcomes[up.documentVersionId]).toBe("unsupported");
     const [v] = await getDb().select().from(schema.documentVersions).where(eq(schema.documentVersions.id, up.documentVersionId));
     expect(v!.parseStatus).toBe("unsupported");

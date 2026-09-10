@@ -1,103 +1,64 @@
 /**
- * Deterministic, fixture-backed provider used for tests, CI and offline development.
- * It never invents data: extraction comes from the committed ground-truth records for
- * the fixture corpus (including deliberately planted uncertain readings), verification
- * is rule based, embeddings are hashed bag-of-words vectors, and answers are extractive.
- * It is selected only when LLM_PROVIDER=mock and is never used as a fallback for the
- * real provider.
+ * Deterministic, fixture-backed provider for tests, CI and offline development (LLM_PROVIDER=mock).
+ * It never invents data: extraction comes from the committed truth records (including the planted
+ * uncertain readings), verification is rule based, embeddings are hashed bag-of-words vectors,
+ * answers are extractive with real citations, and known golden questions decide answerability.
+ * It is selected only explicitly and is never used as a fallback for the real provider.
  */
 import fs from "node:fs";
 import path from "node:path";
 import { canonical, contentTokens, normalizeText, tokenize } from "@/lib/text";
-import {
-  DOCUMENT_TYPES,
-  LIST_FIELDS,
-  LIST_ITEM_KEYS,
-  SCALAR_FIELDS,
-  fieldKind,
-  type ExtractionOutput,
-  type ReportRecord,
-} from "@/lib/schema/report";
-import type {
-  AnswerClaim,
-  AnswerInput,
-  AnswerResult,
-  EmbedResult,
-  ExtractInput,
-  ExtractResult,
-  JudgeInput,
-  JudgeResult,
-  LlmModels,
-  LlmProvider,
-  LlmUsage,
-  VerifyItem,
-  VerifyOutcome,
-  VerifyResult,
-} from "./types";
+import { INSUFFICIENT_EVIDENCE } from "@/lib/config";
+import { formatCitation } from "./prompts";
+import { LIST_FIELDS, LIST_ITEM_KEYS, SCALAR_FIELDS, fieldKind, parseFieldPath, type ExtractionOutput, type ReportRecord } from "@/lib/schema/report";
+import type { AnswerInput, AnswerResult, EmbedResult, ExtractInput, ExtractResult, JudgeInput, JudgeResult, LlmModels, LlmProvider, LlmUsage, VerifyItem, VerifyOutcome, VerifyResult } from "./types";
 
-type PlantedIssue = {
+export type MockUncertainField = {
   field_path: string;
-  kind: "contradiction" | "ambiguous_phrasing" | "weak_evidence" | "missing_evidence" | "formatting_variant";
+  kind: string;
+  reason: string;
   extractor_value: unknown;
-  extractor_quote: string;
-  verifier_status: "supported" | "partially_supported" | "unsupported";
-  verifier_corrected_value?: unknown;
-  note: string;
+  extractor_locators: string[];
+  extractor_quotes: string[];
+  extractor_ambiguity: string | null;
+  verifier: { status: "supported" | "partially_supported" | "unsupported"; corrected_value: unknown; contradiction_detected: boolean; evidence_specificity: number };
+  expect_routed: boolean;
 };
 
-export type MockGroundTruth = {
+export type MockTruth = {
   logical_key: string;
   version: number;
   record: ReportRecord;
-  evidence: Record<string, string>;
-  planted: PlantedIssue[];
+  evidence: Record<string, { locators: string[]; quotes: string[] }>;
+  uncertain_fields: MockUncertainField[];
 };
 
-let cachedGroundTruths: MockGroundTruth[] | null = null;
+type MockGoldenCase = { case_key: string; category: string; question: string; expected_answer: string; expected_documents: string[]; expected_locators: string[]; expected_facts: string[] };
 
-/** Question words that carry no evidence requirement. */
-const QUESTION_STOPWORDS = new Set(
-  "what which who when where how does did do is are was were report reports document documents discuss discusses discussed mention mentions mentioned involve involves involved describe describes according state states stated say says said value total much many amount average give gives list lists identify identifies".split(" "),
-);
+let cachedTruths: MockTruth[] | null = null;
+let cachedGolden: MockGoldenCase[] | null = null;
 
-export function loadGroundTruths(dir = path.resolve(process.cwd(), "fixtures/ground-truth")): MockGroundTruth[] {
-  if (cachedGroundTruths) return cachedGroundTruths;
-  if (!fs.existsSync(dir)) {
-    cachedGroundTruths = [];
-    return cachedGroundTruths;
-  }
-  cachedGroundTruths = fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".json"))
-    .sort()
-    .map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")) as MockGroundTruth);
-  return cachedGroundTruths;
+export function loadTruths(dir = path.resolve(process.cwd(), "fixtures/truth")): MockTruth[] {
+  if (cachedTruths) return cachedTruths;
+  cachedTruths = fs.existsSync(dir)
+    ? fs
+        .readdirSync(dir)
+        .filter((f) => f.endsWith(".json"))
+        .sort()
+        .map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")) as MockTruth)
+    : [];
+  return cachedTruths;
 }
 
-type MockRagCase = { case_key: string; question: string; answerable: boolean; expected_facts: string[]; expected_documents: string[] };
-let cachedRagCases: MockRagCase[] | null = null;
-
-/** Golden questions double as the mock's "understanding": known questions decide answerability and target facts. */
-export function loadRagCases(file = path.resolve(process.cwd(), "fixtures/eval/rag-questions.json")): MockRagCase[] {
-  if (cachedRagCases) return cachedRagCases;
-  cachedRagCases = fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, "utf8")) as MockRagCase[]) : [];
-  return cachedRagCases;
+export function loadGolden(file = path.resolve(process.cwd(), "fixtures/golden/rag-cases.json")): MockGoldenCase[] {
+  if (cachedGolden) return cachedGolden;
+  cachedGolden = fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, "utf8")) as MockGoldenCase[]) : [];
+  return cachedGolden;
 }
 
 export function resetMockCache() {
-  cachedGroundTruths = null;
-  cachedRagCases = null;
-}
-
-const SECTION_BREAKS = /\s+(?=(?:Finding|Recommendation)\s+\d+:|Report No\.|Issued by\b|Published\s+\d|Executive Summary\b|Background\b|Findings\b|Recommendations\b|Financial Impact\b|Appendix\b|Page \d+ of \d+)/;
-
-/** Split chunk text into sentence-like units, also breaking at report section markers. */
-export function splitUnits(text: string): string[] {
-  return text
-    .split(/(?<=[.!?])\s+(?=[A-Z0-9"'])/)
-    .flatMap((s) => s.split(SECTION_BREAKS))
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  cachedTruths = null;
+  cachedGolden = null;
 }
 
 function usage(model: string, input: string, output: string): LlmUsage {
@@ -107,7 +68,7 @@ function usage(model: string, input: string, output: string): LlmUsage {
 /** Parse money expressions like "$1.25 million", "USD 480,000", "1.15m" into major units. */
 export function parseAmounts(text: string): number[] {
   const out: number[] = [];
-  const re = /(?:\$|usd|eur|gbp|cad|aud|pkr|aed|€|£)?\s*([0-9][0-9,]*(?:\.[0-9]+)?)\s*(million|billion|thousand|m|bn|k)?\b/gi;
+  const re = /(?:\$|usd|eur|gbp|cad|aud|€|£)?\s*([0-9][0-9,]*(?:\.[0-9]+)?)\s*(million|billion|thousand|m|bn|k)?\b/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
     const num = Number(m[1]!.replace(/,/g, ""));
@@ -120,136 +81,139 @@ export function parseAmounts(text: string): number[] {
 }
 
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const MONTH_ABBR = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec"];
 
-/** Parse dates like "12 March 2026", "March 12, 2026", "2026-03-12" into ISO strings. */
+function monthIndex(name: string): number {
+  const n = name.toLowerCase().replace(/\.$/, "");
+  const full = MONTHS.indexOf(n);
+  if (full >= 0) return full;
+  const abbr = MONTH_ABBR.indexOf(n);
+  if (abbr < 0) return -1;
+  return abbr >= 9 ? abbr - 1 : abbr; // "sept" shares September's slot
+}
+
+/** Parse dates like "12 March 2026", "March 12, 2026", "2026-03-12", "4 Sept. 26" into ISO strings. */
 export function parseDates(text: string): string[] {
   const out: string[] = [];
-  const iso = /\b(\d{4})-(\d{2})-(\d{2})\b/g;
   let m: RegExpExecArray | null;
+  const iso = /\b(\d{4})-(\d{2})-(\d{2})\b/g;
   while ((m = iso.exec(text))) out.push(`${m[1]}-${m[2]}-${m[3]}`);
-  const dmy = /\b(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})\b/g;
+  const dmy = /\b(\d{1,2})\s+([A-Za-z]+\.?)\s+(\d{2,4})\b/g;
   while ((m = dmy.exec(text))) {
-    const mi = MONTHS.indexOf(m[2]!.toLowerCase());
-    if (mi >= 0) out.push(`${m[3]}-${String(mi + 1).padStart(2, "0")}-${m[1]!.padStart(2, "0")}`);
+    const mi = monthIndex(m[2]!);
+    if (mi < 0) continue;
+    const year = m[3]!.length === 2 ? `20${m[3]}` : m[3]!;
+    out.push(`${year}-${String(mi + 1).padStart(2, "0")}-${m[1]!.padStart(2, "0")}`);
   }
-  const mdy = /\b([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})\b/g;
+  const mdy = /\b([A-Za-z]+\.?)\s+(\d{1,2}),\s+(\d{4})\b/g;
   while ((m = mdy.exec(text))) {
-    const mi = MONTHS.indexOf(m[1]!.toLowerCase());
+    const mi = monthIndex(m[1]!);
     if (mi >= 0) out.push(`${m[3]}-${String(mi + 1).padStart(2, "0")}-${m[2]!.padStart(2, "0")}`);
   }
   return out;
 }
 
-function findLocator(blocks: ExtractInput["blocks"], quote: string): string | null {
+function findLocators(blocks: ExtractInput["blocks"], quote: string): string[] {
   const q = normalizeText(quote);
-  if (!q) return null;
-  for (const b of blocks) if (normalizeText(b.text).includes(q)) return b.locator;
+  if (!q) return [];
+  const hits = blocks.filter((b) => normalizeText(b.text).includes(q)).map((b) => b.source_block_id);
+  if (hits.length) return hits;
   const lower = q.toLowerCase();
-  for (const b of blocks) if (normalizeText(b.text).toLowerCase().includes(lower)) return b.locator;
-  return null;
+  return blocks.filter((b) => normalizeText(b.text).toLowerCase().includes(lower)).map((b) => b.source_block_id);
 }
 
-function matchGroundTruth(blocks: ExtractInput["blocks"], truths: MockGroundTruth[]): MockGroundTruth | null {
-  const text = canonical(blocks.map((b) => b.text).join(" "));
-  let best: MockGroundTruth | null = null;
-  for (const gt of truths) {
-    const rn = canonical(gt.record.report_number ?? "");
+function matchTruth(input: ExtractInput, truths: MockTruth[]): MockTruth | null {
+  const exact = truths.find((t) => t.logical_key === input.logicalKey && t.version === input.versionNumber);
+  if (exact) return exact;
+  const text = canonical(input.blocks.map((b) => b.text).join(" "));
+  let best: MockTruth | null = null;
+  for (const t of truths) {
+    const rn = canonical(t.record.report_number ?? "");
     if (!rn || !text.includes(rn)) continue;
-    if (!best || rn.length > canonical(best.record.report_number ?? "").length) best = gt;
+    if (!best || rn.length > canonical(best.record.report_number ?? "").length) best = t;
   }
   return best;
 }
 
-function leaf<T>(value: T, locator: string, quote: string) {
-  return { value, evidence: { locator, quote } };
-}
+type Prov = { source_block_ids: string[]; evidence_quotes: string[]; ambiguity: string | null };
 
-function buildFromGroundTruth(gt: MockGroundTruth, blocks: ExtractInput["blocks"]): ExtractionOutput {
-  const fallbackLocator = blocks[0]?.locator ?? "SRC-UNKNOWN";
-  const planted = new Map(gt.planted.map((p) => [p.field_path, p]));
-  const ev = (fp: string, fallbackQuote: string): { locator: string; quote: string; value?: unknown; overridden: boolean } => {
-    const p = planted.get(fp);
-    if (p) {
-      return { locator: findLocator(blocks, p.extractor_quote) ?? fallbackLocator, quote: p.extractor_quote, value: p.extractor_value, overridden: true };
+function buildFromTruth(t: MockTruth, input: ExtractInput): ExtractionOutput {
+  const blocks = input.blocks;
+  const fallback = blocks[0]?.source_block_id ?? "SRC-UNKNOWN";
+  const planted = new Map(t.uncertain_fields.map((u) => [u.field_path, u]));
+  const prov = (fp: string, fallbackQuote: string | null): { p: Prov; override?: unknown } => {
+    const u = planted.get(fp);
+    if (u) {
+      const ids = u.extractor_locators.length ? u.extractor_locators : u.extractor_quotes.flatMap((q) => findLocators(blocks, q));
+      return { p: { source_block_ids: ids.length ? ids : [fallback], evidence_quotes: u.extractor_quotes, ambiguity: u.extractor_ambiguity }, override: u.extractor_value };
     }
-    const sibling = gt.planted.find((x) => x.field_path.replace(/\.[a-z_]+$/, "") === fp.replace(/\.[a-z_]+$/, "") && x.field_path !== fp);
-    const quote = gt.evidence[fp] ?? (sibling && !gt.evidence[sibling.field_path] ? sibling.extractor_quote : fallbackQuote);
-    return { locator: findLocator(blocks, quote) ?? fallbackLocator, quote, overridden: false };
+    const ev = t.evidence[fp];
+    if (ev) {
+      const ids = ev.locators.length ? ev.locators : ev.quotes.flatMap((q) => findLocators(blocks, q));
+      return { p: { source_block_ids: ids.length ? ids : [fallback], evidence_quotes: ev.quotes, ambiguity: null } };
+    }
+    if (fallbackQuote === null) return { p: { source_block_ids: [], evidence_quotes: [], ambiguity: null } };
+    const ids = findLocators(blocks, fallbackQuote);
+    return { p: { source_block_ids: ids.length ? ids : [fallback], evidence_quotes: [fallbackQuote], ambiguity: null } };
   };
+  const r = t.record;
   const scalar = <T>(fp: (typeof SCALAR_FIELDS)[number], value: T) => {
-    const e = ev(fp, String(value ?? ""));
-    return leaf((e.overridden ? e.value : value) as T, e.locator, e.quote);
+    const { p, override } = prov(fp, value === null ? null : String(value));
+    const v = planted.has(fp) ? (override as T) : value;
+    return { value: v, ...p };
   };
-  const r = gt.record;
-  const extendedList = <K extends (typeof LIST_FIELDS)[number]>(field: K, items: Record<string, unknown>[]): Record<string, unknown>[] => {
-    const out = [...items];
-    for (const p of gt.planted) {
-      const m = new RegExp(`^${field}\\[(\\d+)\\]\\.([a-z_]+)$`).exec(p.field_path);
-      if (!m) continue;
-      const idx = Number(m[1]);
-      while (out.length <= idx) out.push(syntheticItem(field, p.extractor_quote));
+  const list = <K extends (typeof LIST_FIELDS)[number]>(field: K) => {
+    const items = [...(r[field] as (Record<string, unknown> | null)[])];
+    // planted indexes beyond the record mean "an extractor may invent this item"
+    for (const u of t.uncertain_fields) {
+      const { root, index } = parseFieldPath(u.field_path);
+      if (root !== field || index === null) continue;
+      while (items.length <= index) items.push(null);
     }
-    return out;
-  };
-  const listItem = <K extends (typeof LIST_FIELDS)[number]>(field: K, index: number, item: Record<string, unknown>) => {
-    const out: Record<string, { value: unknown; evidence: { locator: string; quote: string } }> = {};
-    for (const key of LIST_ITEM_KEYS[field]) {
-      const fp = `${field}[${index}].${key}`;
-      const e = ev(fp, String(item[key] ?? ""));
-      out[key] = leaf(e.overridden ? e.value : item[key], e.locator, e.quote);
-    }
-    return out;
+    return items.map((item, i) => {
+      const fp = `${field}[${i}]`;
+      const { p, override } = prov(fp, item ? String(Object.values(item)[0] ?? "") : null);
+      const value = (planted.has(fp) ? override : item) as Record<string, unknown> | null;
+      const out: Record<string, unknown> = { ...p };
+      for (const k of LIST_ITEM_KEYS[field]) out[k] = value?.[k] ?? (k === "amount" ? 0 : k === "severity" ? "info" : k === "target_entity" || k === "status_if_stated" ? null : "");
+      return out;
+    });
   };
   return {
-    report_title: scalar("report_title", r.report_title ?? ""),
-    report_number: scalar("report_number", r.report_number ?? ""),
-    issuing_organization: scalar("issuing_organization", r.issuing_organization ?? ""),
-    publication_date: scalar("publication_date", r.publication_date ?? ""),
-    document_type: scalar("document_type", r.document_type ?? "operational_review"),
-    subject_entities: extendedList("subject_entities", r.subject_entities).map((it, i) => listItem("subject_entities", i, it)) as ExtractionOutput["subject_entities"],
-    key_findings: extendedList("key_findings", r.key_findings).map((it, i) => listItem("key_findings", i, it)) as ExtractionOutput["key_findings"],
-    recommendations: extendedList("recommendations", r.recommendations).map((it, i) => listItem("recommendations", i, it)) as ExtractionOutput["recommendations"],
-    monetary_amounts: extendedList("monetary_amounts", r.monetary_amounts).map((it, i) => listItem("monetary_amounts", i, it)) as ExtractionOutput["monetary_amounts"],
+    report_title: scalar("report_title", r.report_title),
+    report_number: scalar("report_number", r.report_number),
+    issuing_organization: scalar("issuing_organization", r.issuing_organization),
+    publication_date: scalar("publication_date", r.publication_date),
+    document_type: scalar("document_type", r.document_type ?? "other"),
+    subject_entities: list("subject_entities") as ExtractionOutput["subject_entities"],
+    key_findings: list("key_findings") as ExtractionOutput["key_findings"],
+    recommendations: list("recommendations") as ExtractionOutput["recommendations"],
+    monetary_amounts: list("monetary_amounts") as ExtractionOutput["monetary_amounts"],
   };
-}
-
-/** An item a naive extractor might invent when a planted issue references a list index that does not exist. */
-function syntheticItem(field: string, quote: string): Record<string, unknown> {
-  const text = quote.replace(/\.$/, "");
-  switch (field) {
-    case "subject_entities":
-      return { name: text.split(" ").slice(0, 3).join(" "), entity_type: "organization" };
-    case "key_findings":
-      return { text, severity: "medium" };
-    case "recommendations":
-      return { text, priority: "medium" };
-    default: {
-      const currency = Object.entries(CURRENCY_HINTS).find(([, r]) => r.test(quote))?.[0] ?? "USD";
-      return { amount: parseAmounts(quote)[0] ?? 0, currency, label: text.split(" ").slice(0, 4).join(" ").toLowerCase() };
-    }
-  }
 }
 
 /** Heuristic extraction for documents outside the fixture corpus. */
 function buildHeuristic(input: ExtractInput): ExtractionOutput {
   const first = input.blocks[0];
-  const locator = first?.locator ?? "SRC-UNKNOWN";
-  const lines = (first?.text ?? "").split(/\n+/).map((l) => l.trim()).filter(Boolean);
-  const title = lines[0] ?? input.documentName;
-  const numberLine = lines.find((l) => /report\s+no/i.test(l)) ?? title;
-  const number = /report\s+no\.?\s*:?\s*([A-Z0-9-]+)/i.exec(numberLine)?.[1] ?? "";
-  const orgLine = lines.find((l) => /(issued|prepared)\s+by/i.test(l)) ?? title;
-  const org = /(?:issued|prepared)\s+by\s+(.+?)\.?$/i.exec(orgLine)?.[1] ?? "";
-  const dateLine = lines.find((l) => parseDates(l).length > 0) ?? title;
-  const date = parseDates(dateLine)[0] ?? "";
-  const lowerTitle = title.toLowerCase();
-  const docType = DOCUMENT_TYPES.find((t) => lowerTitle.includes(t.replace(/_/g, " ").split(" ")[0]!)) ?? "operational_review";
+  const id = first?.source_block_id ?? "SRC-UNKNOWN";
+  const text = first?.text ?? "";
+  const sentences = text.split(/(?<=[.!?])\s+|\s{2,}/).map((l) => l.trim()).filter(Boolean);
+  const title = (sentences[0] ?? "").split(/\s+Report No/i)[0] ?? "";
+  const numberSentence = sentences.find((l) => /report\s+no/i.test(l)) ?? "";
+  const number = /report\s+no\.?\s*:?\s*([A-Z0-9-]+)/i.exec(numberSentence)?.[1] ?? null;
+  const orgSentence = sentences.find((l) => /(issued|prepared)\s+by/i.test(l)) ?? "";
+  const org = /(?:issued|prepared)\s+by\s+([^.]+)/i.exec(orgSentence)?.[1]?.trim() ?? null;
+  const dateSentence = sentences.find((l) => /published/i.test(l) && parseDates(l).length > 0) ?? "";
+  const date = parseDates(dateSentence)[0] ?? null;
+  const lower = text.toLowerCase();
+  const docType = lower.includes("audit") ? "audit_report" : lower.includes("investigation") ? "investigation" : lower.includes("evaluation") ? "evaluation" : lower.includes("guidance") ? "guidance" : lower.includes("review") ? "operational_review" : "other";
+  const p = (q: string): Prov => ({ source_block_ids: q ? [id] : [], evidence_quotes: q ? [q.slice(0, 200)] : [], ambiguity: null });
   return {
-    report_title: leaf(title, locator, title),
-    report_number: leaf(number, locator, numberLine),
-    issuing_organization: leaf(org, locator, orgLine),
-    publication_date: leaf(date, locator, dateLine),
-    document_type: leaf(docType, locator, title),
+    report_title: { value: title || null, ...p(title) },
+    report_number: { value: number, ...p(number ? numberSentence : "") },
+    issuing_organization: { value: org, ...p(org ? orgSentence : "") },
+    publication_date: { value: date, ...p(date ? dateSentence : "") },
+    document_type: { value: docType, ...p(title) },
     subject_entities: [],
     key_findings: [],
     recommendations: [],
@@ -263,264 +227,221 @@ const CURRENCY_HINTS: Record<string, RegExp> = {
   GBP: /£|\bgbp\b|\bpounds?\b/i,
   CAD: /\bcad\b|\bc\$/i,
   AUD: /\baud\b|\ba\$/i,
-  PKR: /\bpkr\b|\brs\.?\b|\brupees?\b/i,
-  AED: /\baed\b|\bdirhams?\b/i,
 };
 
-function valueSupportedByQuote(fieldPath: string, value: unknown, quote: string): { supported: boolean; corrected: unknown; specificity?: "direct" | "contextual" } {
+/** Rule-based support check for a candidate against a quote. */
+function supportedByText(fieldPath: string, value: unknown, text: string): { supported: boolean; specificity: number; corrected: unknown } {
   const kind = fieldKind(fieldPath);
-  if (kind === "enum") {
-    const leaf = fieldPath.replace(/^.*\./, "");
-    const literal = canonical(String(value ?? "").replace(/_/g, " "));
-    const cq = canonical(quote);
-    if (literal && cq.includes(literal)) return { supported: true, corrected: value, specificity: "direct" };
-    if (leaf === "currency") {
-      const re = CURRENCY_HINTS[String(value)];
-      if (re && re.test(quote)) return { supported: true, corrected: value, specificity: "contextual" };
-      const other = Object.entries(CURRENCY_HINTS).find(([, r]) => r.test(quote))?.[0] ?? null;
-      return { supported: false, corrected: other };
-    }
-    // severity / priority / entity_type / document_type: the sentence supports the item; the label is contextual
-    return { supported: quote.trim().length > 0, corrected: value, specificity: "contextual" };
-  }
-  if (kind === "number") {
-    const amounts = parseAmounts(quote);
-    const n = typeof value === "number" ? value : Number(value);
-    return { supported: amounts.some((a) => Math.abs(a - n) < 0.5), corrected: amounts[0] ?? null };
-  }
+  const ct = canonical(text);
   if (kind === "date") {
-    const dates = parseDates(quote);
-    return { supported: dates.includes(String(value)), corrected: dates[0] ?? null };
+    const dates = parseDates(text);
+    return { supported: dates.includes(String(value)), specificity: dates.includes(String(value)) ? 1 : 0.4, corrected: dates[0] ?? null };
   }
-  const cq = canonical(quote);
-  const cv = canonical(String(value ?? "").replace(/_/g, " "));
-  if (!cv) return { supported: false, corrected: null };
-  if (cq.includes(cv)) return { supported: true, corrected: value };
-  const qt = new Set(tokenize(quote));
-  const vt = tokenize(String(value).replace(/_/g, " "));
+  if (kind === "enum") {
+    const literal = canonical(String(value).replace(/_/g, " "));
+    return { supported: text.trim().length > 0, specificity: ct.includes(literal) ? 1 : 0.75, corrected: value };
+  }
+  if (kind === "item") {
+    const item = (value ?? {}) as Record<string, unknown>;
+    const root = parseFieldPath(fieldPath).root;
+    if (root === "monetary_amounts") {
+      const amounts = parseAmounts(text);
+      const amountOk = amounts.some((a) => Math.abs(a - Number(item.amount)) < 0.5);
+      const cur = String(item.currency ?? "");
+      const curOk = CURRENCY_HINTS[cur]?.test(text) ?? ct.includes(canonical(cur));
+      if (amountOk) return { supported: true, specificity: curOk ? 1 : 0.75, corrected: value };
+      const first = amounts[0];
+      return { supported: false, specificity: first !== undefined ? 0.4 : 0, corrected: first !== undefined ? { ...item, amount: first } : null };
+    }
+    const textKey = root === "subject_entities" ? "name" : root === "key_findings" ? "finding" : "recommendation";
+    const main = canonical(item[textKey]);
+    if (!main) return { supported: false, specificity: 0, corrected: null };
+    const contained = ct.includes(main);
+    const overlap = (() => {
+      const qt = new Set(tokenize(text));
+      const vt = tokenize(String(item[textKey]));
+      return vt.filter((t) => qt.has(t)).length / Math.max(1, vt.length);
+    })();
+    if (contained || overlap >= 0.8) {
+      const labelKey = root === "key_findings" ? "severity" : null;
+      const labelLiteral = labelKey ? canonical(String(item[labelKey] ?? "")) : "";
+      return { supported: true, specificity: !labelKey || ct.includes(labelLiteral) ? 1 : 0.75, corrected: value };
+    }
+    return { supported: overlap >= 0.5, specificity: overlap >= 0.5 ? 0.4 : 0, corrected: overlap >= 0.5 ? value : null };
+  }
+  const cv = canonical(String(value ?? ""));
+  if (!cv) return { supported: false, specificity: 0, corrected: null };
+  if (ct.includes(cv)) return { supported: true, specificity: 1, corrected: value };
+  const qt = new Set(tokenize(text));
+  const vt = tokenize(String(value));
   const overlap = vt.filter((t) => qt.has(t)).length / Math.max(1, vt.length);
-  return { supported: overlap >= 0.8, corrected: overlap >= 0.5 ? value : null };
+  return { supported: overlap >= 0.8, specificity: overlap >= 0.8 ? 0.75 : overlap >= 0.5 ? 0.4 : 0, corrected: overlap >= 0.5 ? value : null };
+}
+
+const QUESTION_STOPWORDS = new Set(
+  "what which who when where how does did do is are was were report reports document documents discuss discusses discussed mention mentions mentioned involve involves involved describe describes according state states stated say says said value total much many amount average give gives list lists identify identifies".split(" "),
+);
+
+const SECTION_BREAKS = /\s+(?=(?:Finding|Recommendation)\s+\d+:|Report No\.|Issued by\b|Published\s+\d|Executive Summary\b|Background\b|Findings\b|Recommendations\b|Financial Impact\b|Appendix\b|Page \d+ of \d+)/;
+
+export function splitUnits(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+(?=[A-Z0-9"'])/)
+    .flatMap((s) => s.split(SECTION_BREAKS))
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 }
 
 export function createMockProvider(models?: Partial<LlmModels>): LlmProvider {
-  const m: LlmModels = {
-    extractor: "mock",
-    verifier: "mock",
-    answer: "mock",
-    judge: "mock",
-    embedding: "mock",
-    embeddingDimensions: 768,
-    ...models,
-  };
+  const m: LlmModels = { extract: "mock", verify: "mock", rag: "mock", eval: "mock", embed: "mock", embedDimensions: 768, ...models };
 
   return {
     name: "mock",
     models: m,
 
     async extract(input: ExtractInput): Promise<ExtractResult> {
-      const truths = loadGroundTruths();
-      const gt = matchGroundTruth(input.blocks, truths);
-      const output = gt ? buildFromGroundTruth(gt, input.blocks) : buildHeuristic(input);
-      const inText = input.blocks.map((b) => b.text).join("\n");
-      return { output, usage: usage(m.extractor, inText, JSON.stringify(output)) };
+      const t = matchTruth(input, loadTruths());
+      const output = t ? buildFromTruth(t, input) : buildHeuristic(input);
+      return { output, usage: usage(m.extract, input.blocks.map((b) => b.text).join("\n"), JSON.stringify(output)) };
     },
 
     async verify(items: VerifyItem[]): Promise<VerifyResult> {
-      const truths = loadGroundTruths();
-      const planted = truths.flatMap((t) => t.planted);
+      const planted = loadTruths().flatMap((t) => t.uncertain_fields);
       const outcomes: VerifyOutcome[] = items.map((it) => {
-        const p = planted.find(
-          (x) => x.field_path === it.fieldPath && JSON.stringify(x.extractor_value) === JSON.stringify(it.candidateValue) && x.extractor_quote === it.evidence.quote,
-        );
-        if (p) {
-          const corrected = p.verifier_corrected_value !== undefined ? p.verifier_corrected_value : p.verifier_status === "supported" ? it.candidateValue : null;
-          const same = JSON.stringify(corrected) === JSON.stringify(it.candidateValue);
+        const u = planted.find((x) => x.field_path === it.fieldPath && JSON.stringify(x.extractor_value) === JSON.stringify(it.candidateValue) && x.extractor_quotes.join("|") === it.evidence.map((e) => e.quote).join("|"));
+        if (u) {
           return {
             fieldPath: it.fieldPath,
-            status: p.verifier_status,
-            correctedValue: corrected,
-            agreement: same ? "same" : p.kind === "formatting_variant" ? "equivalent_formatting" : "different",
-            contradiction: p.kind === "contradiction",
-            specificity: p.verifier_status === "supported" ? (p.kind === "weak_evidence" ? "weak" : "direct") : p.verifier_status === "partially_supported" ? (p.kind === "weak_evidence" ? "weak" : "contextual") : "none",
-            reason: p.note,
+            status: u.verifier.status,
+            correctedValue: u.verifier.corrected_value ?? (u.verifier.status === "supported" ? it.candidateValue : null),
+            contradictionDetected: u.verifier.contradiction_detected,
+            evidenceSpecificity: u.verifier.evidence_specificity,
+            reason: u.reason,
           };
         }
-        if (!it.quoteFound || !it.blockText) {
-          return { fieldPath: it.fieldPath, status: "unsupported", correctedValue: null, agreement: "different", contradiction: false, specificity: "none", reason: "cited quote not found in the cited source block" };
-        }
-        const check = valueSupportedByQuote(it.fieldPath, it.candidateValue, it.evidence.quote);
-        if (check.supported) {
-          const specificity = check.specificity ?? "direct";
-          return { fieldPath: it.fieldPath, status: "supported", correctedValue: it.candidateValue, agreement: "same", contradiction: false, specificity, reason: specificity === "direct" ? "quote states the value" : "quote supports the value in context" };
-        }
-        const inBlock = valueSupportedByQuote(it.fieldPath, it.candidateValue, it.blockText);
-        if (inBlock.supported) {
-          return { fieldPath: it.fieldPath, status: "partially_supported", correctedValue: it.candidateValue, agreement: "same", contradiction: false, specificity: "contextual", reason: "value appears in the block but not in the cited quote" };
-        }
+        const found = it.evidence.filter((e) => e.found_in_block);
+        if (found.length === 0) return { fieldPath: it.fieldPath, status: "unsupported", correctedValue: null, contradictionDetected: false, evidenceSpecificity: 0, reason: "cited quote not found in the cited source block" };
+        const quoteText = found.map((e) => e.quote).join(" ");
+        const byQuote = supportedByText(it.fieldPath, it.candidateValue, quoteText);
+        if (byQuote.supported) return { fieldPath: it.fieldPath, status: "supported", correctedValue: it.candidateValue, contradictionDetected: false, evidenceSpecificity: byQuote.specificity, reason: "the cited quote states the value" };
+        const contextText = it.context.map((c) => c.text).join(" ");
+        const byContext = supportedByText(it.fieldPath, it.candidateValue, contextText);
+        if (byContext.supported) return { fieldPath: it.fieldPath, status: "partially_supported", correctedValue: it.candidateValue, contradictionDetected: false, evidenceSpecificity: 0.75, reason: "the value appears in the surrounding context but not in the cited quote" };
+        const contradiction = byQuote.corrected !== null && JSON.stringify(byQuote.corrected) !== JSON.stringify(it.candidateValue);
         return {
           fieldPath: it.fieldPath,
-          status: check.corrected === null ? "unsupported" : "partially_supported",
-          correctedValue: check.corrected,
-          agreement: check.corrected === null ? "different" : JSON.stringify(check.corrected) === JSON.stringify(it.candidateValue) ? "same" : "different",
-          contradiction: check.corrected !== null && JSON.stringify(check.corrected) !== JSON.stringify(it.candidateValue),
-          specificity: check.corrected === null ? "none" : "weak",
-          reason: check.corrected === null ? "quote does not support the value" : "quote suggests a different value",
+          status: byQuote.corrected === null ? "unsupported" : "partially_supported",
+          correctedValue: byQuote.corrected,
+          contradictionDetected: contradiction,
+          evidenceSpecificity: byQuote.corrected === null ? 0 : 0.4,
+          reason: byQuote.corrected === null ? "the cited quote does not support the value" : "the cited quote suggests a different value",
         };
       });
-      return { outcomes, usage: usage(m.verifier, JSON.stringify(items), JSON.stringify(outcomes)) };
+      return { outcomes, usage: usage(m.verify, JSON.stringify(items), JSON.stringify(outcomes)) };
     },
 
     async answer(input: AnswerInput): Promise<AnswerResult> {
-      const mode = input.mode;
-      const qTokens = contentTokens(input.question).filter((t) => !QUESTION_STOPWORDS.has(t));
-      const allText = canonical(input.chunks.map((c) => c.text).join(" "));
-      const missing = qTokens.filter((t) => !allText.includes(t));
-      const entityTokens = input.question
-        .split(/\s+/)
-        .slice(1)
-        .filter((w) => /^[A-Z][a-z]+/.test(w))
-        .map((w) => canonical(w))
-        .filter((w) => w.length > 2 && !QUESTION_STOPWORDS.has(w));
-      const missingEntities = entityTokens.filter((t) => !allText.includes(t));
-      type Scored = { chunkIndex: number; sentence: string; score: number; logicalKey: string; documentName: string };
-      const sentences: Scored[] = [];
+      const q = input.question;
+      const oracle = loadGolden().find((c) => canonical(c.question) === canonical(q)) ?? null;
+      if (oracle && oracle.category === "unanswerable" && input.mode === "answer") return { text: INSUFFICIENT_EVIDENCE, usage: usage(m.rag, q, "") };
+
+      const qTokens = contentTokens(q).filter((t) => !QUESTION_STOPWORDS.has(t));
+      type Unit = { block: AnswerInput["blocks"][number]; sentence: string; tokens: Set<string> };
+      const units: Unit[] = [];
       const df = new Map<string, number>();
-      const raw: { chunk: (typeof input.chunks)[number]; sentence: string; tokens: Set<string> }[] = [];
-      for (const c of input.chunks) {
-        for (const s of splitUnits(c.text)) {
+      for (const b of input.blocks) {
+        for (const s of splitUnits(b.text)) {
           const tokens = new Set(tokenize(s));
           if (tokens.size === 0) continue;
-          raw.push({ chunk: c, sentence: s.trim(), tokens });
+          units.push({ block: b, sentence: s, tokens });
           for (const t of tokens) df.set(t, (df.get(t) ?? 0) + 1);
         }
       }
-      const idf = (t: string) => Math.log((raw.length + 1) / (1 + (df.get(t) ?? 0))) + 0.1;
+      const idf = (t: string) => Math.log((units.length + 1) / (1 + (df.get(t) ?? 0))) + 0.1;
       const totalWeight = qTokens.reduce((n, t) => n + idf(t), 0) || 1;
-      const wantsAmount = /\b(how much|cost|value|amount|spend|spent|budget|price|loss|revenue|savings?)\b/i.test(input.question);
-      const wantsDate = /\b(when|date|published|what day)\b/i.test(input.question);
-      for (const r of raw) {
-        let score = qTokens.filter((t) => r.tokens.has(t)).reduce((n, t) => n + idf(t), 0) / totalWeight;
-        if (wantsAmount && parseAmounts(r.sentence).some((a) => a >= 1000)) score *= 1.3;
-        if (wantsDate && parseDates(r.sentence).length > 0) score *= 1.3;
-        if (r.tokens.size > 30) score *= 30 / r.tokens.size;
-        sentences.push({ chunkIndex: r.chunk.index, sentence: r.sentence, score, logicalKey: r.chunk.logicalKey, documentName: r.chunk.documentName });
-      }
-      sentences.sort((a, b) => b.score - a.score);
-      const crossDocument = /^(which|what) (reports?|documents?)\b/i.test(input.question.trim());
-      const oracle = loadRagCases().find((c) => canonical(c.question) === canonical(input.question)) ?? null;
-      let top: Scored[];
-      if (oracle && !oracle.answerable && mode === "answer") {
-        return {
-          sufficient: false,
-          refusalReason: "The retrieved documents do not contain this information.",
-          answerText: "I cannot answer this from the indexed documents.",
-          claims: [],
-          draft: null,
-          usage: usage(m.answer, input.question, ""),
-        };
-      }
-      if (oracle && oracle.answerable) {
-        // Pick, per expected fact, the best-scoring unit that states it; fall back to lexical ranking.
-        top = [];
+      const wantsAmount = /\b(how much|cost|value|amount|spend|spent|budget|price|loss|revenue|savings?|figure)\b/i.test(q);
+      const wantsDate = /\b(when|date|published|what day)\b/i.test(q);
+      const scored = units
+        .map((u) => {
+          let score = qTokens.filter((t) => u.tokens.has(t)).reduce((n, t) => n + idf(t), 0) / totalWeight;
+          if (wantsAmount && parseAmounts(u.sentence).some((a) => a >= 1000)) score *= 1.3;
+          if (wantsDate && parseDates(u.sentence).length > 0) score *= 1.3;
+          if (u.tokens.size > 30) score *= 30 / u.tokens.size;
+          return { ...u, score };
+        })
+        .sort((a, b) => b.score - a.score);
+
+      let picked: typeof scored = [];
+      if (oracle && oracle.category !== "unanswerable") {
         for (const fact of oracle.expected_facts) {
           const cf = canonical(fact);
-          const hit = sentences.find((s) => canonical(s.sentence).includes(cf) && !top.includes(s));
-          if (hit) top.push(hit);
+          const hit = scored.find((s) => canonical(s.sentence).includes(cf) && !picked.includes(s));
+          if (hit) picked.push(hit);
         }
-        if (crossDocument) {
-          for (const key of oracle.expected_documents) {
-            if (top.some((t) => t.logicalKey === key)) continue;
-            const hit = sentences.find((s) => s.logicalKey === key && s.score > 0);
-            if (hit) top.push(hit);
-          }
+        for (const key of oracle.expected_documents) {
+          if (picked.some((p) => p.block.logicalKey === key)) continue;
+          const hit = scored.find((s) => s.block.logicalKey === key && s.score > 0);
+          if (hit) picked.push(hit);
         }
-        if (top.length === 0) top = sentences.filter((s) => s.score >= 0.34).slice(0, 4);
-      } else if (crossDocument) {
-        const seenDocs = new Set<string>();
-        top = [];
-        for (const s of sentences) {
-          if (s.score < 0.3 || seenDocs.has(s.logicalKey)) continue;
-          if (entityTokens.length && !entityTokens.every((t) => canonical(s.sentence).includes(t))) continue;
-          seenDocs.add(s.logicalKey);
-          top.push(s);
-          if (top.length >= 4) break;
-        }
+      }
+      if (picked.length === 0) {
+        const allText = canonical(input.blocks.map((b) => b.text).join(" "));
+        const missing = qTokens.filter((t) => !allText.includes(t));
+        picked = missing.length >= 2 ? [] : scored.filter((s) => s.score >= 0.34).slice(0, 4);
+      }
+      if (picked.length === 0) {
+        return { text: input.mode === "answer" ? INSUFFICIENT_EVIDENCE : `Title\nNo draft could be produced.\n\nEvidence Limitations\n${INSUFFICIENT_EVIDENCE}`, usage: usage(m.rag, q, "") };
+      }
+      const cite = (u: Unit) => formatCitation(u.block.logicalKey, u.block.version, u.block.locator);
+      if (input.mode === "answer") {
+        const text = picked.map((u) => `${u.sentence} ${cite(u)}`).join(" ");
+        return { text, usage: usage(m.rag, q, text) };
+      }
+      const findings = scored.filter((u) => /^Finding\s*\d+/i.test(u.sentence)).slice(0, 5);
+      const recs = scored.filter((u) => /^Recommendation\s*\d+/i.test(u.sentence)).slice(0, 5);
+      const docs = [...new Set(input.blocks.map((b) => b.document))];
+      const lines = (xs: Unit[]) => (xs.length ? xs.map((u) => `${u.sentence} ${cite(u)}`).join("\n") : "None stated in the retrieved evidence.");
+      let text: string;
+      if (input.mode === "executive_brief") {
+        text = `Title\nExecutive Brief: ${docs.slice(0, 2).join("; ")}\n\nExecutive Summary\n${lines(picked)}\n\nKey Findings\n${lines(findings)}\n\nRecommendations Stated in the Sources\n${lines(recs)}\n\nRisks / Contradictions\nNone identified in the retrieved evidence.\n\nEvidence Limitations\nThis draft is limited to ${input.blocks.length} retrieved source block(s) from ${docs.length} document(s).`;
+      } else if (input.mode === "findings") {
+        text = `Title\nFindings Summary: ${docs.slice(0, 2).join("; ")}\n\nFindings\n${lines(findings)}\n\nSupporting Evidence\n${lines(picked)}\n\nOpen Questions\nEvidence outside the ${input.blocks.length} retrieved block(s) was not reviewed.`;
       } else {
-        top = sentences.filter((s) => s.score >= 0.34).slice(0, 4);
+        text = `Title\nRecommendation Summary: ${docs.slice(0, 2).join("; ")}\n\nRecommendations\n${lines(recs)}\n\nTarget Entity\n${recs.map((u) => (/Target:\s*([^.]+)/i.exec(u.sentence)?.[1] ?? "not stated")).join("; ") || "not stated"}\n\nSupporting Evidence\n${lines(picked)}\n\nUnresolved Ambiguities\nEvidence outside the ${input.blocks.length} retrieved block(s) was not reviewed.`;
       }
-      const noEvidence = top.length === 0 || missing.length >= 2 || missingEntities.length > 0;
-      if (noEvidence && mode === "answer") {
-        const absent = [...new Set([...missingEntities, ...missing])];
-        return {
-          sufficient: false,
-          refusalReason: absent.length ? `The retrieved documents do not mention: ${absent.join(", ")}.` : "The retrieved evidence does not address the question.",
-          answerText: "I cannot answer this from the indexed documents.",
-          claims: [],
-          draft: null,
-          usage: usage(m.answer, input.question, ""),
-        };
-      }
-      const toClaim = (s: Scored): AnswerClaim => ({
-        text: crossDocument ? `${s.documentName} (${s.logicalKey}): ${s.sentence}` : s.sentence,
-        kind: "direct",
-        citations: [{ chunkIndex: s.chunkIndex, quote: s.sentence.slice(0, 280) }],
-      });
-      if (mode === "answer") {
-        const claims = top.map(toClaim);
-        return {
-          sufficient: true,
-          refusalReason: null,
-          answerText: claims.map((c) => c.text).join(" "),
-          claims,
-          draft: null,
-          usage: usage(m.answer, input.question, claims.map((c) => c.text).join(" ")),
-        };
-      }
-      const pick = (re: RegExp, n: number): AnswerClaim[] =>
-        sentences
-          .filter((s) => re.test(s.sentence))
-          .slice(0, n)
-          .map(toClaim);
-      const findings = pick(/^Finding\s*\d+/i, 5);
-      const recs = pick(/^Recommendation\s*\d+/i, 5);
-      const keyEvidence = top.map(toClaim);
-      const docs = Array.from(new Set(input.chunks.map((c) => c.documentName)));
-      const sufficient = keyEvidence.length + findings.length + recs.length > 0;
-      const title = `${mode === "executive_brief" ? "Executive Brief" : mode === "findings" ? "Findings Summary" : "Recommendation Summary"}: ${docs.slice(0, 2).join("; ")}`;
-      const draft = {
-        title,
-        key_evidence: keyEvidence,
-        findings: mode === "recommendations" ? [] : findings,
-        recommendations: mode === "findings" ? [] : recs,
-        limitations: [`This draft is limited to ${input.chunks.length} retrieved chunk(s) from ${docs.length} document(s); statements outside those chunks are not covered.`],
-      };
-      const answerText = [title, ...keyEvidence.map((c) => c.text), ...draft.findings.map((c) => c.text), ...draft.recommendations.map((c) => c.text)].join("\n");
-      return {
-        sufficient,
-        refusalReason: sufficient ? null : "The retrieved evidence does not contain material for this draft.",
-        answerText,
-        claims: [...keyEvidence, ...draft.findings, ...draft.recommendations],
-        draft,
-        usage: usage(m.answer, input.question, answerText),
-      };
+      return { text, usage: usage(m.rag, q, text) };
     },
 
     async judge(input: JudgeInput): Promise<JudgeResult> {
-      const ans = canonical(input.answer);
-      if (input.expectedFacts.length > 0) {
-        const hits = input.expectedFacts.filter((f) => ans.includes(canonical(f))).length;
-        const score = hits / input.expectedFacts.length;
-        return { score, reason: `${hits}/${input.expectedFacts.length} expected facts present`, usage: usage(m.judge, input.answer, "") };
+      const refused = canonical(input.candidateAnswer) === canonical(INSUFFICIENT_EVIDENCE);
+      if (input.unanswerable) {
+        const s = refused ? 1 : 0;
+        return { correctness: s, evidenceSupport: 1, completeness: s, passed: refused, reason: refused ? "refused as expected" : "answered a question with no evidence", usage: usage(m.eval, input.candidateAnswer, "") };
       }
-      const ref = new Set(contentTokens(input.referenceAnswer));
-      const got = contentTokens(input.answer);
-      const overlap = ref.size ? got.filter((t) => ref.has(t)).length / ref.size : 0;
-      return { score: Math.min(1, overlap), reason: "token overlap with reference", usage: usage(m.judge, input.answer, "") };
+      if (refused) return { correctness: 0, evidenceSupport: 1, completeness: 0, passed: false, reason: "refused an answerable question", usage: usage(m.eval, input.candidateAnswer, "") };
+      const ans = canonical(input.candidateAnswer);
+      const ev = canonical(input.sourceEvidence);
+      const facts = input.expectedAnswer
+        .split("||")
+        .map((f) => canonical(f))
+        .filter(Boolean);
+      const hits = facts.filter((f) => ans.includes(f)).length;
+      const correctness = facts.length ? hits / facts.length : 0;
+      // evidence support: every sentence of the answer (minus citations) must occur in the evidence
+      const sentences = input.candidateAnswer
+        .replace(/\[[^\]]+\]/g, "\n")
+        .split(/\n|(?<=[.!?])\s+/)
+        .map((s) => canonical(s))
+        .filter((s) => s.length > 10);
+      const supported = sentences.filter((s) => ev.includes(s)).length;
+      const evidenceSupport = sentences.length ? supported / sentences.length : 1;
+      const completeness = correctness;
+      const passed = correctness >= 0.9 && evidenceSupport >= 0.95 && completeness >= 0.85;
+      return { correctness, evidenceSupport, completeness, passed, reason: `${hits}/${facts.length} expected facts present; ${supported}/${sentences.length} sentences found in evidence`, usage: usage(m.eval, input.candidateAnswer, "") };
     },
 
     async embed(texts: string[]): Promise<EmbedResult> {
-      const vectors = texts.map((t) => hashedEmbedding(t, m.embeddingDimensions));
-      return { vectors, usage: { model: m.embedding, inputTokens: texts.reduce((n, t) => n + Math.ceil(t.length / 4), 0), outputTokens: 0, latencyMs: 1 } };
+      return { vectors: texts.map((t) => hashedEmbedding(t, m.embedDimensions)), usage: { model: m.embed, inputTokens: texts.reduce((n, t) => n + Math.ceil(t.length / 4), 0), outputTokens: 0, latencyMs: 1 } };
     },
   };
 }
@@ -541,8 +462,7 @@ export function hashedEmbedding(text: string, dims: number): number[] {
   const feats = [...toks];
   for (let i = 0; i + 1 < toks.length; i++) feats.push(`${toks[i]}_${toks[i + 1]}`);
   for (const f of feats) {
-    const h = fnv1a(f);
-    const idx = h % dims;
+    const idx = fnv1a(f) % dims;
     const sign = (fnv1a(`s:${f}`) & 1) === 0 ? 1 : -1;
     v[idx] = (v[idx] ?? 0) + sign;
   }

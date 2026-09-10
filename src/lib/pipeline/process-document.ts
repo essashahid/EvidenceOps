@@ -1,12 +1,11 @@
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db/client";
 import { getStorage } from "@/lib/storage";
-import { getLlm } from "@/lib/llm";
-import { EXTRACTOR_PROMPT_VERSION, VERIFIER_PROMPT_VERSION, VERIFIER_BATCH_SIZE, UPLOAD_LIMITS } from "@/lib/config";
+import { getLlm, modelConfigHash } from "@/lib/llm";
+import { EXTRACT_PROMPT_VERSION, VERIFY_PROMPT_VERSION, VERIFIER_BATCH_SIZE, UPLOAD_LIMITS } from "@/lib/config";
 import { sha256 } from "@/lib/hash";
-import { findQuote, normalizeText } from "@/lib/text";
-import { extractionOutputSchema, flattenExtraction, toRecord, type ExtractionOutput, type LeafField } from "@/lib/schema/report";
-import { fieldDefinition } from "@/lib/llm/prompts";
+import { normalizeText } from "@/lib/text";
+import { extractionOutputSchema, fieldDefinition, flattenExtraction, toRecord, type ExtractionOutput, type LeafField } from "@/lib/schema/report";
 import type { VerifyItem, VerifyOutcome } from "@/lib/llm/types";
 import { parseDocument, blockLocator } from "./parse";
 import { chunkBlocks } from "./chunk";
@@ -16,7 +15,8 @@ import { runStep, StepFailure, type StepContext } from "./steps-runner";
 import { logEvent } from "./events";
 import { recordLlmCall } from "./llm-log";
 
-export const DOCUMENT_STEPS = ["parse", "chunk", "extract", "validate", "verify", "score_and_route", "embed"] as const;
+/** Durable step names in pipeline order (spec section 34). `upload` happens in the request; `finalize` closes the document. */
+export const DOCUMENT_STEPS = ["parse", "chunk", "extract", "deterministic_validate", "independent_verify", "calculate_confidence", "route_review", "embed", "finalize"] as const;
 export type DocumentStep = (typeof DOCUMENT_STEPS)[number];
 
 export type ParseStepOutput = { status: "parsed" | "unsupported"; reason?: string; blockCount: number; pageCount: number | null; charCount: number };
@@ -24,7 +24,8 @@ export type ChunkStepOutput = { chunkCount: number };
 export type ExtractStepOutput = { extractionRunId: string; leafCount: number };
 export type ValidateStepOutput = { validations: FieldValidation[] };
 export type VerifyStepOutput = { outcomes: VerifyOutcome[] };
-export type ScoreStepOutput = { recordVersionId: string; versionNumber: number; autoApproved: number; review: number; blocked: number; total: number };
+export type ConfidenceStepOutput = { scored: ScoredField[] };
+export type RouteStepOutput = { recordVersionId: string; versionNumber: number; autoApproved: number; review: number; blocked: number; total: number };
 export type EmbedStepOutput = { embedded: number; cached: number; skipped: number };
 
 async function loadVersion(documentVersionId: string) {
@@ -91,7 +92,10 @@ export async function stepParse(ctx: StepContext) {
         documentVersionId: version.id,
         failedStep: "parse",
         errorCode: result.reason,
-        errorMessage: result.reason === "unsupported_scanned_document" ? "Image-only or scanned PDF: text extraction yielded under 100 characters on more than half of the pages. OCR is not supported in this build." : "The document contains no extractable text.",
+        errorMessage:
+          result.reason === "unsupported_scanned_document"
+            ? "Image-only or scanned PDF: more than half of the pages have fewer than 100 extracted characters. OCR is not part of this build; the document needs a text-based source."
+            : "The document contains no extractable text.",
         attemptCount: 1,
         retryable: false,
         status: "open",
@@ -139,24 +143,27 @@ export async function stepExtract(ctx: StepContext) {
     const db = getDb();
     const llm = getLlm();
     const { version, document } = await loadVersion(ctx.documentVersionId);
+    const [cached] = await db.select().from(schema.extractionRuns).where(and(eq(schema.extractionRuns.documentVersionId, ctx.documentVersionId), eq(schema.extractionRuns.modelConfigHash, ctx.modelConfigHash))).limit(1);
+    if (cached) return { extractionRunId: cached.id, leafCount: flattenExtraction(extractionOutputSchema.parse(cached.rawExtractionJson)).length };
     const blocks = await loadBlocks(ctx.documentVersionId);
     if (blocks.length === 0) throw new StepFailure("no source blocks to extract from", "no_source_blocks", false);
     const result = await llm.extract({
-      documentName: `${document.displayName} (${version.sourceFilename})`,
-      blocks: blocks.map((b) => ({ locator: b.locator, text: b.normalizedText })),
+      logicalKey: document.logicalKey,
+      versionNumber: version.versionNumber,
+      blocks: blocks.map((b) => ({ source_block_id: b.locator, locator: b.pageNumber !== null ? `page ${b.pageNumber}` : `paragraph ${b.paragraphNumber}`, text: b.normalizedText })),
     });
     const parsed = extractionOutputSchema.safeParse(result.output);
     if (!parsed.success) throw new StepFailure(`extraction output invalid: ${parsed.error.message}`, "invalid_structured_output", false);
-    await recordLlmCall(ctx, "extract", result.usage, { promptVersion: EXTRACTOR_PROMPT_VERSION });
+    await recordLlmCall(ctx, "extract", result.usage, { promptVersion: EXTRACT_PROMPT_VERSION });
     const [row] = await db
       .insert(schema.extractionRuns)
       .values({
         processingRunId: ctx.processingRunId,
         documentVersionId: ctx.documentVersionId,
-        extractorModel: llm.models.extractor,
-        verifierModel: llm.models.verifier,
-        extractorPromptVersion: EXTRACTOR_PROMPT_VERSION,
-        verifierPromptVersion: VERIFIER_PROMPT_VERSION,
+        extractorModel: llm.models.extract,
+        verifierModel: llm.models.verify,
+        extractorPromptVersion: EXTRACT_PROMPT_VERSION,
+        verifierPromptVersion: VERIFY_PROMPT_VERSION,
         modelConfigHash: ctx.modelConfigHash,
         rawExtractionJson: parsed.data,
         inputTokens: result.usage.inputTokens,
@@ -174,9 +181,9 @@ async function loadExtraction(extractionRunId: string): Promise<{ output: Extrac
   return { output, leaves: flattenExtraction(output) };
 }
 
-// ---------------------------------------------------------------- validate
+// ---------------------------------------------------------------- deterministic_validate
 export async function stepValidate(ctx: StepContext, extract: ExtractStepOutput) {
-  return runStep<ValidateStepOutput>(ctx, "validate", async () => {
+  return runStep<ValidateStepOutput>(ctx, "deterministic_validate", async () => {
     const { leaves } = await loadExtraction(extract.extractionRunId);
     const blocks = await loadBlocks(ctx.documentVersionId);
     const lookup = new Map(blocks.map((b) => [b.locator, { id: b.id, normalizedText: b.normalizedText }]));
@@ -187,72 +194,98 @@ export async function stepValidate(ctx: StepContext, extract: ExtractStepOutput)
   });
 }
 
-// ---------------------------------------------------------------- verify
+// ---------------------------------------------------------------- independent_verify
 export async function stepVerify(ctx: StepContext, extract: ExtractStepOutput, validate: ValidateStepOutput) {
-  return runStep<VerifyStepOutput>(ctx, "verify", async () => {
+  return runStep<VerifyStepOutput>(ctx, "independent_verify", async () => {
     const db = getDb();
     const llm = getLlm();
     const { leaves } = await loadExtraction(extract.extractionRunId);
     const blocks = await loadBlocks(ctx.documentVersionId);
     const byLocator = new Map(blocks.map((b) => [b.locator, b]));
     const validationByPath = new Map(validate.validations.map((v) => [v.fieldPath, v]));
-    const items: VerifyItem[] = leaves.map((leaf) => {
-      const block = byLocator.get(leaf.evidence.locator);
-      const v = validationByPath.get(leaf.fieldPath);
-      return {
-        fieldPath: leaf.fieldPath,
-        fieldDefinition: fieldDefinition(leaf.fieldPath),
-        candidateValue: leaf.value,
-        evidence: leaf.evidence,
-        blockText: block?.normalizedText ?? "",
-        quoteFound: v ? v.evidenceExactMatch === 1 : Boolean(block && findQuote(block.normalizedText, leaf.evidence.quote)),
-      };
-    });
-    const outcomes: VerifyOutcome[] = [];
-    for (let i = 0; i < items.length; i += VERIFIER_BATCH_SIZE) {
-      const batch = items.slice(i, i + VERIFIER_BATCH_SIZE);
+    const items: VerifyItem[] = leaves
+      .filter((leaf) => leaf.value !== null && leaf.value !== undefined && !(typeof leaf.value === "string" && leaf.value.trim() === ""))
+      .map((leaf) => {
+        const v = validationByPath.get(leaf.fieldPath);
+        const cited = leaf.provenance.source_block_ids;
+        // context: the cited blocks plus one neighbour on each side
+        const idxs = new Set<number>();
+        for (const loc of cited) {
+          const b = byLocator.get(loc);
+          if (!b) continue;
+          for (const d of [-1, 0, 1]) idxs.add(b.blockIndex + d);
+        }
+        const context = blocks
+          .filter((b) => idxs.has(b.blockIndex))
+          .map((b) => ({ source_block_id: b.locator, locator: b.pageNumber !== null ? `page ${b.pageNumber}` : `paragraph ${b.paragraphNumber}`, text: b.normalizedText }));
+        return {
+          fieldPath: leaf.fieldPath,
+          fieldDefinition: fieldDefinition(leaf.fieldPath),
+          candidateValue: leaf.value,
+          evidence: (v?.evidence ?? leaf.provenance.evidence_quotes.map((q) => ({ quote: q, locator: cited[0] ?? "", exactMatch: false }))).map((e) => ({ source_block_id: e.locator, quote: e.quote, found_in_block: e.exactMatch })),
+          context,
+        };
+      });
+    const [saved] = await db.select({ outcomes: schema.extractionRuns.verificationJson }).from(schema.extractionRuns).where(eq(schema.extractionRuns.id, extract.extractionRunId));
+    const outcomes: VerifyOutcome[] = (saved?.outcomes as VerifyOutcome[] | null) ?? [];
+    const verified = new Set(outcomes.map(o => o.fieldPath));
+    const pendingItems = items.filter(item => !verified.has(item.fieldPath));
+    for (let i = 0; i < pendingItems.length; i += VERIFIER_BATCH_SIZE) {
+      const batch = pendingItems.slice(i, i + VERIFIER_BATCH_SIZE);
       const res = await llm.verify(batch);
-      await recordLlmCall(ctx, "verify", res.usage, { promptVersion: VERIFIER_PROMPT_VERSION });
+      await recordLlmCall(ctx, "verify", res.usage, { promptVersion: VERIFY_PROMPT_VERSION });
       outcomes.push(...res.outcomes);
+      await db.update(schema.extractionRuns).set({ verificationJson: outcomes }).where(eq(schema.extractionRuns.id, extract.extractionRunId));
     }
     await db.update(schema.extractionRuns).set({ verificationJson: outcomes, completedAt: new Date() }).where(eq(schema.extractionRuns.id, extract.extractionRunId));
     return { outcomes };
   });
 }
 
-// ---------------------------------------------------------------- score & route
-export async function stepScoreAndRoute(ctx: StepContext, extract: ExtractStepOutput, validate: ValidateStepOutput, verify: VerifyStepOutput, runType: string) {
-  return runStep<ScoreStepOutput>(ctx, "score_and_route", async () => {
+// ---------------------------------------------------------------- calculate_confidence
+export async function stepConfidence(ctx: StepContext, extract: ExtractStepOutput, validate: ValidateStepOutput, verify: VerifyStepOutput) {
+  return runStep<ConfidenceStepOutput>(ctx, "calculate_confidence", async () => {
+    const { leaves } = await loadExtraction(extract.extractionRunId);
+    const validationByPath = new Map(validate.validations.map((v) => [v.fieldPath, v]));
+    const verifyByPath = new Map(verify.outcomes.map((o) => [o.fieldPath, o]));
+    const scored = leaves.map((leaf) => {
+      const validation = validationByPath.get(leaf.fieldPath)!;
+      const isNull = leaf.value === null || leaf.value === undefined || (typeof leaf.value === "string" && leaf.value.trim() === "");
+      const v: VerifyOutcome = verifyByPath.get(leaf.fieldPath) ?? {
+        fieldPath: leaf.fieldPath,
+        // null values are not verified: an absent value with no evidence is a clean "not stated"
+        status: isNull ? "supported" : "unsupported",
+        correctedValue: null,
+        contradictionDetected: false,
+        evidenceSpecificity: isNull ? 1 : 0,
+        reason: isNull ? "value not stated in the document" : "no verifier outcome",
+      };
+      return scoreField(validation, v, leaf.value);
+    });
+    return { scored };
+  });
+}
+
+// ---------------------------------------------------------------- route_review
+export async function stepRoute(ctx: StepContext, extract: ExtractStepOutput, validate: ValidateStepOutput, verify: VerifyStepOutput, confidence: ConfidenceStepOutput, runType: string) {
+  return runStep<RouteStepOutput>(ctx, "route_review", async () => {
     const db = getDb();
     const { output, leaves } = await loadExtraction(extract.extractionRunId);
     const validationByPath = new Map(validate.validations.map((v) => [v.fieldPath, v]));
     const verifyByPath = new Map(verify.outcomes.map((o) => [o.fieldPath, o]));
-    const scored: { leaf: LeafField; validation: FieldValidation; verify: VerifyOutcome; score: ScoredField }[] = leaves.map((leaf) => {
-      const validation = validationByPath.get(leaf.fieldPath)!;
-      const v = verifyByPath.get(leaf.fieldPath) ?? {
-        fieldPath: leaf.fieldPath,
-        status: "unsupported" as const,
-        correctedValue: null,
-        agreement: "different" as const,
-        contradiction: false,
-        specificity: "none" as const,
-        reason: "no verifier outcome",
-      };
-      const empty = leaf.value === null || leaf.value === undefined || (typeof leaf.value === "string" && leaf.value.trim() === "");
-      return { leaf, validation, verify: v, score: scoreField(validation, v, leaf.required, empty) };
-    });
-
+    const scoreByPath = new Map(confidence.scored.map((s) => [s.fieldPath, s]));
     const payload = toRecord(output);
-    const [currentRecord] = await db
-      .select()
-      .from(schema.recordVersions)
-      .where(eq(schema.recordVersions.documentVersionId, ctx.documentVersionId))
-      .orderBy(desc(schema.recordVersions.versionNumber))
-      .limit(1);
-    const versionNumber = (currentRecord?.versionNumber ?? 0) + 1;
-    const changedFields = currentRecord ? diffRecords(currentRecord.payloadJson as Record<string, unknown>, payload as unknown as Record<string, unknown>) : leaves.map((l) => l.fieldPath);
-
     const result = await db.transaction(async (tx) => {
+      await tx.execute(sql`select id from document_versions where id = ${ctx.documentVersionId} for update`);
+      const [persisted] = await tx.select().from(schema.recordVersions).where(and(eq(schema.recordVersions.extractionRunId, extract.extractionRunId), inArray(schema.recordVersions.createdByType, ["model", "reprocess"]))).limit(1);
+      if (persisted) {
+        const fields = await tx.select().from(schema.fieldValues).where(eq(schema.fieldValues.recordVersionId, persisted.id));
+        return { recordVersionId: persisted.id, versionNumber: persisted.versionNumber, autoApproved: fields.filter(f => f.routingStatus === "auto_approved").length, review: fields.filter(f => f.routingStatus === "review").length, blocked: fields.filter(f => f.routingStatus === "blocked").length, total: fields.length };
+      }
+      const [currentRecord] = await tx.select().from(schema.recordVersions).where(eq(schema.recordVersions.documentVersionId, ctx.documentVersionId)).orderBy(desc(schema.recordVersions.versionNumber)).limit(1);
+      const versionNumber = (currentRecord?.versionNumber ?? 0) + 1;
+      const changedFields = currentRecord ? diffRecords(currentRecord.payloadJson as Record<string, unknown>, payload as unknown as Record<string, unknown>) : leaves.map(l => l.fieldPath);
+      await tx.update(schema.reviewItems).set({ status: "superseded" }).where(and(eq(schema.reviewItems.documentVersionId, ctx.documentVersionId), inArray(schema.reviewItems.status, ["open", "needs_source"])));
       if (currentRecord) await tx.update(schema.recordVersions).set({ isCurrent: false }).where(eq(schema.recordVersions.documentVersionId, ctx.documentVersionId));
       const [rv] = await tx
         .insert(schema.recordVersions)
@@ -271,49 +304,56 @@ export async function stepScoreAndRoute(ctx: StepContext, extract: ExtractStepOu
       let autoApproved = 0;
       let review = 0;
       let blocked = 0;
-      for (const s of scored) {
+      for (const leaf of leaves) {
+        const validation = validationByPath.get(leaf.fieldPath)!;
+        const s = scoreByPath.get(leaf.fieldPath)!;
+        const v = verifyByPath.get(leaf.fieldPath);
         const [fv] = await tx
           .insert(schema.fieldValues)
           .values({
             recordVersionId: rv!.id,
-            fieldPath: s.leaf.fieldPath,
-            valueJson: s.leaf.value as object,
-            isRequired: s.leaf.required,
-            confidence: s.score.confidence.toFixed(3),
-            routingStatus: s.score.routing,
-            deterministicValidation: s.score.components.deterministic_validation.toFixed(3),
-            evidenceExactMatch: s.score.components.evidence_exact_match.toFixed(3),
-            verifierSupport: s.score.components.verifier_support.toFixed(3),
-            crossPassAgreement: s.score.components.cross_pass_agreement.toFixed(3),
-            evidenceSpecificity: s.score.components.evidence_specificity.toFixed(3),
-            verifierStatus: s.verify.status,
-            contradiction: s.verify.contradiction,
-            verifierCorrectedValueJson: s.verify.correctedValue as object,
-            validationMessages: s.validation.messages,
+            fieldPath: leaf.fieldPath,
+            valueJson: leaf.value as object,
+            isRequired: leaf.core,
+            confidence: s.confidence.toFixed(3),
+            routingStatus: s.routing,
+            deterministicValidation: s.components.deterministic_validation.toFixed(3),
+            evidenceExactMatch: s.components.evidence_exact_match.toFixed(3),
+            verifierSupport: s.components.verifier_support.toFixed(3),
+            crossPassAgreement: s.components.cross_pass_agreement.toFixed(3),
+            evidenceSpecificity: s.components.evidence_specificity.toFixed(3),
+            verifierStatus: v?.status ?? "supported",
+            verifierReason: v?.reason ?? null,
+            ambiguity: leaf.provenance.ambiguity,
+            contradiction: s.contradiction,
+            verifierCorrectedValueJson: (v?.correctedValue ?? null) as object,
+            validationMessages: validation.messages,
           })
           .returning({ id: schema.fieldValues.id });
-        await tx.insert(schema.fieldEvidence).values({
-          fieldValueId: fv!.id,
-          sourceBlockId: s.validation.sourceBlockId,
-          quoteText: s.leaf.evidence.quote,
-          quoteStart: s.validation.quoteStart,
-          quoteEnd: s.validation.quoteEnd,
-          sourceLocator: s.leaf.evidence.locator,
-          exactMatch: s.validation.evidenceExactMatch === 1,
-        });
-        if (s.score.routing === "auto_approved") autoApproved++;
+        for (const e of validation.evidence) {
+          await tx.insert(schema.fieldEvidence).values({
+            fieldValueId: fv!.id,
+            sourceBlockId: e.sourceBlockId,
+            quoteText: e.quote,
+            quoteStart: e.quoteStart,
+            quoteEnd: e.quoteEnd,
+            sourceLocator: e.locator,
+            exactMatch: e.exactMatch,
+          });
+        }
+        if (s.routing === "auto_approved") autoApproved++;
         else {
-          if (s.score.routing === "review") review++;
+          if (s.routing === "review") review++;
           else blocked++;
           await tx.insert(schema.reviewItems).values({
             workspaceId: ctx.workspaceId,
             documentVersionId: ctx.documentVersionId,
             recordVersionId: rv!.id,
             fieldValueId: fv!.id,
-            fieldPath: s.leaf.fieldPath,
+            fieldPath: leaf.fieldPath,
             status: "open",
-            priority: s.score.routing === "blocked" || s.leaf.required ? "high" : "normal",
-            reason: `${s.score.routing}: ${s.score.reason}${s.verify.reason ? ` (verifier: ${s.verify.reason})` : ""}`,
+            priority: s.routing === "blocked" ? "high" : "normal",
+            reason: `${s.routing}: ${s.reason}${v?.reason ? ` (verifier: ${v.reason})` : ""}${leaf.provenance.ambiguity ? ` (extractor: ${leaf.provenance.ambiguity})` : ""}`,
           });
         }
       }
@@ -321,9 +361,9 @@ export async function stepScoreAndRoute(ctx: StepContext, extract: ExtractStepOu
         .update(schema.processingRuns)
         .set({ reviewItemsCreated: sql`${schema.processingRuns.reviewItemsCreated} + ${review + blocked}` })
         .where(eq(schema.processingRuns.id, ctx.processingRunId));
-      return { recordVersionId: rv!.id, versionNumber, autoApproved, review, blocked, total: scored.length };
+      return { recordVersionId: rv!.id, versionNumber, autoApproved, review, blocked, total: leaves.length };
     });
-    await logEvent(ctx.processingRunId, ctx.documentVersionId, "info", "route.done", `record v${versionNumber}: ${result.autoApproved} auto-approved, ${result.review} review, ${result.blocked} blocked`, { ...result });
+    await logEvent(ctx.processingRunId, ctx.documentVersionId, "info", "route.done", `record v${result.versionNumber}: ${result.autoApproved} auto-approved, ${result.review} review, ${result.blocked} blocked`, { ...result });
     return result;
   });
 }
@@ -336,17 +376,8 @@ function diffRecords(a: Record<string, unknown>, b: Record<string, unknown>): st
     if (Array.isArray(av) || Array.isArray(bv)) {
       const aa = (av as unknown[]) ?? [];
       const bb = (bv as unknown[]) ?? [];
-      const n = Math.max(aa.length, bb.length);
-      for (let i = 0; i < n; i++) {
-        const ai = (aa[i] ?? {}) as Record<string, unknown>;
-        const bi = (bb[i] ?? {}) as Record<string, unknown>;
-        for (const k of new Set([...Object.keys(ai), ...Object.keys(bi)])) {
-          if (JSON.stringify(ai[k]) !== JSON.stringify(bi[k])) changed.push(`${key}[${i}].${k}`);
-        }
-      }
-    } else if (JSON.stringify(av) !== JSON.stringify(bv)) {
-      changed.push(key);
-    }
+      for (let i = 0; i < Math.max(aa.length, bb.length); i++) if (JSON.stringify(aa[i] ?? null) !== JSON.stringify(bb[i] ?? null)) changed.push(`${key}[${i}]`);
+    } else if (JSON.stringify(av ?? null) !== JSON.stringify(bv ?? null)) changed.push(key);
   }
   return changed;
 }
@@ -357,9 +388,9 @@ export async function stepEmbed(ctx: StepContext) {
     const db = getDb();
     const llm = getLlm();
     const rows = await db.select().from(schema.chunks).where(eq(schema.chunks.documentVersionId, ctx.documentVersionId)).orderBy(asc(schema.chunks.chunkIndex));
-    const model = llm.models.embedding;
-    const dims = llm.models.embeddingDimensions;
-    const keyed = rows.map((r) => ({ row: r, key: sha256(`${r.text}|${model}|${dims}`) }));
+    const model = llm.models.embed;
+    const dims = llm.models.embedDimensions;
+    const keyed = rows.map((r) => ({ row: r, key: sha256(`${r.text}${model}${dims}`) }));
     const keys = keyed.map((k) => k.key);
     const cachedRows = keys.length ? await db.select().from(schema.embeddingCache).where(inArray(schema.embeddingCache.embeddingKey, keys)) : [];
     const cache = new Map(cachedRows.map((c) => [c.embeddingKey, c.embedding]));
@@ -373,19 +404,12 @@ export async function stepEmbed(ctx: StepContext) {
         const vec = res.vectors[j];
         if (!vec || vec.length !== dims) throw new StepFailure(`embedding dimension mismatch (${vec?.length ?? 0} != ${dims})`, "embedding_invalid", false);
         cache.set(batch[j]!.key, vec);
-        await db
-          .insert(schema.embeddingCache)
-          .values({ embeddingKey: batch[j]!.key, embedding: vec, model, dimensions: dims })
-          .onConflictDoNothing();
+        await db.insert(schema.embeddingCache).values({ embeddingKey: batch[j]!.key, embedding: vec, model, dimensions: dims }).onConflictDoNothing();
         embedded++;
       }
     }
     for (const k of keyed) {
-      const vec = cache.get(k.key)!;
-      await db
-        .update(schema.chunks)
-        .set({ embedding: vec, embeddingModel: model, embeddingDimensions: dims, embeddingKey: k.key })
-        .where(eq(schema.chunks.id, k.row.id));
+      await db.update(schema.chunks).set({ embedding: cache.get(k.key)!, embeddingModel: model, embeddingDimensions: dims, embeddingKey: k.key }).where(eq(schema.chunks.id, k.row.id));
     }
     return { embedded, cached: keyed.length - embedded, skipped: 0 };
   });
@@ -394,18 +418,28 @@ export async function stepEmbed(ctx: StepContext) {
 // ---------------------------------------------------------------- finalize
 export async function markDocumentOutcome(ctx: StepContext, outcome: "completed" | "completed_with_review" | "failed" | "unsupported") {
   const db = getDb();
-  await db.update(schema.documentVersions).set({ processingStatus: outcome }).where(eq(schema.documentVersions.id, ctx.documentVersionId));
   const failed = outcome === "failed" || outcome === "unsupported";
-  await db
-    .update(schema.processingRuns)
-    .set(
-      failed
-        ? { documentsFailed: sql`${schema.processingRuns.documentsFailed} + 1` }
-        : { documentsCompleted: sql`${schema.processingRuns.documentsCompleted} + 1` },
-    )
-    .where(eq(schema.processingRuns.id, ctx.processingRunId));
+  await db.transaction(async tx => {
+    await tx.execute(sql`select id from processing_runs where id = ${ctx.processingRunId} for update`);
+    await tx.execute(sql`insert into processing_run_documents (processing_run_id, document_version_id, outcome)
+      values (${ctx.processingRunId}, ${ctx.documentVersionId}, ${outcome})
+      on conflict (processing_run_id, document_version_id) do update set outcome = excluded.outcome`);
+    await tx.update(schema.documentVersions).set({ processingStatus: outcome }).where(eq(schema.documentVersions.id, ctx.documentVersionId));
+    await tx.execute(sql`update processing_runs set
+      documents_completed = (select count(*) from processing_run_documents where processing_run_id = ${ctx.processingRunId} and outcome in ('completed','completed_with_review')),
+      documents_failed = (select count(*) from processing_run_documents where processing_run_id = ${ctx.processingRunId} and outcome in ('failed','unsupported'))
+      where id = ${ctx.processingRunId}`);
+  });
   await logEvent(ctx.processingRunId, ctx.documentVersionId, failed ? "error" : "info", "document.finished", `document ${outcome}`, { outcome });
   await maybeFinalizeRun(ctx.processingRunId);
+}
+
+/** Durable finalize step: records the terminal document state as a step so the timeline is complete. */
+export async function stepFinalize(ctx: StepContext, outcome: "completed" | "completed_with_review") {
+  return runStep<{ outcome: string }>(ctx, "finalize", async () => {
+    await markDocumentOutcome(ctx, outcome);
+    return { outcome };
+  });
 }
 
 /** Close the run once every document has a terminal outcome. Never leaves a run silently stuck. */
@@ -414,7 +448,8 @@ export async function maybeFinalizeRun(processingRunId: string) {
   const [run] = await db.select().from(schema.processingRuns).where(eq(schema.processingRuns.id, processingRunId)).limit(1);
   if (!run || run.status === "completed" || run.status === "completed_with_review" || run.status === "failed") return run;
   if (run.documentsCompleted + run.documentsFailed < run.documentsTotal) return run;
-  const status = run.documentsFailed > 0 ? "failed" : run.reviewItemsCreated > 0 ? "completed_with_review" : "completed";
+  const [pending] = await db.select({ count: sql<number>`count(*)::int` }).from(schema.reviewItems).where(and(inArray(schema.reviewItems.documentVersionId, run.configJson.documentVersionIds ?? []), inArray(schema.reviewItems.status, ["open", "needs_source"])));
+  const status = run.documentsFailed > 0 ? "failed" : (pending?.count ?? 0) > 0 ? "completed_with_review" : "completed";
   const [updated] = await db
     .update(schema.processingRuns)
     .set({ status, completedAt: new Date(), currentStep: null, errorMessage: run.documentsFailed > 0 ? `${run.documentsFailed} document(s) failed or unsupported` : null })
@@ -431,20 +466,17 @@ export async function markRunRunning(processingRunId: string) {
     .where(and(eq(schema.processingRuns.id, processingRunId), eq(schema.processingRuns.status, "queued")));
 }
 
-/** Build the step context for a run/document pair. */
 export async function buildStepContext(processingRunId: string, documentVersionId: string): Promise<StepContext & { runType: string }> {
   const [run] = await getDb().select().from(schema.processingRuns).where(eq(schema.processingRuns.id, processingRunId)).limit(1);
   if (!run) throw new Error(`processing run ${processingRunId} not found`);
-  return {
-    processingRunId,
-    workspaceId: run.workspaceId,
-    documentVersionId,
-    modelConfigHash: run.modelConfigHash,
-    provider: run.provider,
-    injectFailure: run.configJson.injectFailure,
-    runType: run.runType,
-  };
+  if (run.modelConfigHash !== modelConfigHash()) {
+    await getDb().update(schema.processingRuns).set({ status: "failed", errorMessage: "Worker configuration changed. Reprocess the documents in a new run.", completedAt: new Date() }).where(eq(schema.processingRuns.id, processingRunId));
+    throw new StepFailure("Worker configuration changed. Reprocess the documents in a new run.", "configuration_changed", false);
+  }
+  if (!run.configJson.documentVersionIds?.includes(documentVersionId)) throw new Error("Document is not part of this processing run");
+  const [version] = await getDb().select().from(schema.documentVersions).where(and(eq(schema.documentVersions.id, documentVersionId), eq(schema.documentVersions.workspaceId, run.workspaceId))).limit(1);
+  if (!version) throw new Error("Document is not in the run workspace");
+  return { processingRunId, workspaceId: run.workspaceId, documentVersionId, modelConfigHash: run.modelConfigHash, provider: run.provider, injectFailure: run.configJson.injectFailure, runType: run.runType };
 }
 
-/** Utility used by the review UI: normalized text helper re-export to keep imports local. */
 export { normalizeText };

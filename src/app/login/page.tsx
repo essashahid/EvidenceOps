@@ -26,10 +26,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <div className="mt-4 border-t border-[var(--line)] pt-3 text-xs text-[var(--muted)]">
             <div className="mb-1 font-medium">Demo accounts</div>
             <div className="font-mono">
-              {e.SEED_ADMIN_EMAIL} / {e.SEED_ADMIN_PASSWORD} (admin)
+              {e.DEMO_ADMIN_EMAIL} / {e.DEMO_ADMIN_PASSWORD} (admin)
             </div>
             <div className="font-mono">
-              {e.SEED_REVIEWER_EMAIL} / {e.SEED_REVIEWER_PASSWORD} (reviewer)
+              {e.DEMO_REVIEWER_EMAIL} / {e.DEMO_REVIEWER_PASSWORD} (reviewer)
             </div>
             <div className="mt-1">Auth driver: {e.AUTH_DRIVER}</div>
           </div>

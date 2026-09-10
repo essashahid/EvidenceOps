@@ -1,0 +1,108 @@
+{
+  "files": [
+    {
+      "filename": "OPS-2026-004-v1-northstar-operational-review.pdf",
+      "truth": "OPS-2026-004-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "OPS-2026-009-v1-redwood-transit-operational-review.pdf",
+      "truth": "OPS-2026-009-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "AUD-2026-003-v1-orchard-valley-audit-report.pdf",
+      "truth": "AUD-2026-003-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "AUD-2026-011-v1-meridian-water-audit-report.pdf",
+      "truth": "AUD-2026-011-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "EVL-2026-002-v1-larkspur-telehealth-evaluation.docx",
+      "truth": "EVL-2026-002-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "EVL-2026-007-v1-kestrel-apprenticeship-evaluation.pdf",
+      "truth": "EVL-2026-007-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "INV-2026-005-v1-tidewater-port-investigation.pdf",
+      "truth": "INV-2026-005-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "INV-2026-012-v1-granite-peak-conveyor-investigation.pdf",
+      "truth": "INV-2026-012-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "GDN-2026-001-v1-cobalt-ridge-vendor-guidance.docx",
+      "truth": "GDN-2026-001-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "GDN-2026-006-v1-silverline-rail-safety-guidance.pdf",
+      "truth": "GDN-2026-006-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "MEM-2026-008-v1-bluefin-cold-chain-memorandum.pdf",
+      "truth": "MEM-2026-008-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "OPS-2026-013-v1-harbor-point-warehouse-review.pdf",
+      "truth": "OPS-2026-013-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "AUD-2026-014-v1-brightwater-library-it-audit.pdf",
+      "truth": "AUD-2026-014-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "EVL-2026-015-v1-sable-coast-subsidy-evaluation.pdf",
+      "truth": "EVL-2026-015-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "INV-2026-016-v1-cardinal-fleet-fuel-card-investigation.pdf",
+      "truth": "INV-2026-016-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "OPS-2026-017-v1-meridian-water-fernhill-review.pdf",
+      "truth": "OPS-2026-017-v1",
+      "expect": "processed"
+    },
+    {
+      "filename": "copy-of-AUD-2026-011-v1-meridian-water-audit-report.pdf",
+      "truth": "AUD-2026-011-v1",
+      "expect": "duplicate",
+      "duplicate_of": "AUD-2026-011-v1-meridian-water-audit-report.pdf"
+    },
+    {
+      "filename": "GDN-2026-001-v1-cobalt-ridge-vendor-guidance-resend.docx",
+      "truth": "GDN-2026-001-v1",
+      "expect": "duplicate",
+      "duplicate_of": "GDN-2026-001-v1-cobalt-ridge-vendor-guidance.docx"
+    },
+    {
+      "filename": "OPS-2026-004-v2-northstar-operational-review-corrected.pdf",
+      "truth": "OPS-2026-004-v2",
+      "expect": "new_version",
+      "supersedes": "OPS-2026-004-v1"
+    },
+    {
+      "filename": "EVL-2026-002-v2-larkspur-telehealth-evaluation-corrected.docx",
+      "truth": "EVL-2026-002-v2",
+      "expect": "new_version",
+      "supersedes": "EVL-2026-002-v1"
+    }
+  ]
+}

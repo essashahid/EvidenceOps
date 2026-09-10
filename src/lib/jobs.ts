@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { env } from "@/lib/env";
 import { getDb, schema } from "@/lib/db/client";
 import { processDocumentInline, retryDocumentInline } from "@/lib/pipeline/orchestrate";
@@ -20,12 +20,19 @@ export async function dispatchRun(processingRunId: string) {
     return { driver: "inline" as const, dispatched: ids.length };
   }
   const { inngest } = await import("@/inngest/client");
-  await inngest.send(ids.map((documentVersionId) => ({ name: "document.process.requested" as const, data: { processingRunId, documentVersionId } })));
+  try {
+    await inngest.send(ids.map((documentVersionId) => ({ name: "document.process.requested" as const, data: { processingRunId, documentVersionId } })));
+  } catch (error) {
+    await getDb().update(schema.processingRuns).set({ status: "failed", errorMessage: "Inngest dispatch failed. Reprocess the documents after checking the event key.", completedAt: new Date() }).where(eq(schema.processingRuns.id, processingRunId));
+    throw error;
+  }
   return { driver: "inngest" as const, dispatched: ids.length };
 }
 
 /** Admin action: retry a dead-lettered step (re-runs the document; completed steps are reused). */
 export async function dispatchRetry(processingRunId: string, documentVersionId: string, stepName: string) {
+  const [dead] = await getDb().select().from(schema.deadLetters).where(and(eq(schema.deadLetters.processingRunId, processingRunId), eq(schema.deadLetters.documentVersionId, documentVersionId), eq(schema.deadLetters.failedStep, stepName), inArray(schema.deadLetters.status, ["open", "retrying"])));
+  if (!dead) throw new Error("No retryable failed step was found for this document and run.");
   await reopenStep(processingRunId, documentVersionId, stepName);
   if (env().JOB_DRIVER === "inline") {
     const outcome = await retryDocumentInline(processingRunId, documentVersionId);

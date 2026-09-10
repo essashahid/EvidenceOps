@@ -1,7 +1,8 @@
+import { env } from "@/lib/env";
 import { asc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/lib/db/client";
-import { requireUser, type CurrentUser } from "@/lib/auth/session";
+import { getCurrentUser, type CurrentUser } from "@/lib/auth/session";
 
 export type WorkspaceRole = "admin" | "reviewer" | "viewer";
 
@@ -24,11 +25,16 @@ export async function getWorkspaceForUser(userId: string): Promise<WorkspaceCont
   return row ?? null;
 }
 
-export type SessionContext = { user: CurrentUser; workspace: WorkspaceContext };
+export type SessionContext = { user: CurrentUser; workspace: WorkspaceContext; isPublic?: boolean };
 
 /** requireUser + membership; redirects to /login when either is missing. */
 export async function requireWorkspace(): Promise<SessionContext> {
-  const user = await requireUser();
+  const user = await getCurrentUser();
+  if (!user && env().PUBLIC_DEMO_MODE) {
+    const [ws] = await getDb().select().from(schema.workspaces).where(eq(schema.workspaces.slug, "default")).limit(1);
+    if (ws) return { user: { id: "00000000-0000-0000-0000-000000000000", email: "Public demo", displayName: "Visitor" }, workspace: { workspaceId: ws.id, slug: ws.slug, name: ws.name, role: "viewer" }, isPublic: true };
+  }
+  if (!user) redirect("/login");
   const workspace = await getWorkspaceForUser(user.id);
   if (!workspace) redirect("/login?error=no_workspace");
   return { user, workspace };

@@ -1,111 +1,63 @@
 import type { ExtractionOutput } from "@/lib/schema/report";
 import type { AnswerMode } from "@/lib/db/schema";
 
-export type LlmUsage = {
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  latencyMs: number;
-};
+export type LlmUsage = { model: string; inputTokens: number; outputTokens: number; latencyMs: number };
 
-export type SourceBlockInput = { locator: string; text: string };
+export type SourceBlockInput = { source_block_id: string; locator: string; text: string };
 
-export type ExtractInput = {
-  documentName: string;
-  blocks: SourceBlockInput[];
-};
-
+export type ExtractInput = { logicalKey: string; versionNumber: number; blocks: SourceBlockInput[] };
 export type ExtractResult = { output: ExtractionOutput; usage: LlmUsage; raw?: unknown };
 
 export type VerifyItem = {
   fieldPath: string;
   fieldDefinition: string;
   candidateValue: unknown;
-  evidence: { locator: string; quote: string };
-  /** Normalized text of the cited source block (empty string when the locator does not exist). */
-  blockText: string;
-  quoteFound: boolean;
+  /** Cited quotes with whether each was found verbatim in one of the cited blocks. */
+  evidence: { source_block_id: string; quote: string; found_in_block: boolean }[];
+  /** The cited blocks (full normalized text) plus neighbours for context. */
+  context: { source_block_id: string; locator: string; text: string }[];
 };
 
 export const VERIFIER_STATUSES = ["supported", "partially_supported", "unsupported"] as const;
 export type VerifierStatus = (typeof VERIFIER_STATUSES)[number];
-export const AGREEMENTS = ["same", "equivalent_formatting", "different"] as const;
-export type Agreement = (typeof AGREEMENTS)[number];
-export const SPECIFICITIES = ["direct", "contextual", "weak", "none"] as const;
-export type Specificity = (typeof SPECIFICITIES)[number];
 
 export type VerifyOutcome = {
   fieldPath: string;
   status: VerifierStatus;
-  /** The value the verifier believes is correct, or null when it cannot determine one. */
   correctedValue: unknown;
-  agreement: Agreement;
-  contradiction: boolean;
-  specificity: Specificity;
+  contradictionDetected: boolean;
+  /** 1.0 direct, 0.75 contextual, 0.4 weak, 0.0 none. */
+  evidenceSpecificity: number;
   reason: string;
 };
-
 export type VerifyResult = { outcomes: VerifyOutcome[]; usage: LlmUsage };
 
-export type RetrievedChunkInput = {
-  index: number;
+export type RetrievedBlockInput = {
+  retrievalId: number;
   chunkId: string;
-  documentName: string;
   logicalKey: string;
-  versionNumber: number;
-  startLocator: string;
-  endLocator: string;
+  version: number;
+  locator: string;
+  document: string;
+  isCurrent: boolean;
   text: string;
 };
 
-export type AnswerInput = {
-  question: string;
-  mode: AnswerMode;
-  chunks: RetrievedChunkInput[];
-};
+export type AnswerInput = { question: string; mode: AnswerMode; blocks: RetrievedBlockInput[] };
 
-export type AnswerClaim = {
-  text: string;
-  kind: "direct" | "synthesis";
-  citations: { chunkIndex: number; quote: string }[];
-};
+/**
+ * The model returns prose with inline citations in the form [KEY vN locator]. Citations are
+ * parsed and validated in code against the supplied retrieval set; the model never decides
+ * what counts as a valid citation.
+ */
+export type AnswerResult = { text: string; usage: LlmUsage };
 
-export type DraftSections = {
-  title: string;
-  key_evidence: AnswerClaim[];
-  findings: AnswerClaim[];
-  recommendations: AnswerClaim[];
-  limitations: string[];
-};
-
-export type AnswerResult = {
-  sufficient: boolean;
-  refusalReason: string | null;
-  answerText: string;
-  claims: AnswerClaim[];
-  draft: DraftSections | null;
-  usage: LlmUsage;
-};
-
-export type JudgeInput = {
-  question: string;
-  referenceAnswer: string;
-  expectedFacts: string[];
-  answer: string;
-};
-
-export type JudgeResult = { score: number; reason: string; usage: LlmUsage };
+export type JudgeInput = { question: string; expectedAnswer: string; candidateAnswer: string; sourceEvidence: string; unanswerable: boolean };
+export type JudgeResult = { correctness: number; evidenceSupport: number; completeness: number; passed: boolean; reason: string; usage: LlmUsage };
 
 export type EmbedResult = { vectors: number[][]; usage: LlmUsage };
 
-export type LlmModels = {
-  extractor: string;
-  verifier: string;
-  answer: string;
-  judge: string;
-  embedding: string;
-  embeddingDimensions: number;
-};
+export type LlmModels = { extract: string; verify: string; rag: string; eval: string; embed: string; embedDimensions: number };
 
 export interface LlmProvider {
   readonly name: "openai" | "mock";

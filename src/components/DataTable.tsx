@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
  */
 export function Table({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`overflow-x-auto rounded border border-[var(--line)] bg-[var(--card)] ${className}`}>
+    <div className={`overflow-x-auto rounded-lg border border-[var(--line)] bg-[var(--card)] ${className}`}>
       <table className="w-full border-collapse text-left text-[13px]">{children}</table>
     </div>
   );
@@ -21,7 +21,7 @@ export function THead({ children }: { children: ReactNode }) {
 }
 
 export function Th({ children, className = "", align = "left" }: { children?: ReactNode; className?: string; align?: "left" | "right" }) {
-  return <th className={`border-b border-[var(--line)] px-2.5 py-1.5 font-medium ${align === "right" ? "text-right" : ""} ${className}`}>{children}</th>;
+  return <th className={`border-b border-[var(--line)] px-3 py-3 font-medium ${align === "right" ? "text-right" : ""} ${className}`}>{children}</th>;
 }
 
 export function Tr({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -30,7 +30,7 @@ export function Tr({ children, className = "" }: { children: ReactNode; classNam
 
 export function Td({ children, className = "", align = "left", title, colSpan }: { children?: ReactNode; className?: string; align?: "left" | "right"; title?: string; colSpan?: number }) {
   return (
-    <td title={title} colSpan={colSpan} className={`px-2.5 py-1.5 align-top ${align === "right" ? "text-right tabular-nums" : ""} ${className}`}>
+    <td title={title} colSpan={colSpan} className={`px-3 py-3 align-top ${align === "right" ? "text-right tabular-nums" : ""} ${className}`}>
       {children}
     </td>
   );

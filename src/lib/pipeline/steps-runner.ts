@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
-import { getDb, schema } from "@/lib/db/client";
-import { PIPELINE_VERSION, MAX_ATTEMPTS } from "@/lib/config";
+import { getDb, getSql, schema } from "@/lib/db/client";
+import { PIPELINE_VERSION, CHUNKING, MAX_ATTEMPTS } from "@/lib/config";
 import { logEvent } from "./events";
 
 export class StepFailure extends Error {
@@ -24,6 +24,9 @@ export type StepContext = {
 };
 
 export function idempotencyKey(ctx: StepContext, stepName: string): string {
+  if (stepName === "finalize") return `${ctx.processingRunId}:${ctx.documentVersionId}:finalize`;
+  if (stepName === "chunk") return `${ctx.workspaceId}:${ctx.documentVersionId}:chunk:chunk-v1:${CHUNKING.targetTokens}:${CHUNKING.overlapTokens}`;
+  if (stepName === "parse") return `${ctx.workspaceId}:${ctx.documentVersionId}:parse:parser-v1`;
   return `${ctx.workspaceId}:${ctx.documentVersionId}:${stepName}:${PIPELINE_VERSION}:${ctx.modelConfigHash}`;
 }
 
@@ -33,7 +36,7 @@ export function idempotencyKey(ctx: StepContext, stepName: string): string {
  * the stored output is returned and the body is not executed. Failures are recorded with attempt
  * counts; the caller (Inngest or the inline runner) decides whether to retry.
  */
-export async function runStep<T>(ctx: StepContext, stepName: string, body: () => Promise<T>): Promise<{ output: T; reused: boolean }> {
+async function runStepUnlocked<T>(ctx: StepContext, stepName: string, body: () => Promise<T>): Promise<{ output: T; reused: boolean }> {
   const db = getDb();
   const key = idempotencyKey(ctx, stepName);
   const [existing] = await db.select().from(schema.runSteps).where(eq(schema.runSteps.idempotencyKey, key)).limit(1);
@@ -76,6 +79,7 @@ export async function runStep<T>(ctx: StepContext, stepName: string, body: () =>
       .update(schema.runSteps)
       .set({ status: "succeeded", completedAt: new Date(), latencyMs: Date.now() - started, outputJson: output as unknown as object, errorCode: null, errorMessage: null })
       .where(eq(schema.runSteps.idempotencyKey, key));
+    await db.update(schema.deadLetters).set({ status: "resolved", resolvedAt: new Date() }).where(and(eq(schema.deadLetters.documentVersionId, ctx.documentVersionId), eq(schema.deadLetters.failedStep, stepName), eq(schema.deadLetters.status, "retrying")));
     await logEvent(ctx.processingRunId, ctx.documentVersionId, "info", "step.succeeded", `${stepName}: succeeded in ${Date.now() - started} ms`, { stepName, attempt, latencyMs: Date.now() - started });
     return { output, reused: false };
   } catch (err) {
@@ -119,4 +123,16 @@ export async function reopenStep(processingRunId: string, documentVersionId: str
     .update(schema.deadLetters)
     .set({ status: "retrying" })
     .where(and(eq(schema.deadLetters.processingRunId, processingRunId), eq(schema.deadLetters.documentVersionId, documentVersionId), eq(schema.deadLetters.failedStep, stepName)));
+}
+
+/** A session advisory lock prevents simultaneous deliveries from repeating paid work. */
+export async function runStep<T>(ctx: StepContext, stepName: string, body: () => Promise<T>): Promise<{ output: T; reused: boolean }> {
+  const connection = await getSql().reserve();
+  const key = idempotencyKey(ctx, stepName);
+  try {
+    await connection`select pg_advisory_lock(hashtextextended(${key}, 0))`;
+    return await runStepUnlocked(ctx, stepName, body);
+  } finally {
+    try { await connection`select pg_advisory_unlock(hashtextextended(${key}, 0))`; } finally { connection.release(); }
+  }
 }

@@ -1,0 +1,297 @@
+{
+  "logical_key": "OPS-2026-017",
+  "version": 1,
+  "format": "pdf",
+  "filename": "OPS-2026-017-v1-meridian-water-fernhill-review.pdf",
+  "display_name": "Meridian Water Fernhill Pump Station operational review",
+  "record": {
+    "report_title": "Operational Review of the Fernhill Pump Station",
+    "report_number": "OPS-2026-017",
+    "issuing_organization": "Meridian Water Authority",
+    "publication_date": "2026-08-26",
+    "document_type": "operational_review",
+    "subject_entities": [
+      {
+        "name": "Meridian Water Authority"
+      },
+      {
+        "name": "Fernhill Pump Station"
+      },
+      {
+        "name": "Clearwell Chemicals"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Pump efficiency at the Fernhill Pump Station fell to 68 percent, below the 75 percent design value.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Chemical deliveries from Clearwell Chemicals were received without a receiving report on nine occasions.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Standby generator tests were completed monthly as required.",
+        "severity": "info"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Refurbish pump 2 and pump 3 during the 2027 low demand period.",
+        "target_entity": "Meridian Water Authority Engineering Division",
+        "status_if_stated": "Approved"
+      },
+      {
+        "recommendation": "Apply the signed receiving report requirement to all chemical deliveries at the station.",
+        "target_entity": "Fernhill Pump Station",
+        "status_if_stated": "In progress"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 655000,
+        "currency": "USD",
+        "context": "energy costs at the Fernhill Pump Station in 2025"
+      },
+      {
+        "amount": 890000,
+        "currency": "USD",
+        "context": "estimated cost of refurbishing pump 2 and pump 3"
+      },
+      {
+        "amount": 47000,
+        "currency": "USD",
+        "context": "estimated annual energy saving after refurbishment"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P01"
+      ],
+      "quotes": [
+        "Operational Review of the Fernhill Pump Station"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P01"
+      ],
+      "quotes": [
+        "Report No. OPS-2026-017"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Meridian Water Authority"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 26 August 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P01"
+      ],
+      "quotes": [
+        "This operational review assesses the Fernhill Pump Station, the largest of the Meridian Water Authority's transfer stations, for the 2025 calendar year."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P01"
+      ],
+      "quotes": [
+        "This operational review assesses the Fernhill Pump Station, the largest of the Meridian Water Authority's transfer stations, for the 2025 calendar year."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P01"
+      ],
+      "quotes": [
+        "This operational review assesses the Fernhill Pump Station, the largest of the Meridian Water Authority's transfer stations, for the 2025 calendar year."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P01"
+      ],
+      "quotes": [
+        "Clearwell Chemicals delivers sodium hypochlorite to the station for residual disinfection."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Pump efficiency at the Fernhill Pump Station fell to 68 percent, below the 75 percent design value.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Chemical deliveries from Clearwell Chemicals were received without a receiving report on nine occasions.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Standby generator tests were completed monthly as required.",
+        "Severity: Info."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Refurbish pump 2 and pump 3 during the 2027 low demand period.",
+        "Target: Meridian Water Authority Engineering Division.",
+        "Status: Approved."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Apply the signed receiving report requirement to all chemical deliveries at the station.",
+        "Target: Fernhill Pump Station.",
+        "Status: In progress."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P03"
+      ],
+      "quotes": [
+        "After the metered data for December were received, energy costs at the Fernhill Pump Station for 2025 are revised to USD 655,000, not USD 640,000 as stated in the Executive Summary."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P02"
+      ],
+      "quotes": [
+        "Refurbishment of pump 2 and pump 3 is estimated at USD 890,000."
+      ]
+    },
+    "monetary_amounts[2]": {
+      "locators": [
+        "SRC-OPS-2026-017-V1-P02"
+      ],
+      "quotes": [
+        "Restoring design efficiency is expected to save about USD 47,000 per year in energy costs."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "monetary_amounts[0]",
+      "kind": "conflicting_amount",
+      "reason": "The Executive Summary states USD 640,000 but Appendix B revises the 2025 energy cost to USD 655,000; the truth holds the appendix figure.",
+      "extractor_value": {
+        "amount": 640000,
+        "currency": "USD",
+        "context": "energy costs at the Fernhill Pump Station in 2025"
+      },
+      "extractor_quotes": [
+        "Energy costs at the station were USD 640,000 in 2025."
+      ],
+      "extractor_ambiguity": null,
+      "verifier": {
+        "status": "unsupported",
+        "corrected_value": {
+          "amount": 655000,
+          "currency": "USD",
+          "context": "energy costs at the Fernhill Pump Station in 2025"
+        },
+        "contradiction_detected": true,
+        "evidence_specificity": 0.75
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-OPS-2026-017-V1-P01"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Operational Review of the Fernhill Pump Station",
+      "paragraphs": [
+        "Report No. OPS-2026-017",
+        "Issued by Meridian Water Authority",
+        "Publication date: 26 August 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This operational review assesses the Fernhill Pump Station, the largest of the Meridian Water Authority's transfer stations, for the 2025 calendar year. It examines pumping efficiency, energy use, chemical receiving practice and standby power testing.",
+        "Energy costs at the station were USD 640,000 in 2025. Pump efficiency has fallen below the design value, and the receiving report weakness identified in the authority's chemical procurement audit earlier this year was also present at Fernhill. Two recommendations are made."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "The Fernhill Pump Station lifts treated water from the Stonebridge Treatment Plant to the Fernhill reservoir and serves about 140,000 customers. It has four pumps, of which two normally run, and a standby diesel generator. Clearwell Chemicals delivers sodium hypochlorite to the station for residual disinfection.",
+        "The review follows the audit of chemical procurement and inventory controls published by the authority in February 2026 and tested whether the receiving report control recommended in that audit had been applied at Fernhill.",
+        "The work was led by Benny Heaney and supported by Arne Zemlak. The team conducted 20 structured interviews, examined a sample of 86 records and reviewed 61 internal documents between 30 August 2025 and 4 October 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Pump efficiency at the Fernhill Pump Station fell to 68 percent, below the 75 percent design value. Impeller wear on pump 2 and pump 3 accounts for most of the shortfall and drives the increase in energy use. Severity: Medium.",
+        "Finding 2: Chemical deliveries from Clearwell Chemicals were received without a receiving report on nine occasions. The nine deliveries occurred between March and July 2025, before the audit recommendation was issued. Severity: Medium.",
+        "Finding 3: Standby generator tests were completed monthly as required. All twelve test records were complete and the generator started within the required thirty seconds on each test. Severity: Info."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Refurbish pump 2 and pump 3 during the 2027 low demand period. Target: Meridian Water Authority Engineering Division. Status: Approved.",
+        "Recommendation 2: Apply the signed receiving report requirement to all chemical deliveries at the station. Target: Fernhill Pump Station. Status: In progress."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "Energy costs for the year are addressed in Appendix B; the refurbishment estimate below was prepared by the engineering division. Refurbishment of pump 2 and pump 3 is estimated at USD 890,000. Restoring design efficiency is expected to save about USD 47,000 per year in energy costs."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 61 internal documents reviewed included 27 purchase orders, 69 invoices and 34 items of correspondence, all indexed under working reference 3Y3BCT.",
+        "Appendix B: Correction. After the metered data for December were received, energy costs at the Fernhill Pump Station for 2025 are revised to USD 655,000, not USD 640,000 as stated in the Executive Summary. The December invoice was received after the summary had been drafted.",
+        "Appendix C: Pump test results. Efficiency measured in November 2025 was 74 percent for pump 1, 66 percent for pump 2, 65 percent for pump 3 and 73 percent for pump 4.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion.",
+        "The sampling approach was intended to describe the matters selected for examination. It was not designed to estimate the frequency of an issue across records outside that selection. Readers should therefore interpret a finding in relation to its stated scope, period and subject. Silence about another activity does not imply that the activity was examined or found satisfactory.",
+        "This appendix explains the preparation of the evidence file. It does not introduce additional recommendations or change the responsibility assigned in the recommendations section. Any later correction to the source must be issued as a separately identified edition. Earlier editions remain part of the record so that differences can be inspected without overwriting the originally published statements."
+      ]
+    }
+  ]
+}

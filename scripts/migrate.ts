@@ -1,10 +1,10 @@
-import "dotenv/config";
+import "./load-env";
 import { getSql, closeDb } from "@/lib/db/client";
 import { migrate } from "@/lib/db/migrate";
 import { databaseUrl } from "@/lib/env";
 
 async function main() {
-  console.log(`migrating ${databaseUrl()}`);
+  console.log(`migrating ${new URL(databaseUrl()).pathname}`);
   await migrate(getSql(), { log: console.log });
   await closeDb();
   console.log("done");

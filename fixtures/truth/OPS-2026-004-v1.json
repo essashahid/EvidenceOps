@@ -1,0 +1,308 @@
+{
+  "logical_key": "OPS-2026-004",
+  "version": 1,
+  "format": "pdf",
+  "filename": "OPS-2026-004-v1-northstar-operational-review.pdf",
+  "display_name": "Northstar Dock Optimization Program operational review",
+  "record": {
+    "report_title": "Operational Review of the Dock Optimization Program",
+    "report_number": "OPS-2026-004",
+    "issuing_organization": "Northstar Distribution Cooperative",
+    "publication_date": "2026-03-12",
+    "document_type": "operational_review",
+    "subject_entities": [
+      {
+        "name": "Dock Optimization Program"
+      },
+      {
+        "name": "Ashford Crossdock Facility"
+      },
+      {
+        "name": "Cardinal Fleet Services"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Detention charges of $212,000 invoiced by Cardinal Fleet Services during the review period had not been reconciled against gate records.",
+        "severity": "high"
+      },
+      {
+        "finding": "Carrier compliance reporting was delivered late in seven of thirteen weeks.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Average trailer dwell time fell from 3.4 hours to 2.8 hours after the appointment system went live.",
+        "severity": "info"
+      },
+      {
+        "finding": "Yard management dashboard uptime was 96.2 percent, below the 99 percent service level in the contract.",
+        "severity": "low"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Reconcile all detention invoices from Cardinal Fleet Services against gate records before payment.",
+        "target_entity": "Northstar Finance Department",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Amend the carrier service agreement to attach a service credit to late compliance reports.",
+        "target_entity": "Northstar Procurement Office",
+        "status_if_stated": "Not started"
+      },
+      {
+        "recommendation": "Extend the appointment scheduling system to the remaining three crossdock facilities by the end of 2026.",
+        "target_entity": "Dock Optimization Program Office",
+        "status_if_stated": "Approved"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 1250000,
+        "currency": "USD",
+        "context": "total Dock Optimization Program cost to date"
+      },
+      {
+        "amount": 1400000,
+        "currency": "USD",
+        "context": "approved Dock Optimization Program budget"
+      },
+      {
+        "amount": 212000,
+        "currency": "USD",
+        "context": "disputed detention charges invoiced by Cardinal Fleet Services"
+      },
+      {
+        "amount": 95000,
+        "currency": "USD",
+        "context": "estimated annual yard labour saving from reduced dwell time"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P01"
+      ],
+      "quotes": [
+        "Operational Review of the Dock Optimization Program"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P01"
+      ],
+      "quotes": [
+        "Report No. OPS-2026-004"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Northstar Distribution Cooperative"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 12 March 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P01"
+      ],
+      "quotes": [
+        "This operational review examines the Dock Optimization Program at the Ashford Crossdock Facility during the thirteen weeks ending 28 February 2026."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P01"
+      ],
+      "quotes": [
+        "This operational review examines the Dock Optimization Program at the Ashford Crossdock Facility during the thirteen weeks ending 28 February 2026."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P01"
+      ],
+      "quotes": [
+        "This operational review examines the Dock Optimization Program at the Ashford Crossdock Facility during the thirteen weeks ending 28 February 2026."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P01"
+      ],
+      "quotes": [
+        "The review concludes that dwell time improved by 18 percent against the baseline but that carrier reporting from Cardinal Fleet Services remained inconsistent throughout the period."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Detention charges of $212,000 invoiced by Cardinal Fleet Services during the review period had not been reconciled against gate records.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Carrier compliance reporting was delivered late in seven of thirteen weeks.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Average trailer dwell time fell from 3.4 hours to 2.8 hours after the appointment system went live.",
+        "Severity: Info."
+      ]
+    },
+    "key_findings[3]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P02"
+      ],
+      "quotes": [
+        "Finding 4: Yard management dashboard uptime was 96.2 percent, below the 99 percent service level in the contract.",
+        "Severity: Low."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P03"
+      ],
+      "quotes": [
+        "Recommendation 1: Reconcile all detention invoices from Cardinal Fleet Services against gate records before payment.",
+        "Target: Northstar Finance Department.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P03"
+      ],
+      "quotes": [
+        "Recommendation 2: Amend the carrier service agreement to attach a service credit to late compliance reports.",
+        "Target: Northstar Procurement Office.",
+        "Status: Not started."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P03"
+      ],
+      "quotes": [
+        "Recommendation 3: Extend the appointment scheduling system to the remaining three crossdock facilities by the end of 2026.",
+        "Target: Dock Optimization Program Office.",
+        "Status: Approved."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P03"
+      ],
+      "quotes": [
+        "Program spending to date totals $1.25 million, comprising software licences, dock equipment and training."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P03"
+      ],
+      "quotes": [
+        "The approved program budget is $1.4 million."
+      ]
+    },
+    "monetary_amounts[2]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P03"
+      ],
+      "quotes": [
+        "Disputed detention charges invoiced by Cardinal Fleet Services amount to $212,000."
+      ]
+    },
+    "monetary_amounts[3]": {
+      "locators": [
+        "SRC-OPS-2026-004-V1-P03"
+      ],
+      "quotes": [
+        "Reduced dwell time is estimated to save USD 95,000 per year in yard labour."
+      ]
+    }
+  },
+  "uncertain_fields": [],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": "OPS-2026-004-v2",
+  "body": [
+    {
+      "heading": "Operational Review of the Dock Optimization Program",
+      "paragraphs": [
+        "Report No. OPS-2026-004",
+        "Issued by Northstar Distribution Cooperative",
+        "Publication date: 12 March 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This operational review examines the Dock Optimization Program at the Ashford Crossdock Facility during the thirteen weeks ending 28 February 2026. The program was launched to reduce trailer dwell time and to improve carrier compliance reporting. The review concludes that dwell time improved by 18 percent against the baseline but that carrier reporting from Cardinal Fleet Services remained inconsistent throughout the period.",
+        "The total program cost to date is $1.25 million, against an approved budget of $1.4 million. Four findings and three recommendations are set out below. The highest rated finding concerns detention charges that have not been reconciled against gate records, and the review asks the finance team to resolve the disputed balance before any further payment is released."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Northstar Distribution Cooperative operates four crossdock facilities serving grocery retailers in the northern region. The Ashford Crossdock Facility handles roughly 620 inbound trailers per week and was selected as the pilot site for the Dock Optimization Program in September 2025 because it had the longest average dwell time in the network.",
+        "Cardinal Fleet Services is the primary contracted carrier for the Ashford site and is required under its service agreement to submit weekly compliance reports covering on-time arrival, detention and trailer condition. The program introduced an appointment scheduling system and a yard management dashboard, both supplied under the same contract, and trained 44 dock staff in the new appointment process.",
+        "The work was led by Kayden Schaefer and supported by Ollie King. The team conducted 31 structured interviews, examined a sample of 93 records and reviewed 211 internal documents between 7 June 2025 and 16 August 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Detention charges of $212,000 invoiced by Cardinal Fleet Services during the review period had not been reconciled against gate records. The finance team could match only 61 percent of the invoiced detention hours to gate timestamps, and the remainder is disputed. Severity: High.",
+        "Finding 2: Carrier compliance reporting was delivered late in seven of thirteen weeks. Late reports were typically received four to nine days after the contractual deadline, which prevented timely escalation of missed appointments. Severity: Medium.",
+        "Finding 3: Average trailer dwell time fell from 3.4 hours to 2.8 hours after the appointment system went live. The improvement was consistent across day and night shifts and is attributed to the appointment system rather than to seasonal volume. Severity: Info.",
+        "Finding 4: Yard management dashboard uptime was 96.2 percent, below the 99 percent service level in the contract. Outages were concentrated in the first three weeks of the period and no single outage exceeded four hours. Severity: Low."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Reconcile all detention invoices from Cardinal Fleet Services against gate records before payment. Target: Northstar Finance Department. Status: In progress.",
+        "Recommendation 2: Amend the carrier service agreement to attach a service credit to late compliance reports. Target: Northstar Procurement Office. Status: Not started.",
+        "Recommendation 3: Extend the appointment scheduling system to the remaining three crossdock facilities by the end of 2026. Target: Dock Optimization Program Office. Status: Approved."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The financial position of the program is summarised below and reconciled to the cooperative's project ledger. Program spending to date totals $1.25 million, comprising software licences, dock equipment and training. The approved program budget is $1.4 million. Disputed detention charges invoiced by Cardinal Fleet Services amount to $212,000. Reduced dwell time is estimated to save USD 95,000 per year in yard labour."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 211 internal documents reviewed included 44 purchase orders, 66 invoices and 10 items of correspondence, all indexed under working reference Y0HSZL.",
+        "Appendix B: Dwell time by week. Weekly average dwell time ranged from 3.6 hours in week one to 2.6 hours in week thirteen, with the largest single week reduction recorded in week five when the appointment system went live.",
+        "Appendix C: Reporting log. The compliance reporting log records the contractual deadline and the actual receipt date for each of the thirteen weekly reports from Cardinal Fleet Services, together with the name of the Northstar coordinator who logged the receipt.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report."
+      ]
+    }
+  ]
+}

@@ -1,37 +1,39 @@
-/**
- * Pipeline constants. Anything that changes model behaviour is folded into the
- * model config hash so that reprocessing with a different configuration creates
- * a new extraction run instead of reusing cached step outputs.
- */
-export const PIPELINE_VERSION = "1.0.0";
-export const EXTRACTOR_PROMPT_VERSION = "extract-v1";
-export const VERIFIER_PROMPT_VERSION = "verify-v1";
-export const ANSWER_PROMPT_VERSION = "answer-v1";
-export const DRAFT_PROMPT_VERSION = "draft-v1";
-export const JUDGE_PROMPT_VERSION = "judge-v1";
+import { env, retryDelaysMs } from "@/lib/env";
+
+/** Pipeline constants. Anything that changes model behaviour is folded into the model config hash. */
+export const PIPELINE_VERSION = env().PIPELINE_VERSION;
+export const SCHEMA_VERSION = "record-v2";
+export const EXTRACT_PROMPT_VERSION = env().EXTRACT_PROMPT_VERSION;
+export const VERIFY_PROMPT_VERSION = env().VERIFY_PROMPT_VERSION;
+export const RAG_PROMPT_VERSION = env().RAG_PROMPT_VERSION;
+export const DRAFT_PROMPT_VERSION = env().DRAFT_PROMPT_VERSION;
+export const EVAL_PROMPT_VERSION = env().EVAL_PROMPT_VERSION;
 
 export const UPLOAD_LIMITS = {
-  maxBytes: 10 * 1024 * 1024,
-  maxPages: 50,
+  maxBytes: env().MAX_UPLOAD_MB * 1024 * 1024,
+  maxPages: env().MAX_DOCUMENT_PAGES,
   allowedMimeTypes: {
     "application/pdf": "pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
   } as const,
 };
 
-/** Scanned-document heuristic: <100 chars/page on >50% of pages. */
+/** Scanned-document heuristic: more than 50% of pages with fewer than 100 characters. */
 export const SCANNED_DETECTION = { minCharsPerPage: 100, maxLowTextPageRatio: 0.5 };
 
-export const CHUNKING = { targetTokens: 800, overlapTokens: 120 };
+export const CHUNKING = { targetTokens: env().CHUNK_TARGET_TOKENS, overlapTokens: env().CHUNK_OVERLAP_TOKENS };
 
 export const RETRIEVAL = {
-  topK: 8,
-  vectorWeight: 0.75,
-  lexicalWeight: 0.25,
+  topK: env().RAG_TOP_K,
+  vectorWeight: env().VECTOR_WEIGHT,
+  lexicalWeight: env().LEXICAL_WEIGHT,
   candidateMultiplier: 4,
-  /** Combined score under which the answerer refuses for lack of evidence. */
+  /** Combined score under which nothing is sent to the model and the exact refusal string is returned. */
   minCombinedScore: 0.05,
 };
+
+/** The exact refusal string required by the RAG prompt (spec section 25). */
+export const INSUFFICIENT_EVIDENCE = "Insufficient evidence in the indexed corpus.";
 
 export const CONFIDENCE_WEIGHTS = {
   evidence_exact_match: 0.3,
@@ -41,40 +43,49 @@ export const CONFIDENCE_WEIGHTS = {
   evidence_specificity: 0.1,
 } as const;
 
-export const ROUTING_THRESHOLDS = { autoApprove: 0.86, review: 0.65 } as const;
+export const ROUTING_THRESHOLDS = { autoApprove: env().AUTO_APPROVE_THRESHOLD, review: env().REVIEW_THRESHOLD } as const;
 
 export const VERIFIER_BATCH_SIZE = 12;
 
-export const RETRY_SCHEDULE_MS = [2_000, 8_000, 30_000] as const;
+export const RETRY_SCHEDULE_MS: readonly number[] = retryDelaysMs().slice(0, env().LLM_MAX_RETRIES);
 export const MAX_ATTEMPTS = RETRY_SCHEDULE_MS.length + 1;
 
-/** USD per 1M tokens. */
+/** Demo-corpus cost warning threshold (spec section 39). */
+export const COST_WARNING_USD = 0.25;
+
+/**
+ * Provider/model prices in USD per 1M tokens. Central configuration, not business logic.
+ * Update here when OpenAI changes list prices.
+ */
 export const PRICING: Record<string, { input: number; output: number }> = {
   "gpt-5.6-luna": { input: 0.2, output: 1.2 },
-  "gpt-5.6-luna-pro": { input: 2.0, output: 12.0 },
   "text-embedding-3-small": { input: 0.02, output: 0 },
   mock: { input: 0, output: 0 },
 };
 
 export function estimateCostUsd(model: string, inputTokens: number, outputTokens: number): number {
-  const p = PRICING[model] ?? { input: 0, output: 0 };
+  const p = PRICING[model];
+  if (!p) throw new Error(`Configure token pricing for model ${model} before using it.`);
   return (inputTokens * p.input + outputTokens * p.output) / 1_000_000;
 }
 
+/** Regression rules (spec section 33). */
 export const REGRESSION_RULES = {
   extractionExactAccuracyDropPct: 2,
-  evidencePrecisionDropPct: 1,
+  provenanceValidityDropPct: 1,
   reviewRecallDropPct: 5,
   retrievalRecallDropPct: 3,
   minRefusalAccuracy: 0.95,
+  minCitationPrecision: 0.95,
   minSemanticScore: 0.9,
 } as const;
 
+/** Success criteria (spec section 5). */
 export const SUCCESS_TARGETS = {
   scalarExactAccuracy: 0.95,
   listMicroF1: 0.9,
-  evidenceValidity: 0.98,
   classificationAccuracy: 0.95,
+  provenanceValidity: 0.98,
   reviewRecall: 0.9,
   reviewPrecision: 0.75,
   retrievalRecallAt5: 0.9,
@@ -83,3 +94,6 @@ export const SUCCESS_TARGETS = {
   refusalAccuracy: 0.95,
   semanticScore: 0.9,
 } as const;
+
+/** Judge pass thresholds per case (spec section 32). */
+export const JUDGE_PASS = { correctness: 0.9, evidenceSupport: 0.95, completeness: 0.85 } as const;

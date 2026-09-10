@@ -1,5 +1,7 @@
 "use server";
 
+import { assertMutation } from "@/lib/access";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { coerceReviewValue, resolveReviewItem, ReviewConflictError, type ReviewActionKind } from "@/lib/review/actions";
@@ -18,7 +20,9 @@ const LABEL: Record<ReviewActionKind, string> = {
 };
 
 export async function resolveReviewAction(_prev: ReviewFormState, formData: FormData): Promise<ReviewFormState> {
-  const { user, workspace } = await requireWorkspace();
+  const context = await requireWorkspace();
+  await assertMutation(context, "review", ["admin", "reviewer"]);
+  const { user, workspace } = context;
   if (!canReview(workspace.role)) return { error: "Your role cannot resolve review items." };
 
   const reviewItemId = String(formData.get("reviewItemId") ?? "");

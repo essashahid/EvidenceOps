@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f7f7f5;
-  --fg: #1a1a1a;
-  --muted: #6b6b66;
-  --line: #e2e2dd;
+  --bg: #f6f8fa;
+  --fg: #182c3b;
+  --muted: #5f6f7c;
+  --line: #dfe6eb;
   --card: #ffffff;
-  --accent: #1f4e79;
+  --accent: #236b63;
   --ok: #1f7a4d;
   --warn: #a2620f;
   --bad: #a8323a;
@@ -17,3 +17,12 @@ body {
   color: var(--fg);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+button, select, summary { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+input:not([type="checkbox"]):not([type="hidden"]), select, textarea { min-height: 38px; border-radius: 6px; }
+mark { background: #fff0a8; color: #182c3b; padding: 2px 0; }
+[id^="SRC-"] { scroll-margin-top: 24px; }
+[id^="SRC-"]:target { outline: 2px solid var(--accent); background: #edf6f4; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }

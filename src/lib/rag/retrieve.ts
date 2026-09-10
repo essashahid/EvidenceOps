@@ -14,6 +14,10 @@ export type RetrievedChunk = {
   text: string;
   startLocator: string;
   endLocator: string;
+  /** Human-readable locator of the chunk's first block, e.g. "page 3" or "paragraph 17". */
+  humanLocator: string;
+  /** Every human locator covered by the chunk span (page 3, page 4, ...). */
+  locatorRange: string[];
   similarity: number;
   lexical: number;
   combined: number;
@@ -33,6 +37,10 @@ type Row = {
   text: string;
   start_locator: string;
   end_locator: string;
+  start_page: number | null;
+  end_page: number | null;
+  start_para: number | null;
+  end_para: number | null;
   similarity: number | null;
   lexical: number | null;
 };
@@ -57,7 +65,9 @@ export async function retrieve(input: RetrieveInput): Promise<{ queryEmbedding: 
       select c.id as chunk_id, 1 - (c.embedding <=> ${vec}::vector) as similarity
       from chunks c
       join document_versions dv on dv.id = c.document_version_id
-      where c.workspace_id = ${input.workspaceId} and c.embedding is not null
+      where c.workspace_id = ${input.workspaceId} and c.embedding is not null and c.embedding_model = ${llm.models.embed}
+        and dv.processing_status in ('completed', 'completed_with_review')
+        and not exists (select 1 from chunks missing where missing.document_version_id = dv.id and missing.embedding is null)
         and (${currentOnly}::boolean = false or dv.is_current)
       order by c.embedding <=> ${vec}::vector
       limit ${pool}
@@ -67,6 +77,9 @@ export async function retrieve(input: RetrieveInput): Promise<{ queryEmbedding: 
       from chunks c
       join document_versions dv on dv.id = c.document_version_id
       where c.workspace_id = ${input.workspaceId}
+        and c.embedding is not null and c.embedding_model = ${llm.models.embed}
+        and dv.processing_status in ('completed', 'completed_with_review')
+        and not exists (select 1 from chunks missing where missing.document_version_id = dv.id and missing.embedding is null)
         and c.search_tsv @@ websearch_to_tsquery('english', ${input.query})
         and (${currentOnly}::boolean = false or dv.is_current)
       order by rank desc
@@ -77,11 +90,14 @@ export async function retrieve(input: RetrieveInput): Promise<{ queryEmbedding: 
     )
     select c.id as chunk_id, c.document_version_id, dv.document_id, d.display_name, d.logical_key, dv.version_number, dv.is_current,
            c.chunk_index, c.text, c.start_locator, c.end_locator,
+           sb.page_number as start_page, eb.page_number as end_page, sb.paragraph_number as start_para, eb.paragraph_number as end_para,
            vec.similarity, lex.rank as lexical
     from cand
     join chunks c on c.id = cand.chunk_id
     join document_versions dv on dv.id = c.document_version_id
     join documents d on d.id = dv.document_id
+    join source_blocks sb on sb.id = c.start_block_id
+    join source_blocks eb on eb.id = c.end_block_id
     left join vec on vec.chunk_id = c.id
     left join lex on lex.chunk_id = c.id
   `;
@@ -109,6 +125,8 @@ export async function retrieve(input: RetrieveInput): Promise<{ queryEmbedding: 
         text: r.text,
         startLocator: r.start_locator,
         endLocator: r.end_locator,
+        humanLocator: r.start_page !== null ? `page ${r.start_page}` : `paragraph ${r.start_para}`,
+        locatorRange: locatorRange(r),
         similarity: round(similarity),
         lexical: round(lexical),
         combined: round(combined),
@@ -117,6 +135,16 @@ export async function retrieve(input: RetrieveInput): Promise<{ queryEmbedding: 
     .sort((a, b) => b.combined - a.combined)
     .slice(0, topK);
   return { queryEmbedding, results, usage: { inputTokens: emb.usage.inputTokens, model: emb.usage.model } };
+}
+
+function locatorRange(r: Row): string[] {
+  const out: string[] = [];
+  if (r.start_page !== null) {
+    for (let p = Number(r.start_page); p <= Number(r.end_page ?? r.start_page); p++) out.push(`page ${p}`);
+  } else if (r.start_para !== null) {
+    for (let p = Number(r.start_para); p <= Number(r.end_para ?? r.start_para); p++) out.push(`paragraph ${p}`);
+  }
+  return out;
 }
 
 function round(n: number): number {

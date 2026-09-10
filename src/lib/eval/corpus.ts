@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db/client";
 import { createProcessingRun, recordDuplicateEvent, registerUpload, type UploadOutcome } from "@/lib/pipeline/ingest";
 import { dispatchRun } from "@/lib/jobs";
-import { FIXTURES_DIR, loadManifest } from "./cases";
+import { DOCUMENTS_DIR, loadManifest } from "./cases";
 
 export type CorpusIngestRow = { filename: string; expect: string; outcome: UploadOutcome["kind"] | "error"; detail: string; documentVersionId: string | null };
 
@@ -21,14 +21,14 @@ export async function ingestCorpus(opts: { workspaceId: string; userId: string |
   const created: string[] = [];
   let duplicates = 0;
   for (const f of manifest.files) {
-    const file = path.join(FIXTURES_DIR, "corpus", f.filename);
+    const file = path.join(DOCUMENTS_DIR, f.filename);
     if (!fs.existsSync(file)) throw new Error(`fixture file missing: ${f.filename} (run pnpm fixtures:generate)`);
     try {
       const outcome = await registerUpload({ workspaceId: opts.workspaceId, userId: opts.userId, filename: f.filename, bytes: fs.readFileSync(file) });
       if (outcome.kind === "duplicate") {
         duplicates++;
-        // Only record a duplicate event for files the manifest expects to be duplicates, or on re-runs (already ingested).
-        await recordDuplicateEvent(opts.workspaceId, opts.userId, f.filename, outcome.existingVersionId, outcome.contentHash);
+        // Re-seeding preserves the intended duplicate examples without logging every unchanged base file.
+        if (f.expect === "duplicate") await recordDuplicateEvent(opts.workspaceId, opts.userId, f.filename, outcome.existingVersionId, outcome.contentHash);
         rows.push({ filename: f.filename, expect: f.expect, outcome: "duplicate", detail: `matches version ${outcome.existingVersionId.slice(0, 8)}`, documentVersionId: outcome.existingVersionId });
       } else {
         created.push(outcome.documentVersionId);

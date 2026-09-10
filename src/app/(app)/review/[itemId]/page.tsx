@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { canReview, requireWorkspace } from "@/lib/workspace";
+import { mutationAllowed } from "@/lib/access";
+import { requireWorkspace } from "@/lib/workspace";
 import { getReviewItemDetail } from "@/lib/review/queries";
 import { enumValuesFor } from "@/lib/schema/report";
 import { CONFIDENCE_WEIGHTS } from "@/lib/config";
@@ -50,16 +51,17 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 export default async function ReviewItemPage({ params, searchParams }: { params: Promise<{ itemId: string }>; searchParams: Promise<{ flash?: string | string[] }> }) {
   const [{ itemId }, sp] = await Promise.all([params, searchParams]);
-  const { workspace } = await requireWorkspace();
+  const sessionContext = await requireWorkspace();
+  const { workspace } = sessionContext;
   const detail = await getReviewItemDetail(workspace.workspaceId, itemId);
   if (!detail) notFound();
   const { item, field, version, document, record, evidence, context, extraction, currentRecord, actions } = detail;
   const flash = Array.isArray(sp.flash) ? sp.flash[0] : sp.flash;
-  const reviewer = canReview(workspace.role);
+  const reviewer = mutationAllowed(sessionContext);
   const versionHref = `/documents/${document.id}/versions/${version.id}`;
   const locator = evidence?.sourceLocator ?? null;
   const confidence = Number(field.confidence);
-  const isOpen = item.status === "open";
+  const isOpen = ["open", "needs_source"].includes(item.status);
   const leaf = item.fieldPath.replace(/^.*\./, "");
   const enumValues = enumValuesFor(item.fieldPath);
   const valueKind: "text" | "number" | "enum" = enumValues ? "enum" : leaf === "amount" ? "number" : "text";

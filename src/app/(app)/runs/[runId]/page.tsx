@@ -15,7 +15,8 @@ import { generateRunReportAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function RunPage({ params }: { params: Promise<{ runId: string }> }) {
+export default async function RunPage({ params, searchParams }: { params: Promise<{ runId: string }>; searchParams: Promise<{ level?: string; document?: string; step?: string }> }) {
+  const filters = await searchParams;
   const { runId } = await params;
   const { workspace } = await requireWorkspace();
   const run = await getRun(workspace.workspaceId, runId);
@@ -25,7 +26,7 @@ export default async function RunPage({ params }: { params: Promise<{ runId: str
     listRunDocuments(workspace.workspaceId, versionIds),
     listRunSteps(run.id),
     listDeadLetters(run.id),
-    listRunEvents(run.id, 200),
+    listRunEvents(run.id, 200, filters),
     listQaReportsForRun(run.id),
     latestCompletedEvalRun(workspace.workspaceId),
   ]);
@@ -310,6 +311,13 @@ export default async function RunPage({ params }: { params: Promise<{ runId: str
         </tbody>
       </Table>
 
+      <form method="get" className="mt-6 flex flex-wrap gap-3 rounded-lg border border-[var(--line)] bg-white p-3 text-sm">
+        <label>Level <select name="level" defaultValue={filters.level} className="rounded border border-[var(--line)] p-1"><option value="">All levels</option>{["debug","info","warn","error"].map(v => <option key={v}>{v}</option>)}</select></label>
+        <label>Document <select name="document" defaultValue={filters.document} className="max-w-64 rounded border border-[var(--line)] p-1"><option value="">All documents</option>{docs.map(d => <option key={d.version.id} value={d.version.id}>{d.document.logicalKey} v{d.version.versionNumber}</option>)}</select></label>
+        <label>Step <select name="step" defaultValue={filters.step} className="rounded border border-[var(--line)] p-1"><option value="">All steps</option>{[...new Set(steps.map(s => s.stepName))].map(s => <option key={s}>{s}</option>)}</select></label>
+        <button type="submit" className="rounded bg-[var(--accent)] px-3 py-1 text-white">Filter events</button>
+        <Link href={`/runs/${run.id}`} className="p-1 text-[var(--accent)] underline">Reset</Link>
+      </form>
       <SectionHeader title="Events" count={events.length} actions={<span className="text-xs text-[var(--muted)]">newest 200</span>} />
       <Table>
         <THead>

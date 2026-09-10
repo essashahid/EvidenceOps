@@ -1,78 +1,95 @@
 import fs from "node:fs";
 import path from "node:path";
+import { sql, notInArray } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db/client";
-import { sql } from "drizzle-orm";
+import type { ReportRecord } from "@/lib/schema/report";
 
-export type RagCase = {
+export const FIXTURES_DIR = path.resolve(process.cwd(), "fixtures");
+export const DOCUMENTS_DIR = path.join(FIXTURES_DIR, "documents");
+
+export type GoldenRagCase = {
   case_key: string;
+  category: "single_document" | "cross_document" | "unanswerable";
   question: string;
-  answerable: boolean;
+  expected_answer: string;
   expected_documents: string[];
+  expected_locators: string[];
   expected_facts: string[];
-  reference_answer: string;
   tags: string[];
 };
 
-export type ManifestFile = {
-  filename: string;
-  ground_truth: string;
-  expect: "processed" | "new_version" | "duplicate";
-  supersedes?: string;
-  duplicate_of?: string;
-};
-
+export type ManifestFile = { filename: string; truth: string; expect: "processed" | "new_version" | "duplicate"; supersedes?: string; duplicate_of?: string };
 export type CorpusManifest = { files: ManifestFile[] };
 
-export const FIXTURES_DIR = path.resolve(process.cwd(), "fixtures");
+export type UncertainField = {
+  field_path: string;
+  kind: string;
+  reason: string;
+  extractor_value: unknown;
+  extractor_locators: string[];
+  extractor_quotes: string[];
+  extractor_ambiguity: string | null;
+  verifier: { status: string; corrected_value: unknown; contradiction_detected: boolean; evidence_specificity: number };
+  expect_routed: boolean;
+};
 
-export function loadManifest(): CorpusManifest {
-  return JSON.parse(fs.readFileSync(path.join(FIXTURES_DIR, "manifest.json"), "utf8")) as CorpusManifest;
-}
-
-export function loadRagCases(): RagCase[] {
-  return JSON.parse(fs.readFileSync(path.join(FIXTURES_DIR, "eval/rag-questions.json"), "utf8")) as RagCase[];
-}
-
-export type GroundTruthFile = {
+export type TruthFile = {
   logical_key: string;
   version: number;
   format: "pdf" | "docx";
   filename: string;
   display_name: string;
-  record: import("@/lib/schema/report").ReportRecord;
-  evidence: Record<string, string>;
-  planted: { field_path: string; kind: string; note: string; verifier_status: string }[];
+  record: ReportRecord;
+  evidence: Record<string, { locators: string[]; quotes: string[] }>;
+  uncertain_fields: UncertainField[];
+  distractors: { kind: string; text: string; note: string }[];
+  expect_duplicate_files: string[];
+  supersedes: string | null;
+  superseded_by: string | null;
 };
 
-export function loadGroundTruthFiles(): Map<string, GroundTruthFile> {
-  const dir = path.join(FIXTURES_DIR, "ground-truth");
-  const out = new Map<string, GroundTruthFile>();
+export function loadManifest(): CorpusManifest {
+  return JSON.parse(fs.readFileSync(path.join(DOCUMENTS_DIR, "manifest.json"), "utf8")) as CorpusManifest;
+}
+
+export function loadGoldenCases(): GoldenRagCase[] {
+  return JSON.parse(fs.readFileSync(path.join(FIXTURES_DIR, "golden/rag-cases.json"), "utf8")) as GoldenRagCase[];
+}
+
+export function loadTruthFiles(): Map<string, TruthFile> {
+  const dir = path.join(FIXTURES_DIR, "truth");
+  const out = new Map<string, TruthFile>();
   if (!fs.existsSync(dir)) return out;
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith(".json")).sort()) {
-    const gt = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")) as GroundTruthFile;
-    out.set(`${gt.logical_key}.v${gt.version}`, gt);
+    const t = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")) as TruthFile;
+    out.set(`${t.logical_key}-v${t.version}`, t);
   }
   return out;
 }
 
+/** The corpus version: a hash over the manifest filenames and truth keys (changes when fixtures change). */
+export function corpusFingerprint(): string {
+  const manifest = loadManifest();
+  return manifest.files.map((f) => `${f.filename}:${f.truth}:${f.expect}`).join("|");
+}
+
 /**
- * Upsert the golden evaluation cases into eval_cases from the fixture files:
- * one extraction + provenance + classification + review_routing case per document version,
- * duplicate/version cases from the manifest, and retrieval/answer/refusal cases from the RAG set.
+ * Upsert the golden evaluation cases from the fixtures (spec sections 28 to 31):
+ * per truth version: extraction, provenance, classification, review_routing;
+ * per manifest: duplicate and version cases; per golden question: retrieval + answer (or refusal).
  */
 export async function seedEvalCases(): Promise<number> {
   const db = getDb();
   const rows: (typeof schema.evalCases.$inferInsert)[] = [];
-  const truths = loadGroundTruthFiles();
-  for (const [key, gt] of truths) {
-    rows.push({ caseKey: `extract:${key}`, caseType: "extraction", documentLogicalKey: gt.logical_key, expectedJson: { version: gt.version, record: gt.record }, tags: ["extraction", gt.format] });
-    rows.push({ caseKey: `provenance:${key}`, caseType: "provenance", documentLogicalKey: gt.logical_key, expectedJson: { version: gt.version, evidence: gt.evidence }, tags: ["provenance"] });
-    rows.push({ caseKey: `classify:${key}`, caseType: "classification", documentLogicalKey: gt.logical_key, expectedJson: { version: gt.version, document_type: gt.record.document_type }, tags: ["classification"] });
+  for (const [key, t] of loadTruthFiles()) {
+    rows.push({ caseKey: `extract:${key}`, caseType: "extraction", documentLogicalKey: t.logical_key, expectedJson: { version: t.version, record: t.record }, tags: ["extraction", t.format] });
+    rows.push({ caseKey: `provenance:${key}`, caseType: "provenance", documentLogicalKey: t.logical_key, expectedJson: { version: t.version, evidence: t.evidence }, tags: ["provenance"] });
+    rows.push({ caseKey: `classify:${key}`, caseType: "classification", documentLogicalKey: t.logical_key, expectedJson: { version: t.version, document_type: t.record.document_type }, tags: ["classification"] });
     rows.push({
       caseKey: `review:${key}`,
       caseType: "review_routing",
-      documentLogicalKey: gt.logical_key,
-      expectedJson: { version: gt.version, planted: gt.planted.map((p) => ({ field_path: p.field_path, kind: p.kind, verifier_status: p.verifier_status })) },
+      documentLogicalKey: t.logical_key,
+      expectedJson: { version: t.version, uncertain_fields: t.uncertain_fields.map((u) => ({ field_path: u.field_path, kind: u.kind, expect_routed: u.expect_routed })) },
       tags: ["review"],
     });
   }
@@ -84,30 +101,31 @@ export async function seedEvalCases(): Promise<number> {
   }
   for (const f of manifest?.files ?? []) {
     if (f.expect === "duplicate") rows.push({ caseKey: `duplicate:${f.filename}`, caseType: "duplicate", expectedJson: { filename: f.filename, duplicate_of: f.duplicate_of }, tags: ["duplicate"] });
-    if (f.expect === "new_version") rows.push({ caseKey: `version:${f.ground_truth}`, caseType: "version", documentLogicalKey: f.ground_truth.split(".v")[0], expectedJson: { filename: f.filename, supersedes: f.supersedes }, tags: ["version"] });
+    if (f.expect === "new_version") rows.push({ caseKey: `version:${f.truth}`, caseType: "version", documentLogicalKey: f.truth.split("-v")[0], expectedJson: { filename: f.filename, supersedes: f.supersedes }, tags: ["version"] });
   }
-  let rag: RagCase[] = [];
+  let golden: GoldenRagCase[] = [];
   try {
-    rag = loadRagCases();
+    golden = loadGoldenCases();
   } catch {
-    rag = [];
+    golden = [];
   }
-  for (const c of rag) {
-    if (c.answerable) {
-      rows.push({ caseKey: `retrieval:${c.case_key}`, caseType: "retrieval", question: c.question, expectedJson: { expected_documents: c.expected_documents }, tags: c.tags });
-      rows.push({ caseKey: `answer:${c.case_key}`, caseType: "answer", question: c.question, expectedJson: { expected_documents: c.expected_documents, expected_facts: c.expected_facts, reference_answer: c.reference_answer }, tags: c.tags });
+  for (const c of golden) {
+    const tags = [c.category, ...c.tags];
+    if (c.category === "unanswerable") {
+      rows.push({ caseKey: `refusal:${c.case_key}`, caseType: "refusal", question: c.question, expectedJson: { category: c.category, expected_answer: c.expected_answer }, tags });
     } else {
-      rows.push({ caseKey: `refusal:${c.case_key}`, caseType: "refusal", question: c.question, expectedJson: { answerable: false, reference_answer: c.reference_answer }, tags: c.tags });
+      rows.push({ caseKey: `retrieval:${c.case_key}`, caseType: "retrieval", question: c.question, expectedJson: { category: c.category, expected_documents: c.expected_documents, expected_locators: c.expected_locators }, tags });
+      rows.push({ caseKey: `answer:${c.case_key}`, caseType: "answer", question: c.question, expectedJson: { category: c.category, expected_documents: c.expected_documents, expected_locators: c.expected_locators, expected_facts: c.expected_facts, expected_answer: c.expected_answer }, tags });
     }
   }
   for (const r of rows) {
     await db
       .insert(schema.evalCases)
       .values(r)
-      .onConflictDoUpdate({
-        target: schema.evalCases.caseKey,
-        set: { caseType: r.caseType, question: r.question ?? null, documentLogicalKey: r.documentLogicalKey ?? null, expectedJson: r.expectedJson, tags: r.tags ?? [], active: sql`true` },
-      });
+      .onConflictDoUpdate({ target: schema.evalCases.caseKey, set: { caseType: r.caseType, question: r.question ?? null, documentLogicalKey: r.documentLogicalKey ?? null, expectedJson: r.expectedJson, tags: r.tags ?? [], active: sql`true` } });
   }
+  // deactivate cases that no longer exist in the fixtures
+  const keys = rows.map((r) => r.caseKey);
+  if (keys.length) await db.update(schema.evalCases).set({ active: false }).where(notInArray(schema.evalCases.caseKey, keys));
   return rows.length;
 }

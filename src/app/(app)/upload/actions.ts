@@ -1,5 +1,7 @@
 "use server";
 
+import { assertMutation } from "@/lib/access";
+
 import { revalidatePath } from "next/cache";
 import { registerUpload, createProcessingRun, recordDuplicateEvent, UploadError } from "@/lib/pipeline/ingest";
 import { dispatchRun } from "@/lib/jobs";
@@ -7,6 +9,26 @@ import { requireWorkspace } from "@/lib/workspace";
 import { UPLOAD_LIMITS } from "@/lib/config";
 import { getDb, schema } from "@/lib/db/client";
 import { eq } from "drizzle-orm";
+import { env } from "@/lib/env";
+import { getStorage } from "@/lib/storage";
+import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
+import { z } from "zod";
+
+const descriptor = z.object({ filename: z.string().min(1).max(240), path: z.string().max(500), size: z.number().int().positive().max(UPLOAD_LIMITS.maxBytes) });
+
+export async function prepareSourceUpload(filename: string, size: number) {
+  const context = await requireWorkspace();
+  await assertMutation(context, "upload-sign");
+  if (!/\.(pdf|docx)$/i.test(filename) || filename.length > 240 || size <= 0 || size > UPLOAD_LIMITS.maxBytes) throw new Error("Choose a PDF or DOCX within the upload limit.");
+  const e = env();
+  if (e.STORAGE_DRIVER !== "supabase" || !e.NEXT_PUBLIC_SUPABASE_URL || !e.NEXT_PUBLIC_SUPABASE_ANON_KEY || !e.SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase storage is not configured.");
+  const path = `pending/${context.workspace.workspaceId}/${context.user.id}/${randomUUID()}/${filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  const sb = createClient(e.NEXT_PUBLIC_SUPABASE_URL, e.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+  const { data, error } = await sb.storage.from(e.SUPABASE_STORAGE_BUCKET).createSignedUploadUrl(path);
+  if (error || !data) throw new Error("Could not prepare the upload. Please retry.");
+  return { path, token: data.token, bucket: e.SUPABASE_STORAGE_BUCKET, url: e.NEXT_PUBLIC_SUPABASE_URL, anonKey: e.NEXT_PUBLIC_SUPABASE_ANON_KEY };
+}
 
 export type UploadRow = {
   filename: string;
@@ -37,10 +59,31 @@ function typeFor(filename: string): string {
 }
 
 export async function uploadAction(_prev: UploadState, formData: FormData): Promise<UploadState> {
-  const { user, workspace } = await requireWorkspace();
+  const context = await requireWorkspace();
+  await assertMutation(context, "upload", ["admin", "reviewer"]);
+  const { user, workspace } = context;
   if (workspace.role === "viewer") return { rows: [], runId: null, runOutcome: null, error: "Viewers cannot upload documents." };
 
   const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0 && f.name !== "");
+  const uploaded = formData.getAll("uploaded");
+  if (files.length + uploaded.length > 20) return { rows: [], runId: null, runOutcome: null, error: "Upload at most 20 files at a time." };
+  if (uploaded.length) {
+    try {
+      if (env().STORAGE_DRIVER !== "supabase") throw new Error("Direct uploads require Supabase.");
+      for (const raw of uploaded) {
+        const item = descriptor.parse(JSON.parse(String(raw)));
+        if (!item.path.startsWith(`pending/${workspace.workspaceId}/${user.id}/`) || item.path.includes("..")) throw new Error("Invalid upload path.");
+        const bytes = await getStorage().get(item.path);
+        if (bytes.length !== item.size) throw new Error("Upload size did not match. Please retry.");
+        files.push(new File([new Uint8Array(bytes)], item.filename));
+        const e = env();
+        const sb = createClient(e.NEXT_PUBLIC_SUPABASE_URL!, e.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+        await sb.storage.from(e.SUPABASE_STORAGE_BUCKET).remove([item.path]);
+      }
+    } catch {
+      return { rows: [], runId: null, runOutcome: null, error: "Could not validate uploaded files. Please select the files and retry." };
+    }
+  }
   if (files.length === 0) return { rows: [], runId: null, runOutcome: null, error: "Choose at least one .pdf or .docx file." };
 
   const rows: UploadRow[] = [];

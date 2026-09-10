@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db/client";
 
 export async function listRuns(workspaceId: string, limit = 200) {
@@ -33,8 +33,12 @@ export async function listDeadLetters(runId: string) {
   return getDb().select().from(schema.deadLetters).where(eq(schema.deadLetters.processingRunId, runId)).orderBy(desc(schema.deadLetters.createdAt));
 }
 
-export async function listRunEvents(runId: string, limit = 200) {
-  return getDb().select().from(schema.runEvents).where(eq(schema.runEvents.processingRunId, runId)).orderBy(desc(schema.runEvents.id)).limit(limit);
+export async function listRunEvents(runId: string, limit = 200, filters: { level?: string; document?: string; step?: string } = {}) {
+  const conditions = [eq(schema.runEvents.processingRunId, runId)];
+  if (filters.level && ["debug", "info", "warn", "error"].includes(filters.level)) conditions.push(eq(schema.runEvents.level, filters.level as "debug" | "info" | "warn" | "error"));
+  if (filters.document) conditions.push(sql`${schema.runEvents.documentVersionId}::text = ${filters.document}`);
+  if (filters.step) conditions.push(sql`${schema.runEvents.payloadJson}->>'stepName' = ${filters.step}`);
+  return getDb().select().from(schema.runEvents).where(and(...conditions)).orderBy(desc(schema.runEvents.id)).limit(limit);
 }
 
 export function percentile(values: number[], p: number): number | null {

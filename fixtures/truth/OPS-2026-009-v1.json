@@ -1,0 +1,322 @@
+{
+  "logical_key": "OPS-2026-009",
+  "version": 1,
+  "format": "pdf",
+  "filename": "OPS-2026-009-v1-redwood-transit-operational-review.pdf",
+  "display_name": "Redwood Transit fleet maintenance operational review",
+  "record": {
+    "report_title": "Operational Review of Bus Fleet Maintenance Scheduling",
+    "report_number": "OPS-2026-009",
+    "issuing_organization": "Redwood Transit District",
+    "publication_date": "2026-02-03",
+    "document_type": "operational_review",
+    "subject_entities": [
+      {
+        "name": "Fleet Maintenance Division"
+      },
+      {
+        "name": "Willow Street Depot"
+      },
+      {
+        "name": "Pinecrest Parts Supply"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Preventive maintenance inspections were overdue on 14 percent of the active fleet at the end of December 2025.",
+        "severity": "high"
+      },
+      {
+        "finding": "The review found no evidence of a shipment delay attributable to Pinecrest Parts Supply during the review period.",
+        "severity": "info"
+      },
+      {
+        "finding": "Technician overtime at the Willow Street Depot exceeded the budgeted level by 22 percent.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Work order closure notes were incomplete for roughly one third of the sampled records.",
+        "severity": "low"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Introduce a rolling twelve week inspection calendar with weekly exception reporting to the depot managers.",
+        "target_entity": "Fleet Maintenance Division",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Recruit two additional certified technicians for the Willow Street Depot night shift.",
+        "target_entity": "Redwood Transit District Human Resources",
+        "status_if_stated": null
+      },
+      {
+        "recommendation": "Require a minimum closure note on every work order before it can be closed in the maintenance system.",
+        "target_entity": "Fleet Maintenance Division",
+        "status_if_stated": "Completed"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 380000,
+        "currency": "USD",
+        "context": "unbudgeted technician overtime in 2025"
+      },
+      {
+        "amount": 1600000,
+        "currency": "USD",
+        "context": "annual parts supply contract with Pinecrest Parts Supply"
+      },
+      {
+        "amount": 52000,
+        "currency": "USD",
+        "context": "estimated annual cost of road calls caused by overdue inspections"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P01"
+      ],
+      "quotes": [
+        "Operational Review of Bus Fleet Maintenance Scheduling"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P01"
+      ],
+      "quotes": [
+        "Report No. OPS-2026-009"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Redwood Transit District"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 3 February 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P01"
+      ],
+      "quotes": [
+        "This operational review assesses how the Fleet Maintenance Division schedules and completes preventive maintenance across the district's 214 buses."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P01"
+      ],
+      "quotes": [
+        "This operational review assesses how the Fleet Maintenance Division schedules and completes preventive maintenance across the district's 214 buses."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P01"
+      ],
+      "quotes": [
+        "The review finds that inspections were overdue on a significant share of the fleet, that the backlog is driven by technician availability rather than by parts supply, and that overtime at the Willow Street Depot is well above budget."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P01"
+      ],
+      "quotes": [
+        "Pinecrest Parts Supply holds the district's annual parts contract and is required to deliver stocked items within five working days of an order."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Preventive maintenance inspections were overdue on 14 percent of the active fleet at the end of December 2025.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: The review found no evidence of a shipment delay attributable to Pinecrest Parts Supply during the review period.",
+        "Severity: Info."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Technician overtime at the Willow Street Depot exceeded the budgeted level by 22 percent.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[3]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P02"
+      ],
+      "quotes": [
+        "Finding 4: Work order closure notes were incomplete for roughly one third of the sampled records.",
+        "Severity: Low."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Introduce a rolling twelve week inspection calendar with weekly exception reporting to the depot managers.",
+        "Target: Fleet Maintenance Division.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Recruit two additional certified technicians for the Willow Street Depot night shift.",
+        "Target: Redwood Transit District Human Resources."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P03"
+      ],
+      "quotes": [
+        "Recommendation 3: Require a minimum closure note on every work order before it can be closed in the maintenance system.",
+        "Target: Fleet Maintenance Division.",
+        "Status: Completed."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P03"
+      ],
+      "quotes": [
+        "Unbudgeted technician overtime for the year totalled USD 380,000."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P03"
+      ],
+      "quotes": [
+        "The annual parts supply contract with Pinecrest Parts Supply is valued at $1.6 million."
+      ]
+    },
+    "monetary_amounts[2]": {
+      "locators": [
+        "SRC-OPS-2026-009-V1-P03"
+      ],
+      "quotes": [
+        "Road calls attributable to overdue inspections are estimated to have cost USD 52,000 in towing and replacement service."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "key_findings[1]",
+      "kind": "negation",
+      "reason": "The finding is a negative statement; a naive reading drops the negation and reports a shipment delay that the review did not find.",
+      "extractor_value": {
+        "finding": "The review found evidence of a shipment delay attributable to Pinecrest Parts Supply during the review period.",
+        "severity": "info"
+      },
+      "extractor_quotes": [
+        "The review found no evidence of a shipment delay attributable to Pinecrest Parts Supply during the review period."
+      ],
+      "extractor_ambiguity": null,
+      "verifier": {
+        "status": "unsupported",
+        "corrected_value": {
+          "finding": "The review found no evidence of a shipment delay attributable to Pinecrest Parts Supply during the review period.",
+          "severity": "info"
+        },
+        "contradiction_detected": true,
+        "evidence_specificity": 1
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-OPS-2026-009-V1-P02"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Operational Review of Bus Fleet Maintenance Scheduling",
+      "paragraphs": [
+        "Report No. OPS-2026-009",
+        "Issued by Redwood Transit District",
+        "Publication date: 3 February 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This operational review assesses how the Fleet Maintenance Division schedules and completes preventive maintenance across the district's 214 buses. It was commissioned after the board noted a rise in road calls during the autumn of 2025. The review covers the period from July to December 2025 and both depots operated by the district.",
+        "The review finds that inspections were overdue on a significant share of the fleet, that the backlog is driven by technician availability rather than by parts supply, and that overtime at the Willow Street Depot is well above budget. Three recommendations are made, one of which has already been completed."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Redwood Transit District operates fixed route and paratransit services from the Willow Street Depot and the Harlan Avenue Depot. The Fleet Maintenance Division employs 37 technicians and follows a manufacturer based inspection interval of 6,000 miles for each bus.",
+        "Pinecrest Parts Supply holds the district's annual parts contract and is required to deliver stocked items within five working days of an order. Depot managers had suggested to the board that late parts deliveries were the main cause of the inspection backlog, and the review tested that explanation directly.",
+        "The work was led by Luna Johnson and supported by Maegan McLaughlin. The team conducted 25 structured interviews, examined a sample of 79 records and reviewed 87 internal documents between 20 June 2025 and 18 August 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Preventive maintenance inspections were overdue on 14 percent of the active fleet at the end of December 2025. The overdue share had risen from 6 percent in July, and 11 buses were more than 2,000 miles past their interval. Severity: High.",
+        "Finding 2: The review found no evidence of a shipment delay attributable to Pinecrest Parts Supply during the review period. All 46 parts orders sampled were delivered within the contractual five working days, and depot records attribute the backlog to technician availability rather than to parts supply. Severity: Info.",
+        "Finding 3: Technician overtime at the Willow Street Depot exceeded the budgeted level by 22 percent. Overtime was concentrated in the night shift, where two vacancies had been open since August 2025. Severity: Medium.",
+        "Finding 4: Work order closure notes were incomplete for roughly one third of the sampled records. Missing notes made it impossible to tell whether a repeat defect had been inspected or simply reset. Severity: Low."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Introduce a rolling twelve week inspection calendar with weekly exception reporting to the depot managers. Target: Fleet Maintenance Division. Status: In progress.",
+        "Recommendation 2: Recruit two additional certified technicians for the Willow Street Depot night shift. Target: Redwood Transit District Human Resources.",
+        "Recommendation 3: Require a minimum closure note on every work order before it can be closed in the maintenance system. Target: Fleet Maintenance Division. Status: Completed."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The costs below were taken from the district's payroll and contract ledgers for the 2025 calendar year. Unbudgeted technician overtime for the year totalled USD 380,000. The annual parts supply contract with Pinecrest Parts Supply is valued at $1.6 million. Road calls attributable to overdue inspections are estimated to have cost USD 52,000 in towing and replacement service."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 87 internal documents reviewed included 46 purchase orders, 73 invoices and 31 items of correspondence, all indexed under working reference 8DTQYW.",
+        "Appendix B: Parts order sample. The 46 sampled orders were placed between 4 August and 19 December 2025 and covered brake components, filters, belts and electrical parts, with an average delivery time of 3.2 working days.",
+        "Appendix C: Overdue inspections by depot. At the end of December 2025, 19 overdue buses were assigned to the Willow Street Depot and 11 to the Harlan Avenue Depot.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion."
+      ]
+    }
+  ]
+}

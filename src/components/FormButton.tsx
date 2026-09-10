@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useFormStatus } from "react-dom";
 import type { ReactNode } from "react";
 
@@ -31,7 +32,7 @@ export function FormButton({
   const { pending } = useFormStatus();
   const sizing = size === "sm" ? "px-2 py-0.5 text-xs" : "px-3 py-1.5 text-sm";
   return (
-    <button
+    <Button
       type="submit"
       disabled={disabled || pending}
       title={title}
@@ -39,6 +40,6 @@ export function FormButton({
       className={`inline-flex items-center gap-1.5 rounded border font-medium disabled:cursor-not-allowed disabled:opacity-50 ${sizing} ${VARIANT[variant]} ${className}`}
     >
       {pending ? (pendingText ?? "Working...") : children}
-    </button>
+    </Button>
   );
 }

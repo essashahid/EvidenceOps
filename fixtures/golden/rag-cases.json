@@ -1,0 +1,747 @@
+[
+  {
+    "case_key": "rag-001",
+    "category": "single_document",
+    "question": "What is the total Dock Optimization Program cost to date according to the current Northstar operational review?",
+    "expected_answer": "The corrected edition of the Northstar operational review (OPS-2026-004-R1) states that program spending to date totals $1.15 million.",
+    "expected_documents": [
+      "OPS-2026-004"
+    ],
+    "expected_locators": [
+      "SRC-OPS-2026-004-V2-P01",
+      "SRC-OPS-2026-004-V2-P03"
+    ],
+    "expected_facts": [
+      "$1.15 million"
+    ],
+    "tags": [
+      "amount",
+      "corrected_figure",
+      "superseded"
+    ]
+  },
+  {
+    "case_key": "rag-002",
+    "category": "single_document",
+    "question": "Which figure did the corrected Northstar Dock Optimization Program review revise, and what had previously been reported?",
+    "expected_answer": "The corrected edition revised the program cost: the figure previously reported as $1.25 million is revised to $1.15 million, following the reversal of a duplicated equipment invoice.",
+    "expected_documents": [
+      "OPS-2026-004"
+    ],
+    "expected_locators": [
+      "SRC-OPS-2026-004-V2-P01"
+    ],
+    "expected_facts": [
+      "previously reported as $1.25 million",
+      "revised to $1.15 million"
+    ],
+    "tags": [
+      "amount",
+      "corrected_figure",
+      "superseded"
+    ]
+  },
+  {
+    "case_key": "rag-003",
+    "category": "single_document",
+    "question": "What is the value of the annual platform contract with Brightwater Analytics in the current Larkspur telehealth evaluation?",
+    "expected_answer": "The corrected Larkspur evaluation (EVL-2026-002-R1) values the annual platform contract with Brightwater Analytics at USD 760,000.",
+    "expected_documents": [
+      "EVL-2026-002"
+    ],
+    "expected_locators": [
+      "SRC-EVL-2026-002-V2-PARA6",
+      "SRC-EVL-2026-002-V2-PARA23"
+    ],
+    "expected_facts": [
+      "USD 760,000"
+    ],
+    "tags": [
+      "amount",
+      "corrected_figure",
+      "superseded",
+      "vendor"
+    ]
+  },
+  {
+    "case_key": "rag-004",
+    "category": "single_document",
+    "question": "Why was the Brightwater Analytics platform contract figure revised in the Larkspur telehealth evaluation?",
+    "expected_answer": "The figure previously reported as USD 820,000 was revised to USD 760,000 after the contract amendment signed in February 2026 was applied.",
+    "expected_documents": [
+      "EVL-2026-002"
+    ],
+    "expected_locators": [
+      "SRC-EVL-2026-002-V2-PARA6"
+    ],
+    "expected_facts": [
+      "contract amendment signed in February 2026"
+    ],
+    "tags": [
+      "corrected_figure",
+      "superseded",
+      "reason"
+    ]
+  },
+  {
+    "case_key": "rag-005",
+    "category": "single_document",
+    "question": "Did the Redwood Transit District review find evidence of a shipment delay attributable to Pinecrest Parts Supply?",
+    "expected_answer": "No. The review found no evidence of a shipment delay attributable to Pinecrest Parts Supply during the review period; all 46 sampled parts orders were delivered within the contractual five working days.",
+    "expected_documents": [
+      "OPS-2026-009"
+    ],
+    "expected_locators": [
+      "SRC-OPS-2026-009-V1-P02"
+    ],
+    "expected_facts": [
+      "no evidence of a shipment delay"
+    ],
+    "tags": [
+      "negation",
+      "finding",
+      "vendor"
+    ]
+  },
+  {
+    "case_key": "rag-006",
+    "category": "single_document",
+    "question": "What is the recoverable overpayment to Ridgeline Medical Supplies after the Appendix B correction in the Orchard Valley audit?",
+    "expected_answer": "Appendix B revises the recoverable overpayment to Ridgeline Medical Supplies to USD 512,000, not the USD 480,000 stated in the Executive Summary.",
+    "expected_documents": [
+      "AUD-2026-003"
+    ],
+    "expected_locators": [
+      "SRC-AUD-2026-003-V1-P03"
+    ],
+    "expected_facts": [
+      "USD 512,000"
+    ],
+    "tags": [
+      "amount",
+      "conflicting_amount",
+      "appendix"
+    ]
+  },
+  {
+    "case_key": "rag-007",
+    "category": "single_document",
+    "question": "In how many sampled cases were Clearwell Chemicals invoices paid without a receiving report, according to the Meridian Water Authority audit?",
+    "expected_answer": "Clearwell Chemicals invoices were paid without a receiving report in 27 of 90 sampled cases.",
+    "expected_documents": [
+      "AUD-2026-011"
+    ],
+    "expected_locators": [
+      "SRC-AUD-2026-011-V1-P02"
+    ],
+    "expected_facts": [
+      "27 of 90 sampled cases"
+    ],
+    "tags": [
+      "finding",
+      "vendor"
+    ]
+  },
+  {
+    "case_key": "rag-008",
+    "category": "single_document",
+    "question": "What was the apprentice completion rate for the 2024 cohort of the Composite Technician Apprenticeship?",
+    "expected_answer": "Apprentice completion was 84 percent for the 2024 cohort, against a target of 80 percent.",
+    "expected_documents": [
+      "EVL-2026-007"
+    ],
+    "expected_locators": [
+      "SRC-EVL-2026-007-V1-P02"
+    ],
+    "expected_facts": [
+      "84 percent"
+    ],
+    "tags": [
+      "finding",
+      "metric"
+    ]
+  },
+  {
+    "case_key": "rag-009",
+    "category": "single_document",
+    "question": "How many of the containers examined at Berth 6 had declared weights that differed from weighbridge readings by more than five percent?",
+    "expected_answer": "Declared weights differed from weighbridge readings by more than five percent for 312 of 4,100 containers examined.",
+    "expected_documents": [
+      "INV-2026-005"
+    ],
+    "expected_locators": [
+      "SRC-INV-2026-005-V1-P02"
+    ],
+    "expected_facts": [
+      "312 of 4,100 containers"
+    ],
+    "tags": [
+      "finding",
+      "metric"
+    ]
+  },
+  {
+    "case_key": "rag-010",
+    "category": "single_document",
+    "question": "How long did the Conveyor 4 outage at Granite Peak Mining last and what production loss is attributed to it?",
+    "expected_answer": "The failure stopped ore delivery for 31 hours; lost production during the 31 hour outage is valued at USD 410,000.",
+    "expected_documents": [
+      "INV-2026-012"
+    ],
+    "expected_locators": [
+      "SRC-INV-2026-012-V1-P03"
+    ],
+    "expected_facts": [
+      "31 hour outage",
+      "USD 410,000"
+    ],
+    "tags": [
+      "amount",
+      "incident"
+    ]
+  },
+  {
+    "case_key": "rag-011",
+    "category": "single_document",
+    "question": "How often does the Cobalt Ridge Energy guidance note require sanctions screening to be repeated?",
+    "expected_answer": "Sanctions screening must be repeated every twelve months for every active vendor using the Brightwater Analytics screening service.",
+    "expected_documents": [
+      "GDN-2026-001"
+    ],
+    "expected_locators": [
+      "SRC-GDN-2026-001-V1-PARA18"
+    ],
+    "expected_facts": [
+      "every twelve months"
+    ],
+    "tags": [
+      "recommendation",
+      "guidance"
+    ]
+  },
+  {
+    "case_key": "rag-012",
+    "category": "single_document",
+    "question": "How many contractor staff who worked at Eastgate Yard in 2025 had no induction record?",
+    "expected_answer": "Contractor induction records were missing for 41 of 260 contractor staff who worked at Eastgate Yard in 2025.",
+    "expected_documents": [
+      "GDN-2026-006"
+    ],
+    "expected_locators": [
+      "SRC-GDN-2026-006-V1-P02"
+    ],
+    "expected_facts": [
+      "41 of 260 contractor staff"
+    ],
+    "tags": [
+      "finding",
+      "safety"
+    ]
+  },
+  {
+    "case_key": "rag-013",
+    "category": "single_document",
+    "question": "What was the value of Bluefin Aquaculture product rejected on arrival during the summer harvest?",
+    "expected_answer": "Product rejected on arrival during the summer harvest was valued at USD 265,000.",
+    "expected_documents": [
+      "MEM-2026-008"
+    ],
+    "expected_locators": [
+      "SRC-MEM-2026-008-V1-P03"
+    ],
+    "expected_facts": [
+      "USD 265,000"
+    ],
+    "tags": [
+      "amount",
+      "memorandum"
+    ]
+  },
+  {
+    "case_key": "rag-014",
+    "category": "single_document",
+    "question": "What pick accuracy did the Tidewater Import Warehouse achieve and what was the target?",
+    "expected_answer": "Pick accuracy was 99.1 percent, marginally below the 99.5 percent target.",
+    "expected_documents": [
+      "OPS-2026-013"
+    ],
+    "expected_locators": [
+      "SRC-OPS-2026-013-V1-P02"
+    ],
+    "expected_facts": [
+      "99.1 percent",
+      "99.5 percent target"
+    ],
+    "tags": [
+      "finding",
+      "metric"
+    ]
+  },
+  {
+    "case_key": "rag-015",
+    "category": "single_document",
+    "question": "What value of service credits under the library help desk contract were due but never claimed?",
+    "expected_answer": "Service credits of USD 9,400 were due under the help desk contract but were never claimed.",
+    "expected_documents": [
+      "AUD-2026-014"
+    ],
+    "expected_locators": [
+      "SRC-AUD-2026-014-V1-P02"
+    ],
+    "expected_facts": [
+      "USD 9,400"
+    ],
+    "tags": [
+      "amount",
+      "finding"
+    ]
+  },
+  {
+    "case_key": "rag-016",
+    "category": "single_document",
+    "question": "How many eligible small vessels applied for the Cold Chain Subsidy Scheme in its first year?",
+    "expected_answer": "Only 38 of 92 eligible small vessels applied for the subsidy in its first year.",
+    "expected_documents": [
+      "EVL-2026-015"
+    ],
+    "expected_locators": [
+      "SRC-EVL-2026-015-V1-P02"
+    ],
+    "expected_facts": [
+      "38 of 92 eligible small vessels"
+    ],
+    "tags": [
+      "finding",
+      "metric"
+    ]
+  },
+  {
+    "case_key": "rag-017",
+    "category": "single_document",
+    "question": "How many Cardinal Fleet Services fuel cards were used while the assigned vehicle was recorded as parked?",
+    "expected_answer": "Fourteen fuel cards were used for purchases at times when the assigned vehicle was recorded as parked.",
+    "expected_documents": [
+      "INV-2026-016"
+    ],
+    "expected_locators": [
+      "SRC-INV-2026-016-V1-P02"
+    ],
+    "expected_facts": [
+      "Fourteen fuel cards"
+    ],
+    "tags": [
+      "finding",
+      "investigation"
+    ]
+  },
+  {
+    "case_key": "rag-018",
+    "category": "single_document",
+    "question": "What are the corrected 2025 energy costs at the Fernhill Pump Station?",
+    "expected_answer": "After the December metered data were received, energy costs at the Fernhill Pump Station for 2025 are revised to USD 655,000, not the USD 640,000 stated in the Executive Summary.",
+    "expected_documents": [
+      "OPS-2026-017"
+    ],
+    "expected_locators": [
+      "SRC-OPS-2026-017-V1-P03"
+    ],
+    "expected_facts": [
+      "USD 655,000"
+    ],
+    "tags": [
+      "amount",
+      "conflicting_amount",
+      "appendix"
+    ]
+  },
+  {
+    "case_key": "rag-019",
+    "category": "single_document",
+    "question": "What does the Northstar operational review recommend to the Northstar Procurement Office?",
+    "expected_answer": "It recommends amending the carrier service agreement to attach a service credit to late compliance reports; the status is not started.",
+    "expected_documents": [
+      "OPS-2026-004"
+    ],
+    "expected_locators": [
+      "SRC-OPS-2026-004-V2-P03"
+    ],
+    "expected_facts": [
+      "service credit to late compliance reports"
+    ],
+    "tags": [
+      "recommendation",
+      "superseded"
+    ]
+  },
+  {
+    "case_key": "rag-020",
+    "category": "single_document",
+    "question": "How many procurement cards at Orchard Valley Regional Hospital remained active for staff who had left?",
+    "expected_answer": "Nine procurement cards remained active for staff who had left the hospital.",
+    "expected_documents": [
+      "AUD-2026-003"
+    ],
+    "expected_locators": [
+      "SRC-AUD-2026-003-V1-P02"
+    ],
+    "expected_facts": [
+      "Nine procurement cards"
+    ],
+    "tags": [
+      "finding",
+      "audit"
+    ]
+  },
+  {
+    "case_key": "rag-021",
+    "category": "cross_document",
+    "question": "Which reports involve Cardinal Fleet Services and what monetary amounts related to the carrier do they cite?",
+    "expected_answer": "Three reports involve Cardinal Fleet Services: the Northstar review cites disputed detention charges of $212,000, the Harbor Point warehouse review cites annual drayage spending of USD 540,000, and Cardinal's own fuel card investigation cites annual fuel spending of $4.2 million for the Northern Region Fleet.",
+    "expected_documents": [
+      "OPS-2026-004",
+      "OPS-2026-013",
+      "INV-2026-016"
+    ],
+    "expected_locators": [
+      "SRC-OPS-2026-004-V2-P02",
+      "SRC-OPS-2026-004-V2-P03",
+      "SRC-OPS-2026-013-V1-P02",
+      "SRC-INV-2026-016-V1-P02"
+    ],
+    "expected_facts": [
+      "$212,000",
+      "USD 540,000",
+      "$4.2 million"
+    ],
+    "tags": [
+      "vendor",
+      "amount",
+      "comparison"
+    ]
+  },
+  {
+    "case_key": "rag-022",
+    "category": "cross_document",
+    "question": "Compare the temperature excursion counts reported for Halvorsen Cold Chain Logistics in the Bluefin memorandum and the Sable Coast evaluation.",
+    "expected_answer": "The Bluefin memorandum records excursions on 17 shipments handled by Halvorsen Cold Chain Logistics, whereas the Sable Coast evaluation records 6 temperature excursions across 1,240 subsidised shipments.",
+    "expected_documents": [
+      "MEM-2026-008",
+      "EVL-2026-015"
+    ],
+    "expected_locators": [
+      "SRC-MEM-2026-008-V1-P02",
+      "SRC-EVL-2026-015-V1-P02"
+    ],
+    "expected_facts": [
+      "17 shipments",
+      "6 temperature excursions"
+    ],
+    "tags": [
+      "vendor",
+      "comparison"
+    ]
+  },
+  {
+    "case_key": "rag-023",
+    "category": "cross_document",
+    "question": "What contract values with Brightwater Analytics are reported across the corpus?",
+    "expected_answer": "The corrected Larkspur evaluation values the platform contract at USD 760,000 per year, the library audit values the catalogue analytics contract at USD 275,000 per year, and the Cobalt Ridge guidance note gives an annual screening service fee of USD 65,000.",
+    "expected_documents": [
+      "EVL-2026-002",
+      "AUD-2026-014",
+      "GDN-2026-001"
+    ],
+    "expected_locators": [
+      "SRC-EVL-2026-002-V2-PARA6",
+      "SRC-EVL-2026-002-V2-PARA23",
+      "SRC-AUD-2026-014-V1-P02",
+      "SRC-GDN-2026-001-V1-PARA21"
+    ],
+    "expected_facts": [
+      "USD 760,000",
+      "USD 275,000",
+      "USD 65,000"
+    ],
+    "tags": [
+      "vendor",
+      "amount",
+      "corrected_figure"
+    ]
+  },
+  {
+    "case_key": "rag-024",
+    "category": "cross_document",
+    "question": "Which two Meridian Water Authority documents report Clearwell Chemicals deliveries or invoices handled without a receiving report, and what counts do they give?",
+    "expected_answer": "The chemical procurement audit found invoices paid without a receiving report in 27 of 90 sampled cases, and the Fernhill Pump Station review found deliveries received without a receiving report on nine occasions.",
+    "expected_documents": [
+      "AUD-2026-011",
+      "OPS-2026-017"
+    ],
+    "expected_locators": [
+      "SRC-AUD-2026-011-V1-P02",
+      "SRC-OPS-2026-017-V1-P02"
+    ],
+    "expected_facts": [
+      "27 of 90 sampled cases",
+      "nine occasions"
+    ],
+    "tags": [
+      "issuer",
+      "vendor",
+      "comparison"
+    ]
+  },
+  {
+    "case_key": "rag-025",
+    "category": "cross_document",
+    "question": "What do the Tidewater port investigation and the Harbor Point warehouse review say about Harbor Point Logistics operations linked to Berth 6?",
+    "expected_answer": "The investigation found that Harbor Point Logistics staff overrode weight alerts on 88 occasions without recording a reason, and the warehouse review found that drayage moves from Berth 6 by Cardinal Fleet Services were late in 12 percent of cases.",
+    "expected_documents": [
+      "INV-2026-005",
+      "OPS-2026-013"
+    ],
+    "expected_locators": [
+      "SRC-INV-2026-005-V1-P02",
+      "SRC-OPS-2026-013-V1-P02"
+    ],
+    "expected_facts": [
+      "88 occasions",
+      "late in 12 percent of cases"
+    ],
+    "tags": [
+      "entity",
+      "comparison"
+    ]
+  },
+  {
+    "case_key": "rag-026",
+    "category": "cross_document",
+    "question": "Which reports recommend introducing a vendor or carrier scorecard, and who is the target of each recommendation?",
+    "expected_answer": "The Cobalt Ridge guidance note recommends a quarterly vendor scorecard for strategic vendors, targeting the Cobalt Ridge Energy Supply Chain Group; the Harbor Point warehouse review recommends a monthly carrier scorecard for Cardinal Fleet Services, targeting the Harbor Point Logistics Transport Team.",
+    "expected_documents": [
+      "GDN-2026-001",
+      "OPS-2026-013"
+    ],
+    "expected_locators": [
+      "SRC-GDN-2026-001-V1-PARA17",
+      "SRC-OPS-2026-013-V1-P02"
+    ],
+    "expected_facts": [
+      "quarterly vendor scorecard",
+      "monthly carrier scorecard"
+    ],
+    "tags": [
+      "recommendation",
+      "comparison"
+    ]
+  },
+  {
+    "case_key": "rag-027",
+    "category": "cross_document",
+    "question": "What was the Meridian Water Authority's annual chemical spending in 2025 and what is the estimated cost of refurbishing the Fernhill pumps?",
+    "expected_answer": "Annual chemical spending across all plants was $3.1 million in 2025, and refurbishment of pump 2 and pump 3 at Fernhill is estimated at USD 890,000.",
+    "expected_documents": [
+      "AUD-2026-011",
+      "OPS-2026-017"
+    ],
+    "expected_locators": [
+      "SRC-AUD-2026-011-V1-P03",
+      "SRC-OPS-2026-017-V1-P02"
+    ],
+    "expected_facts": [
+      "$3.1 million",
+      "USD 890,000"
+    ],
+    "tags": [
+      "issuer",
+      "amount"
+    ]
+  },
+  {
+    "case_key": "rag-028",
+    "category": "cross_document",
+    "question": "Which documents contain an appendix correction to a figure given in their Executive Summary, and what are the corrected figures?",
+    "expected_answer": "The Orchard Valley audit corrects the recoverable overpayment to USD 512,000, and the Fernhill Pump Station review corrects 2025 energy costs to USD 655,000.",
+    "expected_documents": [
+      "AUD-2026-003",
+      "OPS-2026-017"
+    ],
+    "expected_locators": [
+      "SRC-AUD-2026-003-V1-P03",
+      "SRC-OPS-2026-017-V1-P03"
+    ],
+    "expected_facts": [
+      "USD 512,000",
+      "USD 655,000"
+    ],
+    "tags": [
+      "conflicting_amount",
+      "appendix",
+      "comparison"
+    ]
+  },
+  {
+    "case_key": "rag-029",
+    "category": "cross_document",
+    "question": "Which reports were superseded by corrected editions, and what were the revised figures?",
+    "expected_answer": "The Northstar Dock Optimization Program review was revised to $1.15 million (from $1.25 million) and the Larkspur telehealth evaluation's platform contract was revised to USD 760,000 (from USD 820,000).",
+    "expected_documents": [
+      "OPS-2026-004",
+      "EVL-2026-002"
+    ],
+    "expected_locators": [
+      "SRC-OPS-2026-004-V2-P01",
+      "SRC-EVL-2026-002-V2-PARA6"
+    ],
+    "expected_facts": [
+      "revised to $1.15 million",
+      "revised to USD 760,000"
+    ],
+    "tags": [
+      "superseded",
+      "corrected_figure"
+    ]
+  },
+  {
+    "case_key": "rag-030",
+    "category": "cross_document",
+    "question": "What annual savings or avoided costs are estimated by the Northstar dock review and the Larkspur telehealth evaluation?",
+    "expected_answer": "The Northstar review estimates that reduced dwell time saves USD 95,000 per year in yard labour, and the Larkspur evaluation estimates avoided patient travel at USD 310,000 per year.",
+    "expected_documents": [
+      "OPS-2026-004",
+      "EVL-2026-002"
+    ],
+    "expected_locators": [
+      "SRC-OPS-2026-004-V2-P03",
+      "SRC-EVL-2026-002-V2-PARA23"
+    ],
+    "expected_facts": [
+      "USD 95,000",
+      "USD 310,000"
+    ],
+    "tags": [
+      "amount",
+      "comparison"
+    ]
+  },
+  {
+    "case_key": "rag-031",
+    "category": "unanswerable",
+    "question": "What was the total cost of the Dock Optimization Program in 2024?",
+    "expected_answer": "Insufficient evidence in the indexed corpus.",
+    "expected_documents": [],
+    "expected_locators": [],
+    "expected_facts": [],
+    "tags": [
+      "year_outside_corpus"
+    ]
+  },
+  {
+    "case_key": "rag-032",
+    "category": "unanswerable",
+    "question": "Which vendor supplied the yard management dashboard used by Redwood Transit District?",
+    "expected_answer": "Insufficient evidence in the indexed corpus.",
+    "expected_documents": [],
+    "expected_locators": [],
+    "expected_facts": [],
+    "tags": [
+      "unnamed_vendor"
+    ]
+  },
+  {
+    "case_key": "rag-033",
+    "category": "unanswerable",
+    "question": "What audit opinion was issued on the Kestrel Aerospace Training Academy financial statements for 2023?",
+    "expected_answer": "Insufficient evidence in the indexed corpus.",
+    "expected_documents": [],
+    "expected_locators": [],
+    "expected_facts": [],
+    "tags": [
+      "metric_never_reported"
+    ]
+  },
+  {
+    "case_key": "rag-034",
+    "category": "unanswerable",
+    "question": "How many employees does Halvorsen Cold Chain Logistics have?",
+    "expected_answer": "Insufficient evidence in the indexed corpus.",
+    "expected_documents": [],
+    "expected_locators": [],
+    "expected_facts": [],
+    "tags": [
+      "metric_never_reported"
+    ]
+  },
+  {
+    "case_key": "rag-035",
+    "category": "unanswerable",
+    "question": "What price per tonne did the Meridian Water Authority pay Clearwell Chemicals for chlorine in 2025?",
+    "expected_answer": "Insufficient evidence in the indexed corpus.",
+    "expected_documents": [],
+    "expected_locators": [],
+    "expected_facts": [],
+    "tags": [
+      "metric_never_reported"
+    ]
+  },
+  {
+    "case_key": "rag-036",
+    "category": "unanswerable",
+    "question": "What did the Westbrook General Hospital pharmacy audit conclude about controlled substance logs?",
+    "expected_answer": "Insufficient evidence in the indexed corpus.",
+    "expected_documents": [],
+    "expected_locators": [],
+    "expected_facts": [],
+    "tags": [
+      "organization_absent"
+    ]
+  },
+  {
+    "case_key": "rag-037",
+    "category": "unanswerable",
+    "question": "Which shipping line had the most misdeclared containers at Berth 6?",
+    "expected_answer": "Insufficient evidence in the indexed corpus.",
+    "expected_documents": [],
+    "expected_locators": [],
+    "expected_facts": [],
+    "tags": [
+      "unnamed_entity"
+    ]
+  },
+  {
+    "case_key": "rag-038",
+    "category": "unanswerable",
+    "question": "What patient satisfaction score did the Rural Telehealth Access Program achieve?",
+    "expected_answer": "Insufficient evidence in the indexed corpus.",
+    "expected_documents": [],
+    "expected_locators": [],
+    "expected_facts": [],
+    "tags": [
+      "metric_never_reported"
+    ]
+  },
+  {
+    "case_key": "rag-039",
+    "category": "unanswerable",
+    "question": "What were Bluefin Aquaculture's total revenues in 2027?",
+    "expected_answer": "Insufficient evidence in the indexed corpus.",
+    "expected_documents": [],
+    "expected_locators": [],
+    "expected_facts": [],
+    "tags": [
+      "year_outside_corpus"
+    ]
+  },
+  {
+    "case_key": "rag-040",
+    "category": "unanswerable",
+    "question": "Who is the chief executive of Cobalt Ridge Energy?",
+    "expected_answer": "Insufficient evidence in the indexed corpus.",
+    "expected_documents": [],
+    "expected_locators": [],
+    "expected_facts": [],
+    "tags": [
+      "metric_never_reported"
+    ]
+  }
+]

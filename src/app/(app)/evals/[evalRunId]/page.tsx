@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { AutoRefresh } from "@/components/AutoRefresh";
+import { EvaluationCharts } from "@/components/QualityCharts";
+import { getDb, schema } from "@/lib/db/client";
+import { and, eq, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { isAdmin, requireWorkspace } from "@/lib/workspace";
 import { getEvalRun, listEvalResults, listQaReportsForEvalRun, metricsOf, regressionOf } from "@/lib/queries/evals";
@@ -52,7 +56,7 @@ export default async function EvalRunPage({ params, searchParams }: { params: Pr
     ? [
         { label: "scalar exact accuracy", value: m.extraction.scalar_exact_accuracy, target: SUCCESS_TARGETS.scalarExactAccuracy },
         { label: "list micro-F1", value: m.extraction.list_micro_f1, target: SUCCESS_TARGETS.listMicroF1 },
-        { label: "evidence validity", value: m.extraction.evidence_validity, target: SUCCESS_TARGETS.evidenceValidity },
+        { label: "evidence validity", value: m.extraction.provenance_validity, target: SUCCESS_TARGETS.provenanceValidity },
         { label: "classification accuracy", value: m.extraction.classification_accuracy, target: SUCCESS_TARGETS.classificationAccuracy },
         { label: "review recall", value: m.review.recall, target: SUCCESS_TARGETS.reviewRecall },
         { label: "review precision", value: m.review.precision, target: SUCCESS_TARGETS.reviewPrecision },
@@ -72,6 +76,8 @@ export default async function EvalRunPage({ params, searchParams }: { params: Pr
     if (!r.result.passed) c.failed++;
     typeCounts.set(r.evalCase.caseType, c);
   }
+  const confidence = await getDb().select({ band: sql<string>`case when confidence < 0.65 then '< 65%' when confidence < 0.86 then '65–86%' else '≥ 86%' end`, n: sql<number>`count(*)::int` }).from(schema.fieldValues).innerJoin(schema.recordVersions, eq(schema.fieldValues.recordVersionId, schema.recordVersions.id)).innerJoin(schema.documentVersions, eq(schema.recordVersions.documentVersionId, schema.documentVersions.id)).where(and(eq(schema.documentVersions.workspaceId, workspace.workspaceId), eq(schema.documentVersions.isCurrent, true), eq(schema.recordVersions.isCurrent, true))).groupBy(sql`1`);
+  const comparison = (regression?.checks ?? []).filter(c => ["extraction.scalar_exact_accuracy", "review.recall", "rag.citation_precision"].includes(c.metric)).map(c => ({ name: c.metric.startsWith("extraction") ? "Extraction" : c.metric.startsWith("review") ? "Review" : "Citations", baseline: c.baseline === null ? undefined : c.baseline * 100, latest: c.current * 100 }));
   const shown = typeFilter ? results.filter((r) => r.evalCase.caseType === typeFilter) : results;
 
   return (
@@ -132,6 +138,9 @@ export default async function EvalRunPage({ params, searchParams }: { params: Pr
           </>
         }
       />
+      <AutoRefresh active={run.status === "running"} />
+      {m?.cost.cached_answer_cases ? <p className="my-2 text-xs text-[var(--muted)]">{m.cost.cached_answer_cases} answers reused from a matching completed evaluation; cost reflects only calls made in this run.</p> : null}
+      {m ? <EvaluationCharts comparison={comparison} distribution={confidence.map(c => ({ name: c.band, count: Number(c.n) }))} failures={[...typeCounts].map(([name, c]) => ({ name: name.replace("review_routing", "review"), count: c.failed }))} /> : null}
       {error ? <div className="mb-3 rounded border border-[var(--bad)] bg-[color-mix(in_srgb,var(--bad)_8%,white)] px-3 py-1.5 text-sm text-[var(--bad)]">{error}</div> : null}
       {run.errorMessage ? <div className="mb-3 rounded border border-[var(--bad)] bg-[color-mix(in_srgb,var(--bad)_8%,white)] px-3 py-1.5 text-sm text-[var(--bad)]">{run.errorMessage}</div> : null}
 
@@ -214,7 +223,7 @@ export default async function EvalRunPage({ params, searchParams }: { params: Pr
           </Table>
           {m ? (
             <div className="mt-1 text-xs text-[var(--muted)]">
-              {m.extraction.documents} document(s), {m.extraction.scalar_fields} scalar field(s); review planted {m.review.planted_caught} / {m.review.planted} caught, {m.review.routed} routed; rag {m.rag.answer_cases} answer, {m.rag.refusal_cases} refusal, {m.rag.retrieval_cases} retrieval case(s), false refusal rate {fmtPct(m.rag.false_refusal_rate, 1)}
+              {m.extraction.documents} document(s), {m.extraction.scalar_fields} scalar field(s); review planted {m.review.planted_caught} / {m.review.planted} caught, {m.review.routed} routed; rag {(m.rag.single_document_cases + m.rag.cross_document_cases)} answer, {m.rag.unanswerable_cases} refusal, {(m.rag.single_document_cases + m.rag.cross_document_cases)} retrieval case(s), false refusal rate {fmtPct(m.rag.false_refusal_rate, 1)}
             </div>
           ) : null}
         </div>

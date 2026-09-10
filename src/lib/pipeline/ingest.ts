@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db/client";
 import { sha256 } from "@/lib/hash";
 import { UPLOAD_LIMITS, PIPELINE_VERSION } from "@/lib/config";
@@ -90,6 +90,10 @@ export async function registerUpload(input: UploadInput): Promise<UploadOutcome>
   await getStorage().put(storagePath, input.bytes, mimeType);
 
   return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${input.workspaceId}, 0))`);
+    const [duplicate] = await tx.select().from(schema.documentVersions).where(and(eq(schema.documentVersions.workspaceId, input.workspaceId), eq(schema.documentVersions.contentHash, contentHash))).limit(1);
+    if (duplicate) return { kind: "duplicate" as const, existingVersionId: duplicate.id, documentId: duplicate.documentId, contentHash };
+
     let [doc] = await tx
       .select()
       .from(schema.documents)

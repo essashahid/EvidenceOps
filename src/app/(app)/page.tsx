@@ -1,8 +1,9 @@
+import { QualityTrend } from "@/components/QualityCharts";
 import Link from "next/link";
 import { requireWorkspace } from "@/lib/workspace";
 import { getDashboardStats, listRecentRuns } from "@/lib/queries/dashboard";
 import { listDocuments } from "@/lib/queries/documents";
-import { latestEvalRun, metricsOf, regressionOf } from "@/lib/queries/evals";
+import { listEvalRuns, latestEvalRun, metricsOf, regressionOf } from "@/lib/queries/evals";
 import { PageHeader, SectionHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -16,15 +17,13 @@ export default async function DashboardPage() {
   const [stats, runs, docs, evalRun] = await Promise.all([getDashboardStats(workspace.workspaceId), listRecentRuns(workspace.workspaceId, 10), listDocuments(workspace.workspaceId, 10), latestEvalRun(workspace.workspaceId)]);
   const evalMetrics = evalRun ? metricsOf(evalRun) : null;
   const evalRegression = evalRun ? regressionOf(evalRun) : null;
-  const runsHint = Object.entries(stats.runsByStatus)
-    .sort()
-    .map(([s, n]) => `${n} ${s}`)
-    .join(", ");
+  const history = await listEvalRuns(workspace.workspaceId, 8);
+  const trend = history.toReversed().flatMap((r, i) => { const m = metricsOf(r); return m ? [{ name: `Run ${i+1}`, extraction: m.extraction.scalar_exact_accuracy * 100, citations: m.rag.citation_precision * 100, recall: m.rag.retrieval_recall_at_5 * 100 }] : []; });
   return (
     <>
       <PageHeader
-        title="Dashboard"
-        subtitle={workspace.name}
+        title="Workspace overview"
+        subtitle="Production Document Intelligence & RAG Quality Workbench"
         actions={
           <>
             <NavButton href="/upload">Upload</NavButton>
@@ -35,16 +34,17 @@ export default async function DashboardPage() {
           </>
         }
       />
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
-        <StatCard label="Documents" value={fmtNumber(stats.documents)} hint="current versions" />
-        <StatCard label="Versions" value={fmtNumber(stats.versions)} hint="all uploads" />
-        <StatCard label="Open review" value={fmtNumber(stats.openReviewItems)} tone={stats.openReviewItems > 0 ? "warn" : undefined} hint={<Link href="/review" className="underline">review queue</Link>} />
-        <StatCard label="Runs" value={fmtNumber(stats.runsTotal)} hint={runsHint || "none yet"} />
-        <StatCard label="Dead letters" value={fmtNumber(stats.deadLettersOpen)} tone={stats.deadLettersOpen > 0 ? "bad" : undefined} hint="open or retrying" />
-        <StatCard label="Est. cost" value={fmtUsd(stats.costUsd)} hint="sum of run estimates" />
-        <StatCard label="Tokens in / out" value={`${fmtNumber(stats.inputTokens)} / ${fmtNumber(stats.outputTokens)}`} hint="LLM prompt / completion" />
-        <StatCard label="Embedding tokens" value={fmtNumber(stats.embeddingTokens)} />
+      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard label="Current documents" value={fmtNumber(stats.documents)} hint="logical document identities" />
+        <StatCard label="Current source versions" value={fmtNumber(stats.documents)} hint={`${stats.versions} editions preserved`} />
+        <StatCard label="Open review items" value={fmtNumber(stats.openReviewItems)} tone={stats.openReviewItems ? "warn" : "ok"} hint={<Link href="/review" className="underline">Inspect flagged evidence →</Link>} />
+        <StatCard label="Extraction accuracy" value={evalMetrics ? fmtPct(evalMetrics.extraction.scalar_exact_accuracy, 1) : "—"} hint="latest evaluation · target ≥ 95%" tone="accent" />
+        <StatCard label="Citation precision" value={evalMetrics ? fmtPct(evalMetrics.rag.citation_precision, 1) : "—"} hint="latest evaluation · target ≥ 95%" tone="accent" />
+        <StatCard label="Latest run cost" value={runs[0] ? fmtUsd(runs[0].estimatedCostUsd) : "—"} hint="estimated provider usage" />
+        <StatCard label="Latest run status" value={<span className="text-sm"><StatusBadge status={runs[0]?.status} /></span>} hint={`${stats.runsTotal} runs recorded`} />
+        <StatCard label="Open failures" value={stats.deadLettersOpen} hint="dead letters requiring attention" tone={stats.deadLettersOpen ? "bad" : "ok"} />
       </div>
+      <QualityTrend data={trend} />
 
       {evalRun ? (
         <>
@@ -80,7 +80,7 @@ export default async function DashboardPage() {
                   list F1 <span className="font-mono tabular-nums">{fmtPct(evalMetrics.extraction.list_micro_f1, 1)}</span>
                 </span>
                 <span>
-                  evidence <span className="font-mono tabular-nums">{fmtPct(evalMetrics.extraction.evidence_validity, 1)}</span>
+                  evidence <span className="font-mono tabular-nums">{fmtPct(evalMetrics.extraction.provenance_validity, 1)}</span>
                 </span>
                 <span>
                   review recall <span className="font-mono tabular-nums">{fmtPct(evalMetrics.review.recall, 1)}</span>

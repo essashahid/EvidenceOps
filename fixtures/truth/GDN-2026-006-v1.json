@@ -1,0 +1,286 @@
+{
+  "logical_key": "GDN-2026-006",
+  "version": 1,
+  "format": "pdf",
+  "filename": "GDN-2026-006-v1-silverline-rail-safety-guidance.pdf",
+  "display_name": "Silverline Rail contractor safety induction guidance",
+  "record": {
+    "report_title": "Guidance Note on Contractor Safety Induction",
+    "report_number": "GDN-2026-006",
+    "issuing_organization": "Silverline Rail",
+    "publication_date": "2026-06-30",
+    "document_type": "guidance",
+    "subject_entities": [
+      {
+        "name": "Silverline Rail"
+      },
+      {
+        "name": "Eastgate Yard"
+      },
+      {
+        "name": "Trackwise Contracting"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Contractor induction records were missing for 41 of 260 contractor staff who worked at Eastgate Yard in 2025.",
+        "severity": "high"
+      },
+      {
+        "finding": "Trackwise Contracting completed inductions for all of its staff before mobilisation.",
+        "severity": "info"
+      },
+      {
+        "finding": "Induction content had not been updated to reflect the 2025 track access rules.",
+        "severity": "medium"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Refuse site access to any contractor worker without a valid induction record in the access system.",
+        "target_entity": "Eastgate Yard Site Management",
+        "status_if_stated": "Completed"
+      },
+      {
+        "recommendation": "Update the induction module for the 2025 track access rules and re-induct all active contractor staff.",
+        "target_entity": "Silverline Rail Safety Directorate",
+        "status_if_stated": "In progress"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 96000,
+        "currency": "GBP",
+        "context": "expected cost of re-inducting all active contractor staff"
+      },
+      {
+        "amount": 2200000,
+        "currency": "GBP",
+        "context": "contractor spending at Eastgate Yard in 2025"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P01"
+      ],
+      "quotes": [
+        "Guidance Note on Contractor Safety Induction"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P01"
+      ],
+      "quotes": [
+        "Report No. GDN-2026-006"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Silverline Rail"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 30 June 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P01"
+      ],
+      "quotes": [
+        "This guidance note explains the induction that every contractor worker must complete before entering a Silverline Rail operational site."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P01"
+      ],
+      "quotes": [
+        "This guidance note explains the induction that every contractor worker must complete before entering a Silverline Rail operational site."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P01"
+      ],
+      "quotes": [
+        "It was prepared after an induction records check at Eastgate Yard found a substantial number of contractor staff working without a valid induction record."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P01"
+      ],
+      "quotes": [
+        "Trackwise Contracting is cited as an example of full compliance."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Contractor induction records were missing for 41 of 260 contractor staff who worked at Eastgate Yard in 2025.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Trackwise Contracting completed inductions for all of its staff before mobilisation.",
+        "Severity: Info."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Induction content had not been updated to reflect the 2025 track access rules.",
+        "Severity: Medium."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Refuse site access to any contractor worker without a valid induction record in the access system.",
+        "Target: Eastgate Yard Site Management.",
+        "Status: Completed."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Update the induction module for the 2025 track access rules and re-induct all active contractor staff.",
+        "Target: Silverline Rail Safety Directorate.",
+        "Status: In progress."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P02"
+      ],
+      "quotes": [
+        "Re-inducting all active contractor staff is expected to cost GBP 96,000."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-GDN-2026-006-V1-P02"
+      ],
+      "quotes": [
+        "Contractor spending at Eastgate Yard was GBP 2.2 million in 2025."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "monetary_amounts[2]",
+      "kind": "distractor_amount",
+      "reason": "Appendix C cites a statutory penalty ceiling that is not a monetary amount of this report.",
+      "extractor_value": {
+        "amount": 500000,
+        "currency": "GBP",
+        "context": "statutory penalty ceiling for a safety induction breach"
+      },
+      "extractor_quotes": [
+        "For reference, the statutory penalty ceiling for a safety induction breach under the Rail Operations Act is GBP 500,000 per incident; no penalty has been assessed and the figure is not a cost identified by this note."
+      ],
+      "extractor_ambiguity": null,
+      "verifier": {
+        "status": "unsupported",
+        "corrected_value": null,
+        "contradiction_detected": false,
+        "evidence_specificity": 0.4
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-GDN-2026-006-V1-P03"
+      ]
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "unrelated_amount",
+      "text": "GBP 500,000 per incident",
+      "note": "Statutory penalty ceiling cited for reference in Appendix C; no penalty was assessed and it is not a monetary amount of this note."
+    }
+  ],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Guidance Note on Contractor Safety Induction",
+      "paragraphs": [
+        "Report No. GDN-2026-006",
+        "Issued by Silverline Rail",
+        "Publication date: 30 June 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This guidance note explains the induction that every contractor worker must complete before entering a Silverline Rail operational site. It was prepared after an induction records check at Eastgate Yard found a substantial number of contractor staff working without a valid induction record.",
+        "The note describes the records check, sets out the induction standard that applies from 1 August 2026, and confirms the cost of re-inducting active contractor staff. Trackwise Contracting is cited as an example of full compliance."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Silverline Rail operates 640 kilometres of freight railway and three maintenance yards. Eastgate Yard is the largest yard and hosts an average of 60 contractor staff on any working day, drawn from nine contracting companies.",
+        "Contractor staff must complete a site induction covering track access rules, isolation procedures and emergency response before their access card is activated. The induction module is owned by the safety directorate and delivered by site management at each yard.",
+        "The work was led by Everette Gutkowski and supported by Maryann Halvorson. The team conducted 22 structured interviews, examined a sample of 53 records and reviewed 136 internal documents between 12 July 2025 and 15 August 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Contractor induction records were missing for 41 of 260 contractor staff who worked at Eastgate Yard in 2025. In most cases the access card had been activated on the strength of a verbal confirmation from the contracting company. Severity: High.",
+        "Finding 2: Trackwise Contracting completed inductions for all of its staff before mobilisation. Trackwise Contracting maintains its own induction register and provides a copy to site management every month. Severity: Info.",
+        "Finding 3: Induction content had not been updated to reflect the 2025 track access rules. The module still described the superseded lookout arrangements withdrawn in March 2025. Severity: Medium."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Refuse site access to any contractor worker without a valid induction record in the access system. Target: Eastgate Yard Site Management. Status: Completed.",
+        "Recommendation 2: Update the induction module for the 2025 track access rules and re-induct all active contractor staff. Target: Silverline Rail Safety Directorate. Status: In progress."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The financial figures below are stated in pounds sterling and were confirmed by the finance business partner for infrastructure. Re-inducting all active contractor staff is expected to cost GBP 96,000. Contractor spending at Eastgate Yard was GBP 2.2 million in 2025."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 136 internal documents reviewed included 39 purchase orders, 62 invoices and 14 items of correspondence, all indexed under working reference LTK7WL.",
+        "Appendix B: Records check method. The check compared the 260 contractor access cards activated at Eastgate Yard in 2025 with the induction register and with the training records held by each contracting company.",
+        "Appendix C: Regulatory reference. For reference, the statutory penalty ceiling for a safety induction breach under the Rail Operations Act is GBP 500,000 per incident; no penalty has been assessed and the figure is not a cost identified by this note.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion.",
+        "The sampling approach was intended to describe the matters selected for examination. It was not designed to estimate the frequency of an issue across records outside that selection. Readers should therefore interpret a finding in relation to its stated scope, period and subject. Silence about another activity does not imply that the activity was examined or found satisfactory.",
+        "This appendix explains the preparation of the evidence file. It does not introduce additional recommendations or change the responsibility assigned in the recommendations section. Any later correction to the source must be issued as a separately identified edition. Earlier editions remain part of the record so that differences can be inspected without overwriting the originally published statements."
+      ]
+    }
+  ]
+}

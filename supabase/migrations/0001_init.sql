@@ -225,6 +225,8 @@ create table if not exists field_values (
   cross_pass_agreement numeric(4,3) not null default 0,
   evidence_specificity numeric(4,3) not null default 0,
   verifier_status text,
+  verifier_reason text,
+  ambiguity text,
   contradiction boolean not null default false,
   verifier_corrected_value_json jsonb,
   validation_messages jsonb not null default '[]'::jsonb,

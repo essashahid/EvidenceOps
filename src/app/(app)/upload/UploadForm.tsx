@@ -6,12 +6,31 @@ import { FormButton } from "@/components/FormButton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Table, THead, Th, Tr, Td, Mono } from "@/components/DataTable";
 import { fmtBytes, shortId } from "@/components/format";
-import { uploadAction, type UploadState } from "./actions";
+import { prepareSourceUpload, uploadAction, type UploadState } from "./actions";
 
 const MAX_MB = 10;
 
-export function UploadForm({ canUpload }: { canUpload: boolean }) {
-  const [state, action] = useActionState<UploadState, FormData>(uploadAction, { rows: [], runId: null, runOutcome: null, error: null });
+export function UploadForm({ canUpload, directUpload }: { canUpload: boolean; directUpload: boolean }) {
+  async function submit(previous: UploadState, data: FormData): Promise<UploadState> {
+    if (!directUpload) return uploadAction(previous, data);
+    try {
+      const files = data.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
+      if (files.length > 20) throw new Error("Upload at most 20 files at a time.");
+      const descriptors = new FormData();
+      const { createClient } = await import("@supabase/supabase-js");
+      for (const file of files) {
+        const target = await prepareSourceUpload(file.name, file.size);
+        const sb = createClient(target.url, target.anonKey, { auth: { persistSession: false } });
+        const { error } = await sb.storage.from(target.bucket).uploadToSignedUrl(target.path, target.token, file);
+        if (error) throw new Error(`Upload failed for ${file.name}. Please retry.`);
+        descriptors.append("uploaded", JSON.stringify({ filename: file.name, size: file.size, path: target.path }));
+      }
+      return uploadAction(previous, descriptors);
+    } catch (error) {
+      return { rows: [], runId: null, runOutcome: null, error: error instanceof Error ? error.message : "Upload failed." };
+    }
+  }
+  const [state, action] = useActionState<UploadState, FormData>(submit, { rows: [], runId: null, runOutcome: null, error: null });
   const [selected, setSelected] = useState<{ name: string; size: number }[]>([]);
   const oversized = selected.filter((f) => f.size > MAX_MB * 1024 * 1024);
 
@@ -44,7 +63,7 @@ export function UploadForm({ canUpload }: { canUpload: boolean }) {
             Upload and process
           </FormButton>
           <span className="text-xs text-[var(--muted)]">
-            {canUpload ? "Each new content hash creates a version; identical files are recorded as duplicates. Processing runs synchronously with the inline job driver." : "Viewers cannot upload."}
+            {canUpload ? "Each new content hash creates a version; identical files are recorded as duplicates. Track progress and retries from the run page." : "This workspace is read-only. Sign in with an authorized account to upload."}
           </span>
         </div>
         {state.error ? <div className="mt-3 text-sm text-[var(--bad)]">{state.error}</div> : null}

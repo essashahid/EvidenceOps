@@ -1,0 +1,328 @@
+{
+  "logical_key": "EVL-2026-002",
+  "version": 1,
+  "format": "docx",
+  "filename": "EVL-2026-002-v1-larkspur-telehealth-evaluation.docx",
+  "display_name": "Larkspur rural telehealth evaluation",
+  "record": {
+    "report_title": "Evaluation of the Rural Telehealth Access Program",
+    "report_number": "EVL-2026-002",
+    "issuing_organization": "Larkspur Health Network",
+    "publication_date": "2026-01-05",
+    "document_type": "evaluation",
+    "subject_entities": [
+      {
+        "name": "Rural Telehealth Access Program"
+      },
+      {
+        "name": "Larkspur Health Network"
+      },
+      {
+        "name": "Brightwater Analytics"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Telehealth consultations increased from 1,900 to 6,400 per quarter over the evaluation period.",
+        "severity": "info"
+      },
+      {
+        "finding": "Patient no-show rates for telehealth appointments were 9 percent compared with 21 percent for in-person visits.",
+        "severity": "low"
+      },
+      {
+        "finding": "The video platform supplied by Brightwater Analytics failed to meet its availability target in two of four quarters.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Clinician training completion was 71 percent against a target of 95 percent.",
+        "severity": "medium"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Renegotiate the platform service level agreement with Brightwater Analytics to include availability credits.",
+        "target_entity": "Larkspur Health Network Contracts Office",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Make platform training mandatory for all clinicians before telehealth scheduling rights are granted.",
+        "target_entity": "Larkspur Clinical Education Unit",
+        "status_if_stated": "Not started"
+      },
+      {
+        "recommendation": "Expand the program to the three remaining rural clinics in 2027.",
+        "target_entity": "Rural Telehealth Access Program Office",
+        "status_if_stated": "Proposed"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 820000,
+        "currency": "USD",
+        "context": "annual platform contract with Brightwater Analytics"
+      },
+      {
+        "amount": 2400000,
+        "currency": "USD",
+        "context": "program funding over the three year evaluation period"
+      },
+      {
+        "amount": 310000,
+        "currency": "USD",
+        "context": "estimated annual avoided patient travel cost"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA1"
+      ],
+      "quotes": [
+        "Evaluation of the Rural Telehealth Access Program"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA2"
+      ],
+      "quotes": [
+        "Report No. EVL-2026-002"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA3"
+      ],
+      "quotes": [
+        "Issued by Larkspur Health Network"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA4"
+      ],
+      "quotes": [
+        "Publication date: 5 January 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA6"
+      ],
+      "quotes": [
+        "This evaluation assesses the first three years of the Rural Telehealth Access Program operated by Larkspur Health Network across nine rural clinics."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA6"
+      ],
+      "quotes": [
+        "This evaluation assesses the first three years of the Rural Telehealth Access Program operated by Larkspur Health Network across nine rural clinics."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA6"
+      ],
+      "quotes": [
+        "This evaluation assesses the first three years of the Rural Telehealth Access Program operated by Larkspur Health Network across nine rural clinics."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA7"
+      ],
+      "quotes": [
+        "Uptake grew strongly and attendance improved, but the video platform supplied by Brightwater Analytics missed its availability target in two quarters and clinician training remains incomplete."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA13"
+      ],
+      "quotes": [
+        "Finding 1: Telehealth consultations increased from 1,900 to 6,400 per quarter over the evaluation period.",
+        "Severity: Info."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA14"
+      ],
+      "quotes": [
+        "Finding 2: Patient no-show rates for telehealth appointments were 9 percent compared with 21 percent for in-person visits.",
+        "Severity: Low."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA15"
+      ],
+      "quotes": [
+        "Finding 3: The video platform supplied by Brightwater Analytics failed to meet its availability target in two of four quarters.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[3]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA16"
+      ],
+      "quotes": [
+        "Finding 4: Clinician training completion was 71 percent against a target of 95 percent.",
+        "Severity: Medium."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA18"
+      ],
+      "quotes": [
+        "Recommendation 1: Renegotiate the platform service level agreement with Brightwater Analytics to include availability credits.",
+        "Target: Larkspur Health Network Contracts Office.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA19"
+      ],
+      "quotes": [
+        "Recommendation 2: Make platform training mandatory for all clinicians before telehealth scheduling rights are granted.",
+        "Target: Larkspur Clinical Education Unit.",
+        "Status: Not started."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA20"
+      ],
+      "quotes": [
+        "Recommendation 3: Expand the program to the three remaining rural clinics in 2027.",
+        "Target: Rural Telehealth Access Program Office.",
+        "Status: Proposed."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA22"
+      ],
+      "quotes": [
+        "The annual platform contract with Brightwater Analytics is valued at USD 820,000."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA22"
+      ],
+      "quotes": [
+        "Program funding over the three year evaluation period totalled $2.4 million."
+      ]
+    },
+    "monetary_amounts[2]": {
+      "locators": [
+        "SRC-EVL-2026-002-V1-PARA22"
+      ],
+      "quotes": [
+        "Avoided patient travel is estimated at USD 310,000 per year."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "monetary_amounts[3]",
+      "kind": "distractor_amount",
+      "reason": "Appendix C mentions a grant ceiling that is not an amount of this report; a naive extractor may list it.",
+      "extractor_value": {
+        "amount": 5000000,
+        "currency": "USD",
+        "context": "regional telehealth grant program ceiling per applicant"
+      },
+      "extractor_quotes": [
+        "For context only, the regional telehealth grant program administered by the state health department has a separate ceiling of USD 5 million per applicant, which does not apply to this evaluation and is not a cost or benefit of the program."
+      ],
+      "extractor_ambiguity": null,
+      "verifier": {
+        "status": "unsupported",
+        "corrected_value": null,
+        "contradiction_detected": false,
+        "evidence_specificity": 0.4
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-EVL-2026-002-V1-PARA26"
+      ]
+    }
+  ],
+  "distractors": [
+    {
+      "kind": "unrelated_amount",
+      "text": "a separate ceiling of USD 5 million per applicant",
+      "note": "Grant program ceiling cited for context in Appendix C; not a monetary amount of this evaluation."
+    }
+  ],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": "EVL-2026-002-v2",
+  "body": [
+    {
+      "heading": "Evaluation of the Rural Telehealth Access Program",
+      "paragraphs": [
+        "Report No. EVL-2026-002",
+        "Issued by Larkspur Health Network",
+        "Publication date: 5 January 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This evaluation assesses the first three years of the Rural Telehealth Access Program operated by Larkspur Health Network across nine rural clinics. It considers uptake, patient attendance, platform reliability and clinician readiness, and draws on activity data, platform logs and interviews with clinic managers.",
+        "Uptake grew strongly and attendance improved, but the video platform supplied by Brightwater Analytics missed its availability target in two quarters and clinician training remains incomplete. The evaluation recommends renegotiating the platform agreement, making training mandatory and extending the program to the remaining clinics."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Larkspur Health Network serves a dispersed rural population of about 240,000 people. The Rural Telehealth Access Program began in January 2023 with grant funding and a platform contract awarded to Brightwater Analytics after a competitive tender.",
+        "Each participating clinic received video consultation rooms, a scheduling integration and access to the platform helpdesk. Clinicians were expected to complete a four hour training module before conducting telehealth consultations, although completion was not enforced in the scheduling system.",
+        "The work was led by Celine Torphy and supported by Ephraim Collier. The team conducted 27 structured interviews, examined a sample of 47 records and reviewed 194 internal documents between 29 August 2025 and 4 November 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Telehealth consultations increased from 1,900 to 6,400 per quarter over the evaluation period. Growth was strongest in the three clinics furthest from the regional hospital. Severity: Info.",
+        "Finding 2: Patient no-show rates for telehealth appointments were 9 percent compared with 21 percent for in-person visits. The difference persisted after adjusting for appointment type and time of day. Severity: Low.",
+        "Finding 3: The video platform supplied by Brightwater Analytics failed to meet its availability target in two of four quarters. Recorded availability was 98.1 percent and 97.6 percent in the affected quarters against a contractual target of 99.5 percent. Severity: Medium.",
+        "Finding 4: Clinician training completion was 71 percent against a target of 95 percent. Untrained clinicians generated a disproportionate share of helpdesk calls during consultations. Severity: Medium."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Renegotiate the platform service level agreement with Brightwater Analytics to include availability credits. Target: Larkspur Health Network Contracts Office. Status: In progress.",
+        "Recommendation 2: Make platform training mandatory for all clinicians before telehealth scheduling rights are granted. Target: Larkspur Clinical Education Unit. Status: Not started.",
+        "Recommendation 3: Expand the program to the three remaining rural clinics in 2027. Target: Rural Telehealth Access Program Office. Status: Proposed."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "Program finances are summarised from the grant acquittal statements and the platform contract. The annual platform contract with Brightwater Analytics is valued at USD 820,000. Program funding over the three year evaluation period totalled $2.4 million. Avoided patient travel is estimated at USD 310,000 per year."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 194 internal documents reviewed included 46 purchase orders, 52 invoices and 10 items of correspondence, all indexed under working reference 3BEKD8.",
+        "Appendix B: Platform availability by quarter. Recorded availability was 99.7 percent, 98.1 percent, 99.6 percent and 97.6 percent for the four quarters of 2025, with the two shortfalls caused by a data centre migration and a certificate expiry.",
+        "Appendix C: Funding context. For context only, the regional telehealth grant program administered by the state health department has a separate ceiling of USD 5 million per applicant, which does not apply to this evaluation and is not a cost or benefit of the program.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion.",
+        "The sampling approach was intended to describe the matters selected for examination. It was not designed to estimate the frequency of an issue across records outside that selection. Readers should therefore interpret a finding in relation to its stated scope, period and subject. Silence about another activity does not imply that the activity was examined or found satisfactory."
+      ]
+    }
+  ]
+}

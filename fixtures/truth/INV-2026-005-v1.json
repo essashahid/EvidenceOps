@@ -1,0 +1,294 @@
+{
+  "logical_key": "INV-2026-005",
+  "version": 1,
+  "format": "pdf",
+  "filename": "INV-2026-005-v1-tidewater-port-investigation.pdf",
+  "display_name": "Tidewater Berth 6 weight discrepancy investigation",
+  "record": {
+    "report_title": "Investigation into Verified Gross Mass Discrepancies at Berth 6",
+    "report_number": "INV-2026-005",
+    "issuing_organization": "Tidewater Port Authority",
+    "publication_date": null,
+    "document_type": "investigation",
+    "subject_entities": [
+      {
+        "name": "Tidewater Port Authority"
+      },
+      {
+        "name": "Berth 6 Container Terminal"
+      },
+      {
+        "name": "Harbor Point Logistics"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Declared container weights differed from weighbridge readings by more than five percent for 312 of 4,100 containers examined.",
+        "severity": "high"
+      },
+      {
+        "finding": "Weighbridge calibration certificates at Berth 6 had expired in October 2025.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Harbor Point Logistics staff overrode weight alerts in the terminal system on 88 occasions without recording a reason.",
+        "severity": "high"
+      },
+      {
+        "finding": "Vessel stability calculations remained within safe margins for every sailing examined.",
+        "severity": "info"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Recalibrate and recertify the Berth 6 weighbridges and set a calendar reminder ninety days before each expiry.",
+        "target_entity": "Berth 6 Container Terminal",
+        "status_if_stated": "Completed"
+      },
+      {
+        "recommendation": "Require a written reason for every weight alert override and review overrides weekly.",
+        "target_entity": "Harbor Point Logistics",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Refer the 312 discrepant declarations to the shipping lines concerned for correction.",
+        "target_entity": "Tidewater Port Authority Compliance Unit",
+        "status_if_stated": null
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 74000,
+        "currency": "USD",
+        "context": "cost of weighbridge recalibration and recertification"
+      },
+      {
+        "amount": 1900000,
+        "currency": "USD",
+        "context": "estimated annual exposure from misdeclared weights"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P01"
+      ],
+      "quotes": [
+        "Investigation into Verified Gross Mass Discrepancies at Berth 6"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P01"
+      ],
+      "quotes": [
+        "Report No. INV-2026-005"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Tidewater Port Authority"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P01"
+      ],
+      "quotes": [
+        "This investigation was opened by the Tidewater Port Authority after two shipping lines reported that declared container weights at the Berth 6 Container Terminal did not match the weights recorded on loading."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P01"
+      ],
+      "quotes": [
+        "This investigation was opened by the Tidewater Port Authority after two shipping lines reported that declared container weights at the Berth 6 Container Terminal did not match the weights recorded on loading."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P01"
+      ],
+      "quotes": [
+        "This investigation was opened by the Tidewater Port Authority after two shipping lines reported that declared container weights at the Berth 6 Container Terminal did not match the weights recorded on loading."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P01"
+      ],
+      "quotes": [
+        "The terminal is operated under concession by Harbor Point Logistics."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Declared container weights differed from weighbridge readings by more than five percent for 312 of 4,100 containers examined.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Weighbridge calibration certificates at Berth 6 had expired in October 2025.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Harbor Point Logistics staff overrode weight alerts in the terminal system on 88 occasions without recording a reason.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[3]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P02"
+      ],
+      "quotes": [
+        "Finding 4: Vessel stability calculations remained within safe margins for every sailing examined.",
+        "Severity: Info."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Recalibrate and recertify the Berth 6 weighbridges and set a calendar reminder ninety days before each expiry.",
+        "Target: Berth 6 Container Terminal.",
+        "Status: Completed."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Require a written reason for every weight alert override and review overrides weekly.",
+        "Target: Harbor Point Logistics.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 3: Refer the 312 discrepant declarations to the shipping lines concerned for correction.",
+        "Target: Tidewater Port Authority Compliance Unit."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P03"
+      ],
+      "quotes": [
+        "Recalibration and recertification of the weighbridges cost USD 74,000."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-INV-2026-005-V1-P03"
+      ],
+      "quotes": [
+        "The estimated annual exposure from misdeclared weights is $1.9 million in potential penalties and claims."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "publication_date",
+      "kind": "missing_date",
+      "reason": "The title block has no publication date; a naive extractor may report the fieldwork completion date instead.",
+      "extractor_value": "2026-05-18",
+      "extractor_quotes": [
+        "Fieldwork concluded on 18 May 2026."
+      ],
+      "extractor_ambiguity": "No publication date is printed; the fieldwork date was used.",
+      "verifier": {
+        "status": "unsupported",
+        "corrected_value": null,
+        "contradiction_detected": false,
+        "evidence_specificity": 0.4
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-INV-2026-005-V1-P01"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Investigation into Verified Gross Mass Discrepancies at Berth 6",
+      "paragraphs": [
+        "Report No. INV-2026-005",
+        "Issued by Tidewater Port Authority"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This investigation was opened by the Tidewater Port Authority after two shipping lines reported that declared container weights at the Berth 6 Container Terminal did not match the weights recorded on loading. The terminal is operated under concession by Harbor Point Logistics.",
+        "The investigation compared declared verified gross mass with weighbridge readings for every export container handled at Berth 6 between November 2025 and April 2026. It found a material rate of discrepancy, expired calibration certificates and a pattern of unexplained overrides of weight alerts in the terminal operating system."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Berth 6 is the largest of the four container berths at the port and handled 218,000 export containers in 2025. Harbor Point Logistics has operated the terminal since 2019 and is responsible under the concession for weighbridge calibration and for the terminal operating system.",
+        "Shippers must declare a verified gross mass for every packed container before loading. The terminal weighs each container on arrival and the operating system raises an alert when the declared and measured weights differ by more than five percent. Fieldwork concluded on 18 May 2026.",
+        "The work was led by Jayson Bergnaum and supported by Ansel VonRueden. The team conducted 28 structured interviews, examined a sample of 63 records and reviewed 172 internal documents between 10 July 2025 and 11 August 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Declared container weights differed from weighbridge readings by more than five percent for 312 of 4,100 containers examined. The discrepancies were concentrated among six shippers and were mostly under-declarations. Severity: High.",
+        "Finding 2: Weighbridge calibration certificates at Berth 6 had expired in October 2025. The two weighbridges continued in use for six months without recertification, although test weights applied during the investigation showed them to be within tolerance. Severity: Medium.",
+        "Finding 3: Harbor Point Logistics staff overrode weight alerts in the terminal system on 88 occasions without recording a reason. The override function was available to every planner and no supervisory approval was required. Severity: High.",
+        "Finding 4: Vessel stability calculations remained within safe margins for every sailing examined. The stowage plans for all 61 sailings in the period were recalculated using measured weights and none breached the stability limits. Severity: Info."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Recalibrate and recertify the Berth 6 weighbridges and set a calendar reminder ninety days before each expiry. Target: Berth 6 Container Terminal. Status: Completed.",
+        "Recommendation 2: Require a written reason for every weight alert override and review overrides weekly. Target: Harbor Point Logistics. Status: In progress.",
+        "Recommendation 3: Refer the 312 discrepant declarations to the shipping lines concerned for correction. Target: Tidewater Port Authority Compliance Unit."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The financial figures below were assembled from the concession accounts and the port authority's claims register. Recalibration and recertification of the weighbridges cost USD 74,000. The estimated annual exposure from misdeclared weights is $1.9 million in potential penalties and claims."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 172 internal documents reviewed included 36 purchase orders, 41 invoices and 37 items of correspondence, all indexed under working reference 690ILI.",
+        "Appendix B: Discrepancy distribution. Of the 312 discrepant containers, 241 were under-declared by between five and ten percent, 58 by between ten and twenty percent, and 13 by more than twenty percent.",
+        "Appendix C: Override log. The 88 overrides were recorded by 14 different planners; 52 of them were entered during the night shift, when no supervisor was rostered in the planning office.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion."
+      ]
+    }
+  ]
+}

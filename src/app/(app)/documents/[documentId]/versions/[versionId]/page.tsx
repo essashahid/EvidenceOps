@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { mutationAllowed } from "@/lib/access";
+import { FormButton } from "@/components/FormButton";
+import { reprocessVersionAction } from "./actions";
 import { notFound } from "next/navigation";
 import { requireWorkspace } from "@/lib/workspace";
 import { getCurrentRecord, getVersion, listRecordHistory, listSourceBlocks, listStepsForVersion, listOpenReviewForVersion, type FieldRow } from "@/lib/queries/documents";
@@ -21,7 +24,8 @@ const TABS = [
 
 export default async function VersionPage({ params }: { params: Promise<{ documentId: string; versionId: string }> }) {
   const { documentId, versionId } = await params;
-  const { workspace } = await requireWorkspace();
+  const context = await requireWorkspace();
+  const { workspace } = context;
   const row = await getVersion(workspace.workspaceId, versionId);
   if (!row || row.document.id !== documentId) notFound();
   const { version, document } = row;
@@ -63,7 +67,9 @@ export default async function VersionPage({ params }: { params: Promise<{ docume
           </span>
         }
         actions={
-          <nav className="flex gap-1 text-sm">
+          <nav className="flex flex-wrap gap-1 text-sm">
+            {mutationAllowed(context, ["admin"]) ? <form action={reprocessVersionAction}><input type="hidden" name="versionId" value={version.id}/><FormButton variant="secondary" pendingText="Starting…">Reprocess</FormButton></form> : null}
+            <a href={`/documents/${document.id}/versions/${version.id}/download`} className="rounded border border-[var(--line)] px-2 py-0.5 text-[var(--accent)]">Download source</a>
             {TABS.map((t) => (
               <a key={t.id} href={`#${t.id}`} className="rounded border border-[var(--line)] bg-[var(--card)] px-2 py-0.5 hover:bg-[var(--bg)]">
                 {t.label}
@@ -101,6 +107,7 @@ export default async function VersionPage({ params }: { params: Promise<{ docume
               <Td align="right">{record.versionNumber}</Td>
               <Td>
                 <StatusBadge status={record.createdByType} />
+                <details className="mt-2"><summary className="cursor-pointer text-[var(--accent)]">View saved record</summary><pre className="mt-2 max-h-80 max-w-xl overflow-auto whitespace-pre-wrap text-xs">{JSON.stringify(record.payloadJson, null, 2)}</pre></details>
               </Td>
               <Td>
                 <Mono title={record.modelConfigHash ?? undefined}>{shortId(record.modelConfigHash)}</Mono>

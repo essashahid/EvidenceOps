@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./load-env";
 import { and, eq } from "drizzle-orm";
 import { closeDb, getDb, schema } from "@/lib/db/client";
 import { seedWorkspace } from "@/lib/seed";

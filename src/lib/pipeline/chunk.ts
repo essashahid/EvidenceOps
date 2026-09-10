@@ -1,4 +1,6 @@
-import { encode } from "gpt-tokenizer";
+import { getEncoding } from "js-tiktoken";
+
+const encoding = getEncoding("cl100k_base");
 import { CHUNKING } from "@/lib/config";
 import { sha256 } from "@/lib/hash";
 
@@ -18,7 +20,7 @@ export type Chunk = {
 type Unit = { text: string; tokens: number; block: ChunkSourceBlock };
 
 export function countTokens(text: string): number {
-  return encode(text).length;
+  return encoding.encode(text).length;
 }
 
 function splitSentences(text: string): string[] {

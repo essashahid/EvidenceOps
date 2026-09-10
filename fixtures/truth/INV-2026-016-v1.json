@@ -1,0 +1,282 @@
+{
+  "logical_key": "INV-2026-016",
+  "version": 1,
+  "format": "pdf",
+  "filename": "INV-2026-016-v1-cardinal-fleet-fuel-card-investigation.pdf",
+  "display_name": "Cardinal Fleet fuel card misuse investigation",
+  "record": {
+    "report_title": "Investigation into Fuel Card Misuse in the Northern Region Fleet",
+    "report_number": "INV-2026-016",
+    "issuing_organization": "Cardinal Fleet Services",
+    "publication_date": "2026-09-02",
+    "document_type": "investigation",
+    "subject_entities": [
+      {
+        "name": "Cardinal Fleet Services"
+      },
+      {
+        "name": "Northern Region Fleet"
+      },
+      {
+        "name": "Petrocrest Fuel Network"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Fourteen fuel cards were used for purchases at times when the assigned vehicle was recorded as parked.",
+        "severity": "high"
+      },
+      {
+        "finding": "The investigation found no evidence of collusion between drivers and Petrocrest Fuel Network staff.",
+        "severity": "info"
+      },
+      {
+        "finding": "Fuel card personal identification numbers were shared between drivers at two depots.",
+        "severity": "medium"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Issue individual fuel cards linked to driver identification rather than to vehicles.",
+        "target_entity": "Cardinal Fleet Services Fleet Administration",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Refer the fourteen identified cases for disciplinary review under the employee conduct policy.",
+        "target_entity": "Cardinal Fleet Services Human Resources",
+        "status_if_stated": "Completed"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 61000,
+        "currency": "USD",
+        "context": "estimated value of unauthorised fuel purchases over nine months"
+      },
+      {
+        "amount": 4200000,
+        "currency": "USD",
+        "context": "annual fuel spending for the Northern Region Fleet in 2025"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P01"
+      ],
+      "quotes": [
+        "Investigation into Fuel Card Misuse in the Northern Region Fleet"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P01"
+      ],
+      "quotes": [
+        "Report No. INV-2026-016"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Cardinal Fleet Services"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 2 September 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P01"
+      ],
+      "quotes": [
+        "This investigation was commissioned by the board of Cardinal Fleet Services after an exception report showed fuel purchases on Northern Region Fleet cards at times when the assigned vehicles were parked."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P01"
+      ],
+      "quotes": [
+        "This investigation was commissioned by the board of Cardinal Fleet Services after an exception report showed fuel purchases on Northern Region Fleet cards at times when the assigned vehicles were parked."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P01"
+      ],
+      "quotes": [
+        "This investigation was commissioned by the board of Cardinal Fleet Services after an exception report showed fuel purchases on Northern Region Fleet cards at times when the assigned vehicles were parked."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P01"
+      ],
+      "quotes": [
+        "Fuel is purchased through cards issued by the Petrocrest Fuel Network and assigned to individual vehicles."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Fourteen fuel cards were used for purchases at times when the assigned vehicle was recorded as parked.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: The investigation found no evidence of collusion between drivers and Petrocrest Fuel Network staff.",
+        "Severity: Info."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Fuel card personal identification numbers were shared between drivers at two depots.",
+        "Severity: Medium."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Issue individual fuel cards linked to driver identification rather than to vehicles.",
+        "Target: Cardinal Fleet Services Fleet Administration.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Refer the fourteen identified cases for disciplinary review under the employee conduct policy.",
+        "Target: Cardinal Fleet Services Human Resources.",
+        "Status: Completed."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P02"
+      ],
+      "quotes": [
+        "Unauthorised fuel purchases are estimated at USD 61,000 over nine months."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-INV-2026-016-V1-P02"
+      ],
+      "quotes": [
+        "Annual fuel spending for the Northern Region Fleet was $4.2 million in 2025."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "key_findings[1]",
+      "kind": "negation",
+      "reason": "The finding is a negative statement; a naive reading drops the negation and reports collusion that the investigation did not find.",
+      "extractor_value": {
+        "finding": "The investigation found evidence of collusion between drivers and Petrocrest Fuel Network staff.",
+        "severity": "info"
+      },
+      "extractor_quotes": [
+        "The investigation found no evidence of collusion between drivers and Petrocrest Fuel Network staff."
+      ],
+      "extractor_ambiguity": null,
+      "verifier": {
+        "status": "unsupported",
+        "corrected_value": {
+          "finding": "The investigation found no evidence of collusion between drivers and Petrocrest Fuel Network staff.",
+          "severity": "info"
+        },
+        "contradiction_detected": true,
+        "evidence_specificity": 1
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-INV-2026-016-V1-P02"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Investigation into Fuel Card Misuse in the Northern Region Fleet",
+      "paragraphs": [
+        "Report No. INV-2026-016",
+        "Issued by Cardinal Fleet Services",
+        "Publication date: 2 September 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This investigation was commissioned by the board of Cardinal Fleet Services after an exception report showed fuel purchases on Northern Region Fleet cards at times when the assigned vehicles were parked. Fuel is purchased through cards issued by the Petrocrest Fuel Network and assigned to individual vehicles.",
+        "The investigation confirmed misuse on fourteen cards, found no indication that fuel station staff were involved, and identified shared personal identification numbers at two depots as the main control weakness. Two recommendations are made."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Cardinal Fleet Services operates 640 tractors and 1,900 trailers across three regions and provides contracted carriage for distribution customers including Northstar Distribution Cooperative and Harbor Point Logistics. The Northern Region Fleet comprises 210 tractors based at four depots.",
+        "Each tractor carries a Petrocrest Fuel Network card that is meant to be used only for that vehicle and only with the driver's personal identification number. Card transactions are matched weekly against telematics data showing where each vehicle was at the time of purchase.",
+        "The work was led by Noah Reichel and supported by Omari Altenwerth. The team conducted 30 structured interviews, examined a sample of 156 records and reviewed 231 internal documents between 11 December 2025 and 12 February 2026. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Fourteen fuel cards were used for purchases at times when the assigned vehicle was recorded as parked. The purchases occurred over nine months and involved 212 transactions, most of them at stations more than 40 kilometres from the parked vehicle. Severity: High.",
+        "Finding 2: The investigation found no evidence of collusion between drivers and Petrocrest Fuel Network staff. Station footage and transaction records showed ordinary pump transactions with no cashier involvement. Severity: Info.",
+        "Finding 3: Fuel card personal identification numbers were shared between drivers at two depots. Depot supervisors had kept a written list of numbers so that relief drivers could refuel without delay. Severity: Medium."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Issue individual fuel cards linked to driver identification rather than to vehicles. Target: Cardinal Fleet Services Fleet Administration. Status: In progress.",
+        "Recommendation 2: Refer the fourteen identified cases for disciplinary review under the employee conduct policy. Target: Cardinal Fleet Services Human Resources. Status: Completed."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The financial effect is estimated from the matched transaction records and the fuel ledger. Unauthorised fuel purchases are estimated at USD 61,000 over nine months. Annual fuel spending for the Northern Region Fleet was $4.2 million in 2025."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 231 internal documents reviewed included 45 purchase orders, 70 invoices and 31 items of correspondence, all indexed under working reference R2GO19.",
+        "Appendix B: Transactions by depot. Of the 212 suspect transactions, 131 were linked to cards assigned to the Kessler Road depot and 81 to the Alder Junction depot; no suspect transactions were found at the other two depots.",
+        "Appendix C: Matching method. Each card transaction was matched to telematics data using the transaction timestamp and the station location, with a tolerance of fifteen minutes and two kilometres.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion.",
+        "The sampling approach was intended to describe the matters selected for examination. It was not designed to estimate the frequency of an issue across records outside that selection. Readers should therefore interpret a finding in relation to its stated scope, period and subject. Silence about another activity does not imply that the activity was examined or found satisfactory.",
+        "This appendix explains the preparation of the evidence file. It does not introduce additional recommendations or change the responsibility assigned in the recommendations section. Any later correction to the source must be issued as a separately identified edition. Earlier editions remain part of the record so that differences can be inspected without overwriting the originally published statements."
+      ]
+    }
+  ]
+}

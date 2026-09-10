@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db/client";
 
 export type DocumentListRow = {
@@ -15,6 +15,10 @@ export type DocumentListRow = {
   parseStatus: string | null;
   updatedAt: Date;
   openReviewCount: number;
+  publicationDate: string | null;
+  documentType: string | null;
+  averageConfidence: number;
+  versionCount: number;
 };
 
 /** Logical documents with their current version and open review counts (two grouped queries, no N+1). */
@@ -34,15 +38,25 @@ export async function listDocuments(workspaceId: string, limit?: number): Promis
     const counts = await db
       .select({ documentVersionId: schema.reviewItems.documentVersionId, n: count() })
       .from(schema.reviewItems)
-      .where(and(eq(schema.reviewItems.workspaceId, workspaceId), eq(schema.reviewItems.status, "open"), inArray(schema.reviewItems.documentVersionId, versionIds)))
+      .where(and(eq(schema.reviewItems.workspaceId, workspaceId), inArray(schema.reviewItems.status, ["open", "needs_source"]), inArray(schema.reviewItems.documentVersionId, versionIds)))
       .groupBy(schema.reviewItems.documentVersionId);
     for (const c of counts) openCounts.set(c.documentVersionId, Number(c.n));
   }
 
+  const metadata = versionIds.length ? await db.select({
+    versionId: schema.recordVersions.documentVersionId,
+    publicationDate: sql<string | null>`${schema.recordVersions.payloadJson}->>'publication_date'`,
+    documentType: sql<string | null>`${schema.recordVersions.payloadJson}->>'document_type'`,
+    title: sql<string | null>`${schema.recordVersions.payloadJson}->>'report_title'`,
+    confidence: sql<number>`(select coalesce(avg(confidence),0) from field_values where record_version_id = ${schema.recordVersions.id})`,
+  }).from(schema.recordVersions).where(and(inArray(schema.recordVersions.documentVersionId, versionIds), eq(schema.recordVersions.isCurrent, true))) : [];
+  const meta = new Map(metadata.map(m => [m.versionId, m]));
+  const versionCounts = await db.select({ id:schema.documentVersions.documentId, n:count() }).from(schema.documentVersions).where(eq(schema.documentVersions.workspaceId,workspaceId)).groupBy(schema.documentVersions.documentId);
+  const counts = new Map(versionCounts.map(v => [v.id,Number(v.n)]));
   return rows.map(({ doc, version }) => ({
     id: doc.id,
     logicalKey: doc.logicalKey,
-    displayName: doc.displayName,
+    displayName: (version && meta.get(version.id)?.title) || doc.displayName,
     createdAt: doc.createdAt,
     currentVersionId: version?.id ?? null,
     versionNumber: version?.versionNumber ?? null,
@@ -52,6 +66,10 @@ export async function listDocuments(workspaceId: string, limit?: number): Promis
     processingStatus: version?.processingStatus ?? null,
     parseStatus: version?.parseStatus ?? null,
     updatedAt: version?.createdAt ?? doc.createdAt,
+    publicationDate: version ? meta.get(version.id)?.publicationDate ?? null : null,
+    documentType: version ? meta.get(version.id)?.documentType ?? null : null,
+    averageConfidence: Number(version ? meta.get(version.id)?.confidence ?? 0 : 0),
+    versionCount: counts.get(doc.id) ?? 0,
     openReviewCount: version ? (openCounts.get(version.id) ?? 0) : 0,
   }));
 }
@@ -157,5 +175,5 @@ export async function listStepsForVersion(versionId: string) {
 }
 
 export async function listOpenReviewForVersion(versionId: string) {
-  return getDb().select().from(schema.reviewItems).where(and(eq(schema.reviewItems.documentVersionId, versionId), eq(schema.reviewItems.status, "open")));
+  return getDb().select().from(schema.reviewItems).where(and(eq(schema.reviewItems.documentVersionId, versionId), inArray(schema.reviewItems.status, ["open", "needs_source"])));
 }

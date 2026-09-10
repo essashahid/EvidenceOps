@@ -1,0 +1,305 @@
+{
+  "logical_key": "AUD-2026-011",
+  "version": 1,
+  "format": "pdf",
+  "filename": "AUD-2026-011-v1-meridian-water-audit-report.pdf",
+  "display_name": "Meridian Water chemical procurement audit",
+  "record": {
+    "report_title": "Audit of Chemical Procurement and Inventory Controls",
+    "report_number": "AUD-2026-011",
+    "issuing_organization": "Meridian Water Authority",
+    "publication_date": "2026-02-19",
+    "document_type": "audit_report",
+    "subject_entities": [
+      {
+        "name": "Meridian Water Authority"
+      },
+      {
+        "name": "Stonebridge Treatment Plant"
+      },
+      {
+        "name": "Clearwell Chemicals"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Chlorine inventory records at the Stonebridge Treatment Plant differed from physical counts by 11 percent.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Clearwell Chemicals invoices were paid without a receiving report in 27 of 90 sampled cases.",
+        "severity": "high"
+      },
+      {
+        "finding": "Emergency purchases were made outside the framework agreement on four occasions.",
+        "severity": "low"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Perform monthly physical counts of treatment chemicals and reconcile them to the inventory system within five working days.",
+        "target_entity": "Stonebridge Treatment Plant",
+        "status_if_stated": "In progress"
+      },
+      {
+        "recommendation": "Require a signed receiving report before any chemical invoice is approved for payment.",
+        "target_entity": "Meridian Water Authority Accounts Payable",
+        "status_if_stated": "Not started"
+      },
+      {
+        "recommendation": "Consolidate emergency purchases into the framework agreement with Clearwell Chemicals.",
+        "target_entity": "Meridian Water Authority Procurement Unit",
+        "status_if_stated": null
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 3100000,
+        "currency": "USD",
+        "context": "annual chemical spending across all plants in 2025"
+      },
+      {
+        "amount": 148000,
+        "currency": "USD",
+        "context": "Clearwell Chemicals invoices paid without a receiving report"
+      },
+      {
+        "amount": 22000,
+        "currency": "USD",
+        "context": "emergency purchases outside the framework agreement"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P01"
+      ],
+      "quotes": [
+        "Audit of Chemical Procurement and Inventory Controls"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P01"
+      ],
+      "quotes": [
+        "Report No. AUD-2026-011"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P01"
+      ],
+      "quotes": [
+        "Issued by MWA (Meridian Water Authority)"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 19 February 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P01"
+      ],
+      "quotes": [
+        "This audit examined how MWA, the Meridian Water Authority, procures, receives and stores treatment chemicals at its three plants during 2025."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P01"
+      ],
+      "quotes": [
+        "This audit examined how MWA, the Meridian Water Authority, procures, receives and stores treatment chemicals at its three plants during 2025."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P01"
+      ],
+      "quotes": [
+        "It focused on the Stonebridge Treatment Plant, which accounts for more than half of chemical consumption, and on the framework agreement with Clearwell Chemicals."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P01"
+      ],
+      "quotes": [
+        "It focused on the Stonebridge Treatment Plant, which accounts for more than half of chemical consumption, and on the framework agreement with Clearwell Chemicals."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Chlorine inventory records at the Stonebridge Treatment Plant differed from physical counts by 11 percent.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Clearwell Chemicals invoices were paid without a receiving report in 27 of 90 sampled cases.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: Emergency purchases were made outside the framework agreement on four occasions.",
+        "Severity: Low."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Perform monthly physical counts of treatment chemicals and reconcile them to the inventory system within five working days.",
+        "Target: Stonebridge Treatment Plant.",
+        "Status: In progress."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Require a signed receiving report before any chemical invoice is approved for payment.",
+        "Target: Meridian Water Authority Accounts Payable.",
+        "Status: Not started."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 3: Consolidate emergency purchases into the framework agreement with Clearwell Chemicals.",
+        "Target: Meridian Water Authority Procurement Unit."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P03"
+      ],
+      "quotes": [
+        "Annual chemical spending across all plants was $3.1 million in 2025."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P03"
+      ],
+      "quotes": [
+        "Invoices paid without a receiving report totalled USD 148,000."
+      ]
+    },
+    "monetary_amounts[2]": {
+      "locators": [
+        "SRC-AUD-2026-011-V1-P03"
+      ],
+      "quotes": [
+        "Emergency purchases outside the framework agreement totalled USD 22,000."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "issuing_organization",
+      "kind": "abbreviation",
+      "reason": "The title block introduces the abbreviation MWA before the full organization name; a naive reading returns the abbreviation.",
+      "extractor_value": "MWA",
+      "extractor_quotes": [
+        "Issued by MWA (Meridian Water Authority)"
+      ],
+      "extractor_ambiguity": "Title block uses the abbreviation MWA.",
+      "verifier": {
+        "status": "partially_supported",
+        "corrected_value": "Meridian Water Authority",
+        "contradiction_detected": false,
+        "evidence_specificity": 0.75
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-AUD-2026-011-V1-P01"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [
+    "copy-of-AUD-2026-011-v1-meridian-water-audit-report.pdf"
+  ],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Audit of Chemical Procurement and Inventory Controls",
+      "paragraphs": [
+        "Report No. AUD-2026-011",
+        "Issued by MWA (Meridian Water Authority)",
+        "Publication date: 19 February 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This audit examined how MWA, the Meridian Water Authority, procures, receives and stores treatment chemicals at its three plants during 2025. It focused on the Stonebridge Treatment Plant, which accounts for more than half of chemical consumption, and on the framework agreement with Clearwell Chemicals.",
+        "The audit found that inventory records did not agree with physical counts, that a material share of supplier invoices were paid without a receiving report, and that emergency purchases were being made outside the framework agreement. Three recommendations are made."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "The Meridian Water Authority supplies drinking water to about 380,000 customers and operates the Stonebridge, Larch Hill and Bexley treatment plants. Chlorine, sodium hydroxide and coagulant are purchased under a three year framework agreement with Clearwell Chemicals that began in January 2024.",
+        "Chemical deliveries are received by plant operators who are expected to complete a receiving report before the invoice is approved for payment by the accounts payable team. Inventory balances are held in the maintenance management system and are meant to be reconciled monthly to physical counts.",
+        "The work was led by Stephon Gleason and supported by Percy Hoppe. The team conducted 24 structured interviews, examined a sample of 177 records and reviewed 189 internal documents between 20 September 2025 and 29 October 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Chlorine inventory records at the Stonebridge Treatment Plant differed from physical counts by 11 percent. The difference had accumulated over nine months because monthly counts had been recorded but never reconciled. Severity: Medium.",
+        "Finding 2: Clearwell Chemicals invoices were paid without a receiving report in 27 of 90 sampled cases. In these cases the accounts payable team relied on the delivery note attached to the invoice rather than on plant confirmation. Severity: High.",
+        "Finding 3: Emergency purchases were made outside the framework agreement on four occasions. Each purchase was justified by a low stock alert that would have been avoided had the inventory records been accurate. Severity: Low."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Perform monthly physical counts of treatment chemicals and reconcile them to the inventory system within five working days. Target: Stonebridge Treatment Plant. Status: In progress.",
+        "Recommendation 2: Require a signed receiving report before any chemical invoice is approved for payment. Target: Meridian Water Authority Accounts Payable. Status: Not started.",
+        "Recommendation 3: Consolidate emergency purchases into the framework agreement with Clearwell Chemicals. Target: Meridian Water Authority Procurement Unit."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The amounts below are taken from the authority's accounts payable ledger for the 2025 calendar year. Annual chemical spending across all plants was $3.1 million in 2025. Invoices paid without a receiving report totalled USD 148,000. Emergency purchases outside the framework agreement totalled USD 22,000."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 189 internal documents reviewed included 20 purchase orders, 83 invoices and 35 items of correspondence, all indexed under working reference GXS0JF.",
+        "Appendix B: Inventory count results. The physical count at the Stonebridge Treatment Plant on 8 December 2025 recorded 41.2 tonnes of chlorine against a system balance of 46.3 tonnes; counts at the Larch Hill and Bexley plants were within 2 percent of the system balance.",
+        "Appendix C: Invoice sample. The 90 sampled invoices were selected at random from 612 Clearwell Chemicals invoices paid in 2025 and covered all three plants.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion.",
+        "The sampling approach was intended to describe the matters selected for examination. It was not designed to estimate the frequency of an issue across records outside that selection. Readers should therefore interpret a finding in relation to its stated scope, period and subject. Silence about another activity does not imply that the activity was examined or found satisfactory."
+      ]
+    }
+  ]
+}

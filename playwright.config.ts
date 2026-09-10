@@ -19,6 +19,6 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
-    env: { ...process.env, EVIDENCEOPS_DB: "test", LLM_PROVIDER: "mock", JOB_DRIVER: "inline", STORAGE_DRIVER: "local", AUTH_DRIVER: "local" },
+    env: { ...process.env, EVIDENCEOPS_DB: "test", LLM_PROVIDER: "mock", JOB_DRIVER: "inline", STORAGE_DRIVER: "local", AUTH_DRIVER: "local", PUBLIC_DEMO_MODE: "false", DEMO_MUTATIONS_ENABLED: "true" },
   },
 });

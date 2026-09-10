@@ -1,0 +1,289 @@
+{
+  "logical_key": "MEM-2026-008",
+  "version": 1,
+  "format": "pdf",
+  "filename": "MEM-2026-008-v1-bluefin-cold-chain-memorandum.pdf",
+  "display_name": "Bluefin summer harvest cold chain memorandum",
+  "record": {
+    "report_title": "Briefing Memorandum on Cold Chain Performance for the Summer Harvest",
+    "report_number": "MEM-2026-008",
+    "issuing_organization": "Bluefin Aquaculture",
+    "publication_date": "2026-07-15",
+    "document_type": "other",
+    "subject_entities": [
+      {
+        "name": "Bluefin Aquaculture"
+      },
+      {
+        "name": "Halvorsen Cold Chain Logistics"
+      },
+      {
+        "name": "Seabright Processing Plant"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "Temperature excursions above 4 degrees Celsius were recorded on 17 shipments handled by Halvorsen Cold Chain Logistics.",
+        "severity": "medium"
+      },
+      {
+        "finding": "Product rejected on arrival totalled 3.1 percent of harvest volume against a seasonal plan of 1.5 percent.",
+        "severity": "medium"
+      },
+      {
+        "finding": "The Seabright Processing Plant achieved a packing throughput of 42 tonnes per day, above the plan of 38 tonnes.",
+        "severity": "info"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Install continuous temperature loggers on every Halvorsen Cold Chain Logistics trailer used for Bluefin shipments.",
+        "target_entity": "Halvorsen Cold Chain Logistics",
+        "status_if_stated": "Agreed"
+      },
+      {
+        "recommendation": "Hold a rejection review meeting with the cold chain contractor within 48 hours of each rejected shipment.",
+        "target_entity": "Bluefin Aquaculture Quality Team",
+        "status_if_stated": null
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 265000,
+        "currency": "USD",
+        "context": "value of product rejected on arrival during the summer harvest"
+      },
+      {
+        "amount": 1100000,
+        "currency": "USD",
+        "context": "annual cold chain contract with Halvorsen Cold Chain Logistics"
+      },
+      {
+        "amount": 38000,
+        "currency": "CAD",
+        "context": "quoted cost of continuous temperature loggers for the trailer fleet"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P01"
+      ],
+      "quotes": [
+        "Briefing Memorandum on Cold Chain Performance for the Summer Harvest"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P01"
+      ],
+      "quotes": [
+        "Report No. MEM-2026-008"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Bluefin Aquaculture"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 15 July 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P01"
+      ],
+      "quotes": [
+        "This briefing memorandum summarises cold chain performance for the Bluefin Aquaculture summer harvest between April and June 2026 for the attention of the executive committee."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P01"
+      ],
+      "quotes": [
+        "This briefing memorandum summarises cold chain performance for the Bluefin Aquaculture summer harvest between April and June 2026 for the attention of the executive committee."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P01"
+      ],
+      "quotes": [
+        "Temperature excursions occurred on a small but costly share of shipments handled by Halvorsen Cold Chain Logistics, and the value of product rejected on arrival exceeded the level planned for the season."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P01"
+      ],
+      "quotes": [
+        "Bluefin Aquaculture harvests farmed salmon from six sea sites and processes it at the Seabright Processing Plant before shipping chilled product to wholesale customers."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: Temperature excursions above 4 degrees Celsius were recorded on 17 shipments handled by Halvorsen Cold Chain Logistics.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Product rejected on arrival totalled 3.1 percent of harvest volume against a seasonal plan of 1.5 percent.",
+        "Severity: Medium."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: The Seabright Processing Plant achieved a packing throughput of 42 tonnes per day, above the plan of 38 tonnes.",
+        "Severity: Info."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Install continuous temperature loggers on every Halvorsen Cold Chain Logistics trailer used for Bluefin shipments.",
+        "Target: Halvorsen Cold Chain Logistics.",
+        "Status: Agreed."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Hold a rejection review meeting with the cold chain contractor within 48 hours of each rejected shipment.",
+        "Target: Bluefin Aquaculture Quality Team."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P03"
+      ],
+      "quotes": [
+        "Product rejected on arrival during the summer harvest was valued at USD 265,000."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P03"
+      ],
+      "quotes": [
+        "The annual cold chain contract with Halvorsen Cold Chain Logistics is valued at $1.1 million."
+      ]
+    },
+    "monetary_amounts[2]": {
+      "locators": [
+        "SRC-MEM-2026-008-V1-P03"
+      ],
+      "quotes": [
+        "Continuous temperature loggers for the trailer fleet are quoted at CAD 38,000 by the Canadian supplier."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "subject_entities[1]",
+      "kind": "weak_evidence",
+      "reason": "The entity is correct but the cited sentence refers only to 'the contractor' and does not name it.",
+      "extractor_value": {
+        "name": "Halvorsen Cold Chain Logistics"
+      },
+      "extractor_quotes": [
+        "The contractor collected product from the plant six days per week."
+      ],
+      "extractor_ambiguity": "The cited sentence does not name the contractor.",
+      "verifier": {
+        "status": "supported",
+        "corrected_value": null,
+        "contradiction_detected": false,
+        "evidence_specificity": 0.4
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-MEM-2026-008-V1-P01"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Briefing Memorandum on Cold Chain Performance for the Summer Harvest",
+      "paragraphs": [
+        "Report No. MEM-2026-008",
+        "Issued by Bluefin Aquaculture",
+        "Publication date: 15 July 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This briefing memorandum summarises cold chain performance for the Bluefin Aquaculture summer harvest between April and June 2026 for the attention of the executive committee. It is not an audit or a formal evaluation and draws on shipment logs, rejection notices and plant throughput data.",
+        "Temperature excursions occurred on a small but costly share of shipments handled by Halvorsen Cold Chain Logistics, and the value of product rejected on arrival exceeded the level planned for the season. The memorandum proposes two actions, one of which the contractor has already agreed to."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Bluefin Aquaculture harvests farmed salmon from six sea sites and processes it at the Seabright Processing Plant before shipping chilled product to wholesale customers. The contractor collected product from the plant six days per week. Halvorsen Cold Chain Logistics has held the cold chain contract since 2024 and operates a fleet of 22 refrigerated trailers on Bluefin routes.",
+        "Chilled product must remain at or below 4 degrees Celsius from packing to delivery. Customers reject any consignment whose temperature record shows an excursion above that limit for more than thirty minutes.",
+        "The work was led by Wilber Lesch and supported by Lola Dicki. The team conducted 10 structured interviews, examined a sample of 77 records and reviewed 70 internal documents between 16 July 2025 and 6 September 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Temperature excursions above 4 degrees Celsius were recorded on 17 shipments handled by Halvorsen Cold Chain Logistics. Eleven of the excursions occurred on the longest route, where trailers were held at a customer dock for more than two hours. Severity: Medium.",
+        "Finding 2: Product rejected on arrival totalled 3.1 percent of harvest volume against a seasonal plan of 1.5 percent. Rejections were driven almost entirely by temperature excursions rather than by quality defects at packing. Severity: Medium.",
+        "Finding 3: The Seabright Processing Plant achieved a packing throughput of 42 tonnes per day, above the plan of 38 tonnes. The higher throughput reflects the second packing line commissioned in March 2026. Severity: Info."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Install continuous temperature loggers on every Halvorsen Cold Chain Logistics trailer used for Bluefin shipments. Target: Halvorsen Cold Chain Logistics. Status: Agreed.",
+        "Recommendation 2: Hold a rejection review meeting with the cold chain contractor within 48 hours of each rejected shipment. Target: Bluefin Aquaculture Quality Team."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The financial effect of the season is summarised below in the currencies of the underlying contracts. Product rejected on arrival during the summer harvest was valued at USD 265,000. The annual cold chain contract with Halvorsen Cold Chain Logistics is valued at $1.1 million. Continuous temperature loggers for the trailer fleet are quoted at CAD 38,000 by the Canadian supplier."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 70 internal documents reviewed included 30 purchase orders, 33 invoices and 9 items of correspondence, all indexed under working reference H0YP9D.",
+        "Appendix B: Excursions by route. The 17 excursions were distributed across four routes, with 11 on the coastal route, 4 on the inland route and 1 on each of the two metropolitan routes.",
+        "Appendix C: Rejection notices. Customers issued 23 rejection notices during the season, of which 21 cited a temperature excursion and 2 cited packaging damage.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion.",
+        "The sampling approach was intended to describe the matters selected for examination. It was not designed to estimate the frequency of an issue across records outside that selection. Readers should therefore interpret a finding in relation to its stated scope, period and subject. Silence about another activity does not imply that the activity was examined or found satisfactory."
+      ]
+    }
+  ]
+}

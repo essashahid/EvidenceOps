@@ -1,237 +1,174 @@
 # EvidenceOps
 
-Document intelligence with receipts. EvidenceOps turns PDF and DOCX reports into structured records and cited answers, and it refuses to store or say anything it cannot point to in the source.
+## What It Is
 
-Every extracted value carries a verbatim quote and a source locator. A second model checks the first without seeing its confidence. Code, not a model, computes the final confidence from five measurable components and decides whether a value is auto-approved, sent to a reviewer, or blocked. Reviewer decisions create new immutable record versions. A golden evaluation suite runs against a committed corpus and fails the build on regression. Every run records its steps, retries, tokens, cost and latency and produces an HTML QA report.
+A document intelligence and RAG quality workbench built with Next.js 16, React, TypeScript, PostgreSQL/pgvector and Drizzle. Supabase provides production Auth and private Storage; Inngest runs durable document and evaluation jobs; OpenAI provides structured extraction, independent verification, answers and judging.
 
-Built for the work that starts after a document-AI prototype "works": making it auditable, correctable, testable and boring to operate.
+**Status:** implemented and verified locally with the deterministic mock provider. Vercel project and GitHub integration are linked; production settings are configured. Hosted deployment is waiting for Supabase project capacity and service credentials. See [deployment status](docs/deployment.md) and the [implementation audit](docs/audit.md).
 
-```
-upload ──► parse ──► chunk ──► extract ──► validate ──► verify ──► score & route ──► embed
-  │          │                    │            │           │             │              │
-  hash,     source blocks       evidence     required,   second       confidence      pgvector +
-  dedupe,   with locators       per leaf     enums,      model,       0.30/0.20/      full text
-  version   SRC-OPS-2026-       (locator +   dates,      no access    0.25/0.15/
-  linkage   004-V2-P03          quote)       amounts,    to extractor 0.10 weights
-                                             quote-in-   confidence
-                                             source
-                                                                      ┌─ auto-approved (>= 0.86)
-                                                                      ├─ review (0.65 .. 0.86, partial support)
-                                                                      └─ blocked (< 0.65, unsupported, contradiction)
-```
+## The Problem
 
-## Table of contents
+Extracted values and generated answers need inspectable sources, measurable quality, correction history and recoverable processing. A plausible answer alone is insufficient.
 
-- [What you get](#what-you-get)
-- [Measured results](#measured-results)
-- [How a document moves through the system](#how-a-document-moves-through-the-system)
-- [Confidence and routing](#confidence-and-routing)
-- [Reliability model](#reliability-model)
-- [Evaluation and regression gate](#evaluation-and-regression-gate)
-- [Run it locally](#run-it-locally)
-- [Commands](#commands)
-- [Configuration](#configuration)
-- [Repository layout](#repository-layout)
-- [Data model](#data-model)
-- [Deploying](#deploying)
-- [Limits and non-goals](#limits-and-non-goals)
+## What This Demo Proves
 
-## What you get
+The synthetic corpus exercises provenance, uncertain values, review decisions, exact duplicates, corrected source editions, cited answers, refusal, regression gates and recovery. The mock provider reads committed fixture truth and golden questions. Its measured scores prove the test workflow and implementation behavior; **they are not independent evidence of live OpenAI model quality**.
 
-| Screen | What it shows |
-| --- | --- |
-| `/upload` | Multi-file upload. Each file reports its SHA-256, logical document key, resulting version, and whether it was created, rejected, a duplicate of an existing version, or a new version superseding a prior one. |
-| `/documents`, `/documents/[id]/versions/[id]` | Logical documents, their versions, the current record with per-field confidence, routing, verifier verdict and evidence quote; full version history (model / reviewer / reprocess, changed fields, parent); the parsed source with an anchor per locator; the processing steps for that version. |
-| `/review`, `/review/[id]` | Queue filtered by status, field, confidence and document. The item screen shows the source context with the exact quote highlighted next to the candidate value, the five confidence components with their weighted contributions, the verifier's verdict and suggested correction, validation messages, and Accept / Edit & Accept / Reject / Needs more source. |
-| `/ask` | Questions and first drafts (executive brief, findings summary, recommendation summary) answered only from retrieved chunks. Each claim links to its source locator; refusals are explicit; the retrieved chunks and their vector, lexical and combined scores are shown. |
-| `/runs`, `/runs/[id]` | Every processing run: status, current step, documents done/failed, review items, retries, tokens in/out/embedding, cost, p50/p95 step latency, per-step attempts and errors, dead letters with a retry button, the event timeline, and QA reports. |
-| `/evals`, `/evals/[id]` | Evaluation runs against the golden suite: each metric against its target, regression checks against the baseline, integrity checks, and per-case results with judge reasons. |
+## Architecture
 
-## Measured results
-
-Numbers from the committed baseline (`eval/baselines/mock.json`) for the 20-file fixture corpus, produced with the deterministic mock provider (see [Configuration](#configuration) for what that means and how to get real-model numbers).
-
-| Metric | Target | Measured |
-| --- | ---: | ---: |
-| Scalar-field exact accuracy (90 fields, 18 versions) | >= 95% | 97.8% |
-| List/object extraction micro-F1 | >= 90% | 97.3% |
-| Evidence/provenance validity | >= 98% | 99.1% |
-| Document classification accuracy | >= 95% | 100% |
-| Review recall on planted uncertain/incorrect fields (12) | >= 90% | 100% |
-| Review-queue precision (12 of 15 routed items were planted) | >= 75% | 80% |
-| Retrieval Recall@5 (32 questions) | >= 90% | 98.4% |
-| Citation precision (quote found verbatim in cited chunk) | >= 95% | 100% |
-| Evidence-supported answer rate | >= 95% | 100% |
-| Refusal accuracy on 8 unanswerable questions | >= 95% | 100% |
-| Semantic answer score (mean) | >= 0.90 | 1.00 |
-| Duplicate uploads detected / corrected versions linked | 2 / 2 | 2 / 2 |
-| Duplicate records created by re-runs | 0 | 0 |
-
-The six per-document cases that fail inside that run are the documents carrying planted contradictions; that is the suite doing its job. The two extraction misses are planted ambiguous dates the extractor is expected to get wrong and the verifier is expected to catch.
-
-Test suites: 31 unit tests, 17 integration tests against a real Postgres, 7 Playwright flows.
-
-## How a document moves through the system
-
-1. **Upload** (`src/lib/pipeline/ingest.ts`). Type and size are checked before anything is written (`.pdf`/`.docx`, 10 MB, 50 pages). The file is hashed. An identical hash in the workspace is reported as a duplicate and not processed. A new hash for an existing logical key (`OPS-2026-004` from `OPS-2026-004-v2-corrected.pdf`) becomes version N+1 with `supersedes_version_id` set and the old version marked not current. Bytes are stored before the version row exists, so no version can point at a missing file.
-2. **Parse** (`parse.ts`). PDF pages (pdfjs) or DOCX paragraphs (mammoth) become `source_blocks` with raw text, normalized text, character offsets and an immutable locator such as `SRC-OPS-2026-004-V2-P03` or `SRC-OPS-2026-009-V1-PARA17`. Fewer than 100 characters on more than half the pages means the file is scanned; it is marked `unsupported_scanned_document` and dead-lettered to the manual queue. No OCR.
-3. **Chunk** (`chunk.ts`). Sentence-aligned chunks of about 800 tokens with 120 tokens of overlap, never crossing documents, each keeping its start and end block.
-4. **Extract** (`llm/openai.ts`, `llm/prompts.ts`). One structured call (OpenAI Responses API, strict JSON schema from Zod). Every leaf of the record (`report_title`, `report_number`, `issuing_organization`, `publication_date`, `document_type`, `subject_entities[]`, `key_findings[]`, `recommendations[]`, `monetary_amounts[]`) carries `{locator, quote}`. A business value without provenance cannot be represented, let alone stored.
-5. **Validate** (`validate.ts`). Deterministic checks: required fields, enum membership, ISO dates in a plausible range, positive and plausible amounts, list limits, duplicate list items, locator exists, quote occurs verbatim in the cited block (with offsets recorded for highlighting).
-6. **Verify** (`process-document.ts`). Batches of up to 12 fields go to an independent model call with the candidate value, the cited quote, the entire cited block and the field definition. It returns supported / partially supported / unsupported, a corrected value, agreement (`same`, `equivalent_formatting`, `different`), a contradiction flag and evidence specificity. It never sees the extractor's confidence.
-7. **Score and route** (`confidence.ts`). See below. Writes `record_versions` v1, `field_values`, `field_evidence` and `review_items`.
-8. **Embed**. `text-embedding-3-small` at 768 dimensions, cached by `sha256(text | model | dims)` so identical chunks are never embedded twice.
-9. **Review** (`src/lib/review/`). Accept, Edit & Accept and Reject each create record version N+1 (`created_by_type = reviewer`, parent link, changed fields, all field states copied), leaving the model's version intact. Needs more source flags the item without creating a version.
-10. **Ask** (`src/lib/rag/`). Hybrid retrieval (75% cosine similarity on pgvector, 25% PostgreSQL `ts_rank_cd`, both normalized over the candidate pool), top 8, current versions only unless `include superseded` is set. The model answers from those chunks only. Every citation is then re-checked in code: the quote must occur verbatim in the cited chunk, and the precise source block is resolved. Claims with no valid citation are marked unsupported; an answer whose claims are all unsupported is downgraded to a refusal.
-
-## Confidence and routing
-
-```
-confidence = 0.30 * evidence_exact_match      1 if the normalized quote occurs in the cited block
-           + 0.20 * deterministic_validation  1 clean, 0.5 warnings only, 0 any error
-           + 0.25 * verifier_support          supported 1, partially 0.5, unsupported 0
-           + 0.15 * cross_pass_agreement      same 1, equivalent formatting 0.75, different 0
-           + 0.10 * evidence_specificity      direct 1, contextual 0.75, weak 0.4, none 0
+```mermaid
+flowchart LR
+  UI[Next.js workbench] --> Auth[Supabase Auth]
+  UI --> Upload[Signed private Storage upload]
+  Upload --> Jobs[Inngest document steps]
+  Jobs --> DB[PostgreSQL / pgvector]
+  Jobs --> AI[OpenAI structured calls]
+  UI --> Review[Immutable reviewer decisions]
+  Review --> DB
+  DB --> RAG[Hybrid retrieval and cited answers]
+  RAG --> AI
+  DB --> Eval[Golden evaluation jobs]
+  Eval --> QA[Versioned HTML QA reports]
 ```
 
-| Outcome | Condition |
-| --- | --- |
-| `auto_approved` | confidence >= 0.86 and no contradiction |
-| `review` | 0.65 <= confidence < 0.86, or the verifier says partially supported |
-| `blocked` | confidence < 0.65, or unsupported, or contradiction, or the cited locator does not exist, or a required field is empty |
+Local adapters use PostgreSQL, filesystem storage and signed sessions. Mock mode is explicit and never a fallback for a failed real provider.
 
-Worked example from the fixtures: the Northstar summary says "$1.2 million", the appendix says the corrected figure is $1.25 million. The extractor cites the summary. Validation passes, the quote matches, the verifier answers partially supported with a corrected value of 1,250,000 and flags a contradiction. Confidence is 0.70 and the field is blocked with the reason and the verifier's suggestion shown to the reviewer.
+## Processing Pipeline
 
-## Reliability model
+`upload → parse → chunk → extract → deterministic_validate → independent_verify → calculate_confidence → route_review → embed → finalize`
 
-- **Idempotent steps.** Each durable step is keyed by `workspace:document_version:step:pipeline_version:model_config_hash` in `run_steps`. A succeeded row is reused by any later run of that version, so a retry, a manual re-run, or a second run of the same batch never re-parses a document and never repeats a paid model call whose output exists. The integration suite asserts this by counting `llm_calls`.
-- **Retries.** Retryable failures (429, 5xx, timeouts, transient database errors) retry after 2 s, 8 s and 30 s. The fourth failure writes a `dead_letters` row; the run stays visible and an admin can retry the step from the run page. Non-retryable failures (corrupt file, structured output still invalid after one immediate retry, too many pages) dead-letter immediately.
-- **Terminal states only.** A run ends `completed`, `completed_with_review` or `failed`. A version ends `completed`, `completed_with_review`, `failed` or `unsupported`. Nothing stays "running" silently.
-- **Embedding failure is isolated.** The record stays usable; the version is excluded from retrieval until the embed step is retried.
-- **Review concurrency.** Items are claimed with `UPDATE ... WHERE status = 'open'` and the record version the reviewer looked at must still be current; a second write is rejected, not merged.
-- **Two runners, one contract.** Inngest functions (`src/inngest/functions.ts`) and the inline runner (`src/lib/pipeline/orchestrate.ts`) call the same step functions. `pnpm process:one` processes a single version synchronously for debugging; `--fail-step extract:2` injects two failures to watch the retry and resume behaviour.
-- **Model config hash.** Provider, model names, prompt versions and pipeline version are hashed. Change any of them and reprocessing creates new extraction runs instead of reusing cached outputs.
+PDF pages and DOCX paragraphs become addressable source blocks. Chunks target 800 tokens with 120-token overlap. Uploads are limited to 10 MB and PDFs to 50 pages. The production browser uploads directly to a signed Supabase path, avoiding Vercel's function request-size limit. Server actions receive descriptors and validate workspace, user, type and actual byte length.
 
-## Evaluation and regression gate
+## Human Review
 
-`pnpm eval` seeds 148 cases from the fixtures, ingests the corpus (idempotent), runs every case, aggregates, compares with the baseline, writes the QA report and exits non-zero on failure.
+The queue filters by status, priority, document, field and confidence. A review screen shows the candidate, quote, highlighted context, verifier reason and confidence components. Accept, edit-and-accept and reject create immutable record versions; needs-source stays unresolved. Stale edits are rejected. Reprocessing supersedes old pending review items. The seeded Orchard Valley example records a synthetic reviewer correction from USD 480,000 to USD 512,000.
 
-| Case type | Count | What it checks |
-| --- | ---: | --- |
-| `extraction` | 18 | Scalar exact match and list micro-F1 against the ground-truth record |
-| `provenance` | 18 | Every field's evidence resolves to a real block and the quote matches verbatim |
-| `classification` | 18 | `document_type` exact |
-| `review_routing` | 18 | Every planted non-supported reading is routed; every field under 0.86 has a review item |
-| `retrieval` | 32 | Expected documents present in the top 5 |
-| `answer` | 32 | Citation precision, all claims supported, judge score against reference and expected facts |
-| `refusal` | 8 | Unanswerable questions are refused |
-| `duplicate`, `version` | 2 + 2 | Byte-identical uploads skipped with an event; corrected editions linked and current |
+## Confidence Formula
 
-Hard regression rules against the baseline: extraction exact accuracy drop > 2 pp, evidence validity drop > 1 pp, review recall drop > 5 pp, Recall@5 drop > 3 pp, refusal accuracy < 95%, semantic score < 0.90, or any duplicate/version case failing. Baselines are per provider in `eval/baselines/<provider>.json`; `pnpm eval --set-baseline` promotes a run.
+`0.30 × exact evidence + 0.20 × deterministic validation + 0.25 × verifier support + 0.15 × cross-pass agreement + 0.10 × evidence specificity`
 
-The QA report (`src/lib/report/qa-report.ts`) is a self-contained HTML file with corpus counts, extraction metrics, confidence distribution, provenance statistics, review statistics, RAG evaluation, duplicate and version events, retries and failures, cost, latency and regression status. It is served and downloadable from each run page.
+Code computes the score. Values below 0.86 require review; below 0.65 are blocked. Unsupported evidence, missing required provenance and contradictions block auto-approval regardless of the weighted score. Partial support requires review. Specificity preserves the verifier's bounded numeric value.
 
-## Run it locally
+## Provenance Model
 
-Requirements: Node 22, pnpm 10, PostgreSQL 15+ with the `vector` extension (Homebrew: `brew install postgresql@17 pgvector`).
+Scalars carry `value`, `source_block_ids`, `evidence_quotes` and `ambiguity`. Each list item has its own provenance. `field_values` and `field_evidence` persist the value, components, verifier results, exact-match offsets and source-block identity. Human locators link directly to highlighted PDF page or DOCX paragraph text. Original files can be downloaded after workspace authorization.
+
+## Document & Record Versioning
+
+A logical document has multiple immutable source editions. Content hashes prevent duplicate editions; corrected sources link to the edition they supersede. Record versions separately preserve initial extraction, reviewer decisions and reprocessing. PostgreSQL uniqueness constraints enforce one current source and one current record. Saved answer evidence remains available through its stored retrieval snapshot.
+
+## RAG
+
+Retrieval combines 75% vector similarity and 25% lexical rank over a normalized candidate pool. Default retrieval excludes superseded sources and incompletely embedded editions. Answers and three draft formats retain citations and retrieval scores. Citation identifiers must resolve to retrieved evidence; a separate verifier checks cited claims. Unsupported answers are replaced with the exact refusal: **Insufficient evidence in the indexed corpus.** `/rag` and `/ask` expose the same workbench. Public visitors can browse saved examples but cannot generate paid output.
+
+## Evaluation
+
+The corpus produces 146 checks: 18 each for extraction, provenance, classification and review routing; 30 retrieval checks; 30 answer checks; 10 refusals; two duplicates; two corrected versions. The 40 golden questions contain 20 single-document, 10 cross-document and 10 unanswerable questions. A separate failure-injection scenario tests resumability. Inngest checkpoints each evaluation case and replays its aggregate contribution without repeating completed calls.
+
+## Regression Gates
+
+Extraction may drop at most 2 percentage points, provenance 1, review recall 5 and retrieval recall 3. Refusal and citation precision must remain at least 95%; semantic score at least 90%; duplicate, version and resumability checks must pass. Success targets are checked separately. Only a passing run can establish a baseline, and only a compatible corpus fingerprint is compared. Provider baselines remain separate. HTML report failure also causes the evaluation CLI to fail.
+
+## Failure Handling
+
+Failures record step, attempt, error and retryability. Retries use 2, 8 and 30 seconds. Exhausted work becomes a dead letter with an admin retry action. Embedding failure retains the extracted record while excluding the edition from retrieval. Corrupt files and scanned PDFs fail explicitly. Dispatch failure marks the run failed instead of leaving it queued.
+
+## Resumability & Idempotency
+
+Database advisory locks serialize duplicate deliveries and uploads. Use Supabase's **session pooler on port 5432**, not transaction pooling on 6543. Parsing and chunking keys are independent of model changes. Extraction and verifier batch checkpoints preserve completed work; embeddings cache by text/model/dimension. A per-run document outcome ledger prevents counter inflation. Record creation checks persisted extraction identity before inserting. Worker configuration drift fails visibly and requires a new processing run.
+
+## Data & Synthetic Corpus
+
+**All demo documents are synthetic and generated in-repository.**
+
+20 files: 16 PDFs and 4 DOCX files, representing 16 logical documents and 18 unique source versions, with two exact duplicates and two corrected editions. The corpus has 57 PDF pages including duplicate files, 700–1200 words per source, and 17 planted uncertainty examples (16 expected review routes). Generation fixes PDF metadata and DOCX ZIP/core timestamps; repeated generation produced identical DOCX hashes.
+
+Sources: `fixtures/source/`; documents and manifest: `fixtures/documents/`; truth: `fixtures/truth/`; golden questions: `fixtures/golden/`. Unsupported and corrupt examples live in `fixtures/documents/extras/`.
+
+## Results
+
+Measured on 2026-09-10, provider **mock**, evaluation `52531eab-d7e2-48ec-8d41-8d62161f9015`. All 11 aggregate targets and all 10 regression rules passed; **141/146 individual cases passed**. Three extraction cases and one provenance case retain planted errors, and one cross-document retrieval case misses one expected document at top five. These failures are reported, not hidden.
+
+| Metric | Measured |
+| --- | ---: |
+| Scalar extraction accuracy | 96.67% |
+| List/object micro-F1 | 97.01% |
+| Classification accuracy | 100.00% |
+| Provenance validity | 99.68% |
+| Review recall | 100.00% |
+| Review precision | 100.00% |
+| Retrieval Recall@5 | 98.33% |
+| Citation precision | 100.00% |
+| Evidence-supported answers | 100.00% |
+| Refusal accuracy | 100.00% |
+| Semantic answer score | 100.00% |
+
+16 logical documents; 18 source versions evaluated; 90 scalar fields; 310 non-null provenance claims, 309 valid. Duplicates 2/2; corrected versions 2/2; no duplicate model records; no below-threshold auto-approvals. Failure/retry, resumability and concurrent delivery tests passed.
+
+Uncached evaluation: $0 actual API spend (no OpenAI calls), 89,350 estimated mock input tokens / 4,436 output tokens, p50 2 ms and p95 34 ms per case. Mock latency and cost do not predict production performance. [Machine-readable results](docs/evaluation-results.json) · [HTML QA report](docs/qa-report.html).
+
+## Screenshots
+
+[Dashboard](docs/screenshots/dashboard.png) · [Documents](docs/screenshots/documents.png) · [Provenance](docs/screenshots/provenance.png) · [Review](docs/screenshots/review.png) · [Cited answer](docs/screenshots/answer.png) · [Evaluations](docs/screenshots/evaluations.png) · [Run activity](docs/screenshots/run.png) · [QA report](docs/screenshots/qa-report.png) · [Mobile](docs/screenshots/mobile-documents.png).
+
+## Running Locally
+
+Use Node 22+, pnpm 10.30 and PostgreSQL with the pgvector extension installed. These commands create development/test databases; the test suite resets only its test database.
 
 ```bash
-git clone https://github.com/essashahid/EvidenceOps.git && cd EvidenceOps
-pnpm install
-cp .env.example .env                     # defaults: mock LLM, local auth, local storage, inline jobs
+corepack enable
+pnpm install --frozen-lockfile
+createdb evidenceops
+createdb evidenceops_test
+cp .env.example .env.local
+```
 
-createdb evidenceops && createdb evidenceops_test
-psql evidenceops      -c 'create extension if not exists vector'
-psql evidenceops_test -c 'create extension if not exists vector'
+Set `.env.local` to `DATABASE_URL=postgres://localhost:5432/evidenceops`, `TEST_DATABASE_URL=postgres://localhost:5432/evidenceops_test`, `LLM_PROVIDER=mock`, `JOB_DRIVER=inline`, `AUTH_DRIVER=local`, `STORAGE_DRIVER=local`. Choose local demo passwords. Use `PUBLIC_DEMO_MODE=true` / `DEMO_MUTATIONS_ENABLED=false` for public read-only browsing; set demo mutations true for a reviewer session.
 
+```bash
 pnpm db:migrate
-pnpm db:seed                             # workspace, demo users, eval cases
-pnpm ingest:corpus                       # upload + process the 20 fixture files
-pnpm dev                                 # http://localhost:3000
+pnpm fixtures:generate
+pnpm seed:demo
+pnpm dev
 ```
 
-Sign in as `admin@evidenceops.local` / `evidenceops-admin` (admin) or `reviewer@evidenceops.local` / `evidenceops-reviewer` (reviewer). Then open `/review` to resolve a planted contradiction, `/ask` to ask "What is the revised program cost in the Northstar operational review?", and `/runs` to see the ingest run and generate a QA report.
+`seed:demo` ingests the corpus, records one synthetic review, runs evaluation and writes a QA report. `db:seed` seeds only accounts and cases. On this workstation the completed demo uses the fresh `evidenceops_verified` database; prior databases were preserved. Its production preview runs at `http://localhost:3010` because another application uses port 3000.
 
-To use real models, set `LLM_PROVIDER=openai` and `OPENAI_API_KEY` in `.env`, then reset so cached mock outputs are not reused:
+## Environment Variables
 
-```bash
-pnpm db:reset && pnpm db:seed && rm -rf .data/storage
-pnpm eval --set-baseline
-```
+See [.env.example](.env.example) and [production configuration](docs/deployment.md). Required live settings are `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `INNGEST_EVENT_KEY`, and `INNGEST_SIGNING_KEY`. Production drivers are Supabase/Supabase/Inngest. Models default to `gpt-5.6-luna`, embeddings to `text-embedding-3-small` with 768 dimensions. Token pricing is centralized in `src/lib/config.ts`; unknown model prices fail explicitly.
 
-## Commands
+Never commit `.env.local`, `.data/production.env` or service keys. Seed passwords for Supabase must be unique and at least 16 characters. Only Supabase URL and anon/publishable key may reach the browser.
 
-```bash
-pnpm dev / build / start
-pnpm lint                    # eslint
-pnpm typecheck               # tsc --noEmit
-pnpm test                    # unit (vitest): text, chunking, validation, confidence, metrics, regression, mock provider
-pnpm test:integration        # vitest against TEST_DATABASE_URL: pipeline, failures, review, RAG
-pnpm test:e2e                # playwright, boots its own dev server on :3100 against the test database
-pnpm eval [--set-baseline] [--no-ingest] [--no-cache] [--no-strict]
-pnpm db:migrate | db:seed | db:reset
-pnpm fixtures:generate       # re-render the corpus and verify every evidence quote
-pnpm ingest:corpus [--no-wait]
-pnpm process:one OPS-2026-004@1 [--fail-step verify:4]
-pnpm inngest:dev             # local Inngest dev server (with JOB_DRIVER=inngest)
-```
+## Testing
 
-The definition of done for this repository is that `lint`, `typecheck`, `test`, `test:integration`, `test:e2e`, `eval` and `build` all pass. They do.
+| Command | Verified result |
+| --- | --- |
+| `pnpm lint` | Passed, no errors or warnings |
+| `pnpm typecheck` | Passed |
+| `pnpm test` | 43 passed, 10 files |
+| `pnpm test:integration` | 20 passed, 5 files |
+| `pnpm test:e2e` | 7 passed, Chromium |
+| `pnpm eval --no-ingest --no-cache` | EVAL PASSED; all targets/regression gates; 141/146 cases |
+| `pnpm build` | Optimized production build passed |
+| `pnpm verify:rls` | Local PostgreSQL policy checks passed |
 
-## Configuration
+Additional browser audit: eight desktop routes and seven mobile routes returned 200 with no uncaught page errors or page-wide horizontal overflow; anonymous upload/Ask controls disabled. The integration suite covers concurrent uploads/deliveries, checkpoint replay, viewer/non-member denial, immutable review and failure recovery. Real OpenAI transport behavior is tested with MSW for malformed JSON retry and rate limiting.
 
-| Variable | Values | Notes |
-| --- | --- | --- |
-| `LLM_PROVIDER` | `openai`, `mock` | `mock` is a deterministic, fixture-backed provider: extraction comes from the committed ground truth including the planted uncertain readings, verification is rule based, embeddings are hashed bag-of-words vectors, answers are extractive, and known golden questions decide answerability. It exists so the whole system, tests and the eval harness run offline and reproducibly. It is never a fallback for the real provider. |
-| `OPENAI_*_MODEL` | defaults `gpt-5.6-luna`, embeddings `text-embedding-3-small` @ 768 | Prices for cost estimates are in `src/lib/config.ts`. |
-| `JOB_DRIVER` | `inline`, `inngest` | `inline` processes in the request (development and tests). |
-| `AUTH_DRIVER` | `local`, `supabase` | `local` is email/password in `app_users` with an HMAC-signed cookie; `supabase` uses Supabase Auth and mirrors users into `app_users`. |
-| `STORAGE_DRIVER` | `local`, `supabase` | Source files and QA reports. |
-| `DATABASE_URL`, `TEST_DATABASE_URL` | Postgres URLs | Tests and e2e always use the test database and reset it. |
+## Deployment
 
-Full list with comments in `.env.example`.
+Vercel project `evidenceops` is linked to `essashahid/EvidenceOps`; Node 22 and pnpm build/install commands are configured. Known settings and generated demo passwords are set in both production and preview. **No working hosted deployment exists yet:** Supabase refused a new project because the account reached its free-project limit, and OpenAI/Inngest keys are absent.
 
-## Repository layout
+The private `.data/production.env` file contains generated passwords and empty slots for missing credentials. Once completed, `pnpm deploy:production` validates configuration, migrates, seeds and evaluates through production Auth/Storage, synchronizes Vercel variables and deploys. Then sync the deployed `/api/inngest` endpoint in Inngest and verify hosted upload/retry. [Detailed runbook](docs/deployment.md).
 
-```
-src/lib/pipeline/    ingest, parse, chunk, validate, confidence, steps-runner (idempotency, dead letters),
-                     process-document (the seven steps), orchestrate (inline runner with retry schedule)
-src/lib/llm/         provider interface, OpenAI Responses implementation, mock provider, prompts
-src/lib/schema/      the extraction record schema, field paths, evidence types
-src/lib/review/      resolve actions (immutable versions, optimistic concurrency), queue queries
-src/lib/rag/         hybrid retrieval, evidence-bound answering with citation validation
-src/lib/eval/        golden cases, metrics, regression rules, baselines, corpus ingestion, runner
-src/lib/report/      QA report generator
-src/inngest/         Inngest client and durable functions
-src/app/             Next.js App Router pages, server actions, report route
-supabase/migrations/ 0001_init.sql (schema), 0002_supabase_rls.sql (RLS + bucket; applied only on Supabase)
-fixtures/            ground truth, manifest, generator, corpus, extras, 40 golden questions
-tests/               unit, integration, e2e
-eval/baselines/      committed regression baselines per provider
-docs/                architecture.md, deployment.md
-```
+## Security & Privacy
 
-## Data model
+Server actions enforce workspace membership and role; public access is read-only. Mutations share a database rate counter. Supabase sessions are validated/refreshed; unknown users are not automatically added to a workspace. RLS protects public tables and direct client writes are revoked. Storage is private; generated reports escape source content and are served with a restrictive content policy. Raw sources and reports enforce workspace authorization. Use a dedicated Supabase project for this application. This is not a formal security/compliance certification.
 
-Twenty-six tables in `supabase/migrations/0001_init.sql`. The ones that carry the guarantees:
+## Limitations
 
-- `documents` / `document_versions`: logical identity vs. immutable content; `content_hash` unique per workspace, `supersedes_version_id`, `is_current`, `parse_status`, `processing_status`.
-- `source_blocks`: page or paragraph text with locator and offsets.
-- `chunks` + `embedding_cache`: text, block span, `vector(768)`, generated `tsvector`.
-- `processing_runs`, `run_steps` (unique `idempotency_key`), `run_events`, `dead_letters`, `llm_calls`.
-- `extraction_runs`: raw extractor output and verifier output per model configuration.
-- `record_versions` → `field_values` → `field_evidence`: payload per version; per-field confidence, five components, routing, verifier verdict, validation messages; quote, offsets, locator, exact-match flag.
-- `review_items`, `review_actions`: queue and audit trail with old value, new value, reviewer, comment, resulting version.
-- `rag_queries`, `rag_answers`, `answer_citations`: question, embedding, retrieved set with scores, answer, sufficiency, citations with resolved block.
-- `eval_cases`, `eval_runs`, `eval_results`, `qa_reports`.
+No OCR; no scanned-document interpretation; no image extraction; no complex table reconstruction; synthetic corpus; no legal/compliance function; no tariff/HTS logic. The deterministic provider uses fixture truth and golden questions, so live-model quality remains unmeasured. Hosted Supabase Auth/Storage, actual Inngest delivery and Vercel deployment remain unverified until credentials are supplied. Source PDFs can contain page-split sentences, so extractive mock answers may include fragments. Model verification reduces unsupported answers but cannot guarantee correctness. Full-text quality is tuned for English. Five individual evaluation cases remain unsuccessful despite passing aggregate targets.
 
-## Deploying
+## What I Would Add for a Client
 
-Supabase (Postgres + pgvector + Auth + Storage, RLS policies in the second migration), Inngest Cloud for durable execution, Vercel for the app. Step by step in [`docs/deployment.md`](docs/deployment.md).
-
-## Limits and non-goals
-
-- No OCR. Scanned or image-only PDFs are detected and routed to the manual queue.
-- One extraction schema (operational reports). Adding another is a new Zod schema, field definitions and fixtures; the pipeline, review, versioning and eval machinery are schema-agnostic by construction but the demo ships one.
-- Single workspace in the demo; the data model and queries are workspace-scoped throughout.
-- The committed baseline is from the mock provider. Real-model numbers require an OpenAI key and will differ.
+Client-specific source samples and acceptance tests, a reviewed retention policy, SSO and explicit invitation flows, usage budgets and provider billing reconciliation, asynchronous draft generation for larger contexts, OCR/table handling when required, and evaluation by independent human reviewers.

@@ -1,0 +1,325 @@
+{
+  "logical_key": "INV-2026-012",
+  "version": 1,
+  "format": "pdf",
+  "filename": "INV-2026-012-v1-granite-peak-conveyor-investigation.pdf",
+  "display_name": "Granite Peak Conveyor 4 belt failure investigation",
+  "record": {
+    "report_title": "Investigation of the Conveyor 4 Belt Failure",
+    "report_number": "INV-2026-012",
+    "issuing_organization": "Granite Peak Mining",
+    "publication_date": "2026-05-22",
+    "document_type": "investigation",
+    "subject_entities": [
+      {
+        "name": "Granite Peak Mining"
+      },
+      {
+        "name": "Conveyor 4"
+      },
+      {
+        "name": "Ironvale Belting Services"
+      }
+    ],
+    "key_findings": [
+      {
+        "finding": "The belt splice that failed had been installed by Ironvale Belting Services eleven days before the failure.",
+        "severity": "high"
+      },
+      {
+        "finding": "Belt tension sensors on Conveyor 4 had reported intermittent faults for three weeks before the failure.",
+        "severity": "high"
+      },
+      {
+        "finding": "No injuries occurred and the emergency stop functioned as designed.",
+        "severity": "info"
+      },
+      {
+        "finding": "The shift handover log did not mention the sensor faults on any of the 21 shifts before the failure.",
+        "severity": "medium"
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation": "Inspect every splice installed by Ironvale Belting Services in the last twelve months and replace any that fail a cure test.",
+        "target_entity": "Granite Peak Mining Maintenance Department",
+        "status_if_stated": "Completed"
+      },
+      {
+        "recommendation": "Replace the belt tension sensors on Conveyor 4 with units that raise a work order automatically on fault.",
+        "target_entity": null,
+        "status_if_stated": "Not started"
+      },
+      {
+        "recommendation": "Add open sensor faults to the mandatory shift handover checklist.",
+        "target_entity": "Granite Peak Mining Operations",
+        "status_if_stated": "Completed"
+      }
+    ],
+    "monetary_amounts": [
+      {
+        "amount": 410000,
+        "currency": "USD",
+        "context": "lost production during the 31 hour outage"
+      },
+      {
+        "amount": 58000,
+        "currency": "USD",
+        "context": "belt replacement and splice repair cost"
+      },
+      {
+        "amount": 21000,
+        "currency": "USD",
+        "context": "estimated cost of replacing the belt tension sensors"
+      }
+    ]
+  },
+  "evidence": {
+    "report_title": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P01"
+      ],
+      "quotes": [
+        "Investigation of the Conveyor 4 Belt Failure"
+      ]
+    },
+    "report_number": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P01"
+      ],
+      "quotes": [
+        "Report No. INV-2026-012"
+      ]
+    },
+    "issuing_organization": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P01"
+      ],
+      "quotes": [
+        "Issued by Granite Peak Mining"
+      ]
+    },
+    "publication_date": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P01"
+      ],
+      "quotes": [
+        "Publication date: 22 May 2026"
+      ]
+    },
+    "document_type": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P01"
+      ],
+      "quotes": [
+        "This investigation examines the failure of the Conveyor 4 belt at the Granite Peak Mining primary crushing plant on 9 April 2026."
+      ]
+    },
+    "subject_entities[0]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P01"
+      ],
+      "quotes": [
+        "This investigation examines the failure of the Conveyor 4 belt at the Granite Peak Mining primary crushing plant on 9 April 2026."
+      ]
+    },
+    "subject_entities[1]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P01"
+      ],
+      "quotes": [
+        "This investigation examines the failure of the Conveyor 4 belt at the Granite Peak Mining primary crushing plant on 9 April 2026."
+      ]
+    },
+    "subject_entities[2]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P01"
+      ],
+      "quotes": [
+        "The investigation attributes the failure to a splice installed by Ironvale Belting Services shortly before the event, compounded by belt tension sensor faults that had been reported for three weeks and were not carried across shift handovers."
+      ]
+    },
+    "key_findings[0]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P02"
+      ],
+      "quotes": [
+        "Finding 1: The belt splice that failed had been installed by Ironvale Belting Services eleven days before the failure.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[1]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P02"
+      ],
+      "quotes": [
+        "Finding 2: Belt tension sensors on Conveyor 4 had reported intermittent faults for three weeks before the failure.",
+        "Severity: High."
+      ]
+    },
+    "key_findings[2]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P02"
+      ],
+      "quotes": [
+        "Finding 3: No injuries occurred and the emergency stop functioned as designed.",
+        "Severity: Info."
+      ]
+    },
+    "key_findings[3]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P02"
+      ],
+      "quotes": [
+        "Finding 4: The shift handover log did not mention the sensor faults on any of the 21 shifts before the failure.",
+        "Severity: Medium."
+      ]
+    },
+    "recommendations[0]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 1: Inspect every splice installed by Ironvale Belting Services in the last twelve months and replace any that fail a cure test.",
+        "Target: Granite Peak Mining Maintenance Department.",
+        "Status: Completed."
+      ]
+    },
+    "recommendations[1]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 2: Replace the belt tension sensors on Conveyor 4 with units that raise a work order automatically on fault.",
+        "Target: the Maintenance Superintendent or the Site Engineering Manager, to be confirmed by the plant manager.",
+        "Status: Not started."
+      ]
+    },
+    "recommendations[2]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P02"
+      ],
+      "quotes": [
+        "Recommendation 3: Add open sensor faults to the mandatory shift handover checklist.",
+        "Target: Granite Peak Mining Operations.",
+        "Status: Completed."
+      ]
+    },
+    "monetary_amounts[0]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P03"
+      ],
+      "quotes": [
+        "Lost production during the 31 hour outage is valued at USD 410,000."
+      ]
+    },
+    "monetary_amounts[1]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P03"
+      ],
+      "quotes": [
+        "Belt replacement and splice repair cost USD 58,000."
+      ]
+    },
+    "monetary_amounts[2]": {
+      "locators": [
+        "SRC-INV-2026-012-V1-P03"
+      ],
+      "quotes": [
+        "Replacing the belt tension sensors is estimated at USD 21,000."
+      ]
+    }
+  },
+  "uncertain_fields": [
+    {
+      "field_path": "recommendations[1]",
+      "kind": "ambiguous_owner",
+      "reason": "The recommendation names two possible owners and says the owner is to be confirmed; the truth records no target entity.",
+      "extractor_value": {
+        "recommendation": "Replace the belt tension sensors on Conveyor 4 with units that raise a work order automatically on fault.",
+        "target_entity": "Maintenance Superintendent",
+        "status_if_stated": "Not started"
+      },
+      "extractor_quotes": [
+        "Target: the Maintenance Superintendent or the Site Engineering Manager, to be confirmed by the plant manager."
+      ],
+      "extractor_ambiguity": "Two owners are named and the assignment is to be confirmed.",
+      "verifier": {
+        "status": "partially_supported",
+        "corrected_value": {
+          "recommendation": "Replace the belt tension sensors on Conveyor 4 with units that raise a work order automatically on fault.",
+          "target_entity": null,
+          "status_if_stated": "Not started"
+        },
+        "contradiction_detected": false,
+        "evidence_specificity": 0.75
+      },
+      "expect_routed": true,
+      "extractor_locators": [
+        "SRC-INV-2026-012-V1-P02"
+      ]
+    }
+  ],
+  "distractors": [],
+  "expect_duplicate_files": [],
+  "supersedes": null,
+  "superseded_by": null,
+  "body": [
+    {
+      "heading": "Investigation of the Conveyor 4 Belt Failure",
+      "paragraphs": [
+        "Report No. INV-2026-012",
+        "Issued by Granite Peak Mining",
+        "Publication date: 22 May 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This investigation examines the failure of the Conveyor 4 belt at the Granite Peak Mining primary crushing plant on 9 April 2026. The failure stopped ore delivery to the mill for 31 hours. Nobody was injured, and the emergency stop system operated as designed.",
+        "The investigation attributes the failure to a splice installed by Ironvale Belting Services shortly before the event, compounded by belt tension sensor faults that had been reported for three weeks and were not carried across shift handovers. Three recommendations are made, two of which were completed before publication."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Granite Peak Mining operates an open pit copper mine with a primary crushing plant connected to the mill by four overland conveyors. Conveyor 4 is 1.9 kilometres long and carries about 2,400 tonnes per hour when the plant is at full rate.",
+        "Ironvale Belting Services holds the belt maintenance contract for the site and performs splices, belt replacements and sensor calibration. Belt tension sensors on each conveyor report to the plant control system, where faults are shown on the operator screen but are not automatically added to the shift handover log.",
+        "The work was led by Angus Reilly and supported by Antonina Jaskolski-Mraz. The team conducted 28 structured interviews, examined a sample of 113 records and reviewed 226 internal documents between 15 July 2025 and 2 September 2025. Records held by third parties were not independently verified except where this document says otherwise."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: The belt splice that failed had been installed by Ironvale Belting Services eleven days before the failure. Laboratory examination found that the splice adhesive had not cured fully because the cure time was cut short to return the conveyor to service. Severity: High.",
+        "Finding 2: Belt tension sensors on Conveyor 4 had reported intermittent faults for three weeks before the failure. The faults were acknowledged on the operator screen 43 times but no work order was raised. Severity: High.",
+        "Finding 3: No injuries occurred and the emergency stop functioned as designed. The belt came to rest within nine seconds of the trip and the area was clear of personnel. Severity: Info.",
+        "Finding 4: The shift handover log did not mention the sensor faults on any of the 21 shifts before the failure. Operators interviewed said they assumed the faults were known to the maintenance planners. Severity: Medium."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Inspect every splice installed by Ironvale Belting Services in the last twelve months and replace any that fail a cure test. Target: Granite Peak Mining Maintenance Department. Status: Completed.",
+        "Recommendation 2: Replace the belt tension sensors on Conveyor 4 with units that raise a work order automatically on fault. Target: the Maintenance Superintendent or the Site Engineering Manager, to be confirmed by the plant manager. Status: Not started.",
+        "Recommendation 3: Add open sensor faults to the mandatory shift handover checklist. Target: Granite Peak Mining Operations. Status: Completed."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The cost of the event is summarised below from the production accounts and the maintenance contract. Lost production during the 31 hour outage is valued at USD 410,000. Belt replacement and splice repair cost USD 58,000. Replacing the belt tension sensors is estimated at USD 21,000."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Records examined. The 226 internal documents reviewed included 42 purchase orders, 20 invoices and 16 items of correspondence, all indexed under working reference UACNIH.",
+        "Appendix B: Timeline. The splice was installed on 29 March 2026, the first tension sensor fault was logged on 19 March 2026, and the belt failed at 02:14 on 9 April 2026 during the night shift.",
+        "Appendix C: Persons interviewed. The investigation interviewed the four operators on shift, the maintenance planner, the Ironvale Belting Services crew leader and the plant manager.",
+        "The evidence register preserves the relationship between each reviewed item and its original record. Working copies were organized by topic, with separate references for correspondence and supporting schedules. A reference identifies the material examined; it does not establish that every statement in that material is accurate. Conclusions remain limited to the findings expressly stated in this report.",
+        "Review procedures distinguished statements made during interviews from observations supported by retained documents. Where an interview described an event, the team checked the available record for the same event before relying on the statement. Material that could not be reconciled was retained with its context so that a later reader could inspect the basis for the conclusion."
+      ]
+    }
+  ]
+}

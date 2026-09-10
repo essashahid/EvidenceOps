@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db/client";
 import { reportRecordSchema, setFieldValue, type ReportRecord } from "@/lib/schema/report";
 
@@ -37,11 +37,17 @@ export type ResolveResult = {
 export async function resolveReviewItem(input: ResolveInput): Promise<ResolveResult> {
   const db = getDb();
   return db.transaction(async (tx) => {
+    const [authorized] = await tx.select({ id: schema.reviewItems.id, versionId: schema.reviewItems.documentVersionId })
+      .from(schema.reviewItems).innerJoin(schema.workspaceMembers, eq(schema.workspaceMembers.workspaceId, schema.reviewItems.workspaceId))
+      .where(and(eq(schema.reviewItems.id, input.reviewItemId), eq(schema.workspaceMembers.userId, input.reviewerUserId), inArray(schema.workspaceMembers.role, ["admin", "reviewer"]))).limit(1);
+    if (!authorized) throw new Error("Review item not found or access denied");
+    // Serialize edits to different fields of the same record, too.
+    await tx.execute(sql`select id from document_versions where id = ${authorized.versionId} for update`);
     const newStatus = input.action === "needs_source" ? "needs_source" : input.action === "reject" ? "rejected" : "resolved";
     const [item] = await tx
       .update(schema.reviewItems)
-      .set({ status: newStatus, resolvedBy: input.reviewerUserId, resolvedAt: new Date() })
-      .where(and(eq(schema.reviewItems.id, input.reviewItemId), eq(schema.reviewItems.status, "open")))
+      .set({ status: newStatus, resolvedBy: input.reviewerUserId, resolvedAt: input.action === "needs_source" ? null : new Date() })
+      .where(and(eq(schema.reviewItems.id, input.reviewItemId), inArray(schema.reviewItems.status, ["open", "needs_source"])))
       .returning();
     if (!item) throw new ReviewConflictError();
 
@@ -71,7 +77,6 @@ export async function resolveReviewItem(input: ResolveInput): Promise<ResolveRes
         comment: input.comment ?? null,
         resultingRecordVersionId: null,
       });
-      await tx.update(schema.fieldValues).set({ routingStatus: "needs_source" }).where(eq(schema.fieldValues.id, target.id));
       return { reviewItemId: item.id, action: input.action, resultingRecordVersionId: null, resultingVersionNumber: null };
     }
 
@@ -86,6 +91,7 @@ export async function resolveReviewItem(input: ResolveInput): Promise<ResolveRes
       routing = "rejected";
     }
     const nextPayload = input.action === "accept" ? payload : setFieldValue(payload, item.fieldPath, newValue);
+    reportRecordSchema.parse(nextPayload);
     const changedFields = input.action === "accept" ? [] : [item.fieldPath];
 
     await tx.update(schema.recordVersions).set({ isCurrent: false }).where(eq(schema.recordVersions.documentVersionId, item.documentVersionId));
@@ -123,6 +129,8 @@ export async function resolveReviewItem(input: ResolveInput): Promise<ResolveRes
           crossPassAgreement: f.crossPassAgreement,
           evidenceSpecificity: f.evidenceSpecificity,
           verifierStatus: f.verifierStatus,
+          verifierReason: f.verifierReason,
+          ambiguity: f.ambiguity,
           contradiction: f.contradiction,
           verifierCorrectedValueJson: f.verifierCorrectedValueJson as object,
           validationMessages: f.validationMessages,
@@ -149,7 +157,7 @@ export async function resolveReviewItem(input: ResolveInput): Promise<ResolveRes
     const [openRow] = await tx
       .select({ open: sql<number>`count(*)::int` })
       .from(schema.reviewItems)
-      .where(and(eq(schema.reviewItems.documentVersionId, item.documentVersionId), eq(schema.reviewItems.status, "open")));
+      .where(and(eq(schema.reviewItems.documentVersionId, item.documentVersionId), inArray(schema.reviewItems.status, ["open", "needs_source"])));
     if ((openRow?.open ?? 0) === 0) {
       await tx
         .update(schema.documentVersions)
@@ -162,11 +170,18 @@ export async function resolveReviewItem(input: ResolveInput): Promise<ResolveRes
 
 /** Coerce a reviewer-entered string into the field's value type. */
 export function coerceReviewValue(fieldPath: string, raw: string): unknown {
-  const leaf = fieldPath.replace(/^.*\./, "");
-  if (leaf === "amount") {
-    const n = Number(raw.replace(/[^0-9.-]/g, ""));
-    if (!Number.isFinite(n)) throw new Error("Amount must be a number");
-    return n;
+  if (/\[\d+\]$/.test(fieldPath)) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      throw new Error("List items are edited as JSON objects");
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("List items must be JSON objects");
+    const item = parsed as Record<string, unknown>;
+    if ("amount" in item) item.amount = Number(item.amount);
+    return item;
   }
-  return raw.trim();
+  const v = raw.trim();
+  return v === "" ? null : v;
 }

@@ -1,5 +1,7 @@
 "use server";
 
+import { assertMutation } from "@/lib/access";
+
 import { revalidatePath } from "next/cache";
 import { dispatchRetry } from "@/lib/jobs";
 import { getRun } from "@/lib/queries/runs";
@@ -10,7 +12,9 @@ import { isAdmin, requireWorkspace } from "@/lib/workspace";
 export type RetryState = { ok: boolean; message: string } | null;
 
 export async function retryDeadLetterAction(_prev: RetryState, formData: FormData): Promise<RetryState> {
-  const { workspace } = await requireWorkspace();
+  const context = await requireWorkspace();
+  await assertMutation(context, "run", ["admin"]);
+  const { workspace } = context;
   if (!isAdmin(workspace.role)) return { ok: false, message: "Only admins can retry failed steps." };
   const runId = String(formData.get("runId") ?? "");
   const documentVersionId = String(formData.get("documentVersionId") ?? "");
@@ -31,7 +35,9 @@ export async function retryDeadLetterAction(_prev: RetryState, formData: FormDat
 
 /** Generate the QA report for this run, attaching the workspace's latest completed eval run when one exists. */
 export async function generateRunReportAction(formData: FormData): Promise<void> {
-  const { workspace } = await requireWorkspace();
+  const context = await requireWorkspace();
+  await assertMutation(context, "run", ["admin"]);
+  const { workspace } = context;
   const runId = String(formData.get("runId") ?? "");
   if (!runId) return;
   if (!isAdmin(workspace.role)) return;

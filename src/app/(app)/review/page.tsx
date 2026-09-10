@@ -12,7 +12,7 @@ import { fmtDate, fmtValue } from "@/components/format";
 
 export const dynamic = "force-dynamic";
 
-const STATUSES = ["open", "resolved", "rejected", "needs_source", "all"] as const;
+const STATUSES = ["open", "resolved", "rejected", "needs_source", "superseded", "all"] as const;
 type Status = (typeof STATUSES)[number];
 
 type Search = { [key: string]: string | string[] | undefined };
@@ -44,6 +44,7 @@ export default async function ReviewQueuePage({ searchParams }: { searchParams: 
 
   const filters: ReviewFilters = {
     status,
+    priority: one(sp.priority) === "high" ? "high" : one(sp.priority) === "normal" ? "normal" : undefined,
     fieldPath: field ? `${field}%` : undefined,
     documentVersionId: versionId || undefined,
     minConfidence: numOrUndefined(min),
@@ -99,6 +100,10 @@ export default async function ReviewQueuePage({ searchParams }: { searchParams: 
               </option>
             ))}
           </select>
+        </label>
+        <label className="flex flex-col gap-0.5 text-xs text-[var(--muted)]">
+          Priority
+          <select name="priority" defaultValue={one(sp.priority)} className="rounded border border-[var(--line)] bg-white p-1 text-sm"><option value="">All priorities</option><option value="high">High</option><option value="normal">Normal</option></select>
         </label>
         <label className="flex flex-col gap-0.5 text-xs text-[var(--muted)]">
           Confidence min

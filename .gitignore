@@ -12,3 +12,6 @@ test-results
 .DS_Store
 coverage
 reports/*.html
+.vercel
+
+supabase/.temp/

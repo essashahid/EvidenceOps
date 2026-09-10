@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { env } from "@/lib/env";
@@ -21,7 +22,7 @@ export function createLocalStorage(root: string): ObjectStorage {
     async put(objectPath, bytes) {
       const full = safeJoin(root, objectPath);
       await fs.mkdir(path.dirname(full), { recursive: true });
-      const tmp = `${full}.tmp-${process.pid}-${Date.now()}`;
+      const tmp = `${full}.tmp-${randomUUID()}`;
       await fs.writeFile(tmp, bytes);
       await fs.rename(tmp, full);
     },

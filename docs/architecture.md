@@ -1,52 +1,48 @@
 # Architecture
 
-## Components
+The application uses Next.js 16 App Router with server components for reads and server actions for authenticated mutations. React client components handle table filtering/sorting, charts and form pending states. The request proxy refreshes Supabase sessions; workspace and role authorization is repeated at the mutation boundary.
 
-```
-Next.js UI + server actions  ->  PostgreSQL/pgvector (Supabase)  <->  Inngest durable functions
-        |                                   ^                                  |
-        |                                   |                                  v
-        +----------- upload ----------------+                 parse -> chunk -> extract -> validate
-                                                              -> verify -> score_and_route -> embed
-                                                                    |                     |
-                                                            record versions        chunk index
-                                                            review queue     ->   hybrid RAG / drafts
-                                                                    |                     |
-                                                                    +---- eval harness ----+
-                                                                              |
-                                                                        QA HTML report
-```
+## Modules
 
-## Data flow
+| Module | Responsibility |
+| --- | --- |
+| `src/app/(app)` | Dashboard, document/source/history views, review, Ask/draft, runs, evaluations, upload and reports |
+| `src/lib/schema/report.ts` | Structured extraction and record schemas; item/scalar field paths |
+| `src/lib/pipeline` | Upload/versioning, parsing, chunking, extraction, deterministic validation, independent verification, scoring, routing, embeddings, retries and event logs |
+| `src/lib/llm` | Explicit OpenAI and deterministic fixture-backed providers; prompts, usage and model configuration hashes |
+| `src/lib/rag` | Hybrid retrieval, citation parsing, support checks and persisted answers/evidence snapshots |
+| `src/lib/review` | Scoped review reads, optimistic conflict checks and immutable decisions |
+| `src/lib/eval` | Golden cases, metrics, compatible baselines, regression rules and resumability checks |
+| `src/lib/report` | Escaped standalone HTML QA report generation and storage |
+| `src/inngest` | Document processing/retry and case-checkpointed evaluation workflows |
+| `src/lib/auth`, `storage`, `access.ts` | Production/local adapters, session validation and mutation rate limiting |
+| `scripts` | Fixture generation, migrations, account/full-demo seeding, evaluation, RLS/browser audit and deployment |
 
-1. **Upload** (`registerUpload`): validate type/size, SHA-256, duplicate check within the workspace, resolve the logical document (derived from the filename identifier such as `OPS-2026-004`), create the next version (`supersedes_version_id`, previous `is_current=false`), store bytes, then create a processing run and dispatch (`dispatchRun`).
-2. **parse**: pdfjs page text or mammoth paragraphs become `source_blocks` with locators and character offsets. Fewer than 100 characters on more than half of the pages marks the version `unsupported_scanned_document` (dead letter, manual queue).
-3. **chunk**: sentence-aligned ~800-token chunks with ~120-token overlap, never across documents, with start/end block provenance and a full-text `tsvector`.
-4. **extract**: one structured call; every leaf value has `{locator, quote}` evidence.
-5. **validate**: deterministic checks (`validate.ts`) produce per-field messages, a 1 / 0.5 / 0 score and the evidence exact-match flag with quote offsets.
-6. **verify**: an independent model call in batches of 12 receives the candidate, the cited quote, the whole cited block and the field definition (never the extractor's confidence) and returns support status, corrected value, agreement, contradiction flag and specificity.
-7. **score_and_route**: code combines the components into the confidence and routing; writes `record_versions` v1 with `field_values` + `field_evidence` and `review_items` for review/blocked fields.
-8. **embed**: embeddings keyed by `sha256(text|model|dims)` through `embedding_cache`; stored on `chunks`.
-9. **review**: reviewer actions create new immutable record versions (`created_by_type=reviewer`) that copy every field value so each version is self-contained.
-10. **RAG**: query embedding, candidate pool from vector and full-text search, normalized 75/25 combination, top 8, current versions only unless requested; the answer model only sees those chunks; citations are validated verbatim in code and stored with the resolved source block.
-11. **eval**: golden cases seeded from fixtures, per-case results, aggregates, regression vs baseline, QA report.
+## Data model
 
-## Idempotency and resumability
+Six ordered migrations implement 28 application tables plus the migration ledger:
 
-`run_steps.idempotency_key = workspace:document_version:step:pipeline_version:model_config_hash`. `runStep` returns the stored output when a succeeded row exists, otherwise records an attempt and executes. Inngest memoizes each step inside a function run as well; the database key makes reuse work across runs, manual retries and the inline runner.
+- Identity: `app_users`, `workspaces`, `workspace_members`.
+- Sources: `documents`, `document_versions`, `source_blocks`, `chunks`, `embedding_cache`.
+- Execution: `processing_runs`, `processing_run_documents`, `run_steps`, `run_events`, `llm_calls`, `dead_letters`, `mutation_limits`.
+- Extraction/review: `extraction_runs`, `record_versions`, `field_values`, `field_evidence`, `review_items`, `review_actions`.
+- RAG: `rag_queries`, `rag_answers`, `answer_citations`.
+- Quality: `eval_cases`, `eval_runs`, `eval_results`, `qa_reports`.
 
-## Tables
+Migration 0001 creates the schema and indexes. 0002 adds the initial Supabase policies/private bucket. 0003 adds verifier details, mutation limits and current-version uniqueness. 0004 hardens identity linkage and direct-client permissions. 0005 introduces idempotent document outcomes. 0006 preserves superseded review items. Supabase-only migrations are skipped when the local database has no Auth schema.
 
-See `supabase/migrations/0001_init.sql` for the full schema: `workspaces`, `workspace_members`, `app_users`, `documents`, `document_versions`, `source_blocks`, `chunks`, `embedding_cache`, `processing_runs`, `run_steps`, `llm_calls`, `extraction_runs`, `record_versions`, `field_values`, `field_evidence`, `review_items`, `review_actions`, `rag_queries`, `rag_answers`, `answer_citations`, `eval_cases`, `eval_runs`, `eval_results`, `run_events`, `dead_letters`, `qa_reports`.
+## Invariants
 
-## Confidence
+A workspace cannot access another workspace's records through the application or authenticated RLS policies. A source hash identifies one edition per workspace. Exactly one edition and record are current per identity. Review edits copy field values and evidence rather than mutating the original snapshot. Reprocessing records its own version and supersedes pending review items. Historical answers keep source/locator/score/text snapshots.
 
-```
-confidence = 0.30 * evidence_exact_match
-           + 0.20 * deterministic_validation
-           + 0.25 * verifier_support
-           + 0.15 * cross_pass_agreement
-           + 0.10 * evidence_specificity
-```
+Step keys combine source identity, pipeline/model/prompt configuration. Parser/chunker keys use their own revisions and chunk settings to preserve work across model changes. Session advisory locks prevent concurrent execution for the same key. The outcome ledger makes repeated document completion idempotent. Extraction identity also guards record creation after a crash between persistence and step acknowledgement.
 
-Auto-approve at >= 0.86 with no contradiction; review for 0.65 <= c < 0.86 or a partially supported verdict; blocked below 0.65 or on unsupported, contradiction, unknown locator, or an empty required field.
+## Evidence and evaluation
+
+The extractor supplies field/list-item provenance. Deterministic validation verifies source membership and quoted text. The verifier receives candidates, quotes and neighboring source blocks without an extractor confidence. Code computes the weighted score and routing. RAG resolves cited identifiers against retrieved chunks and independently checks support before persisting a sufficient answer.
+
+Model evaluation reads the latest machine-produced record, independently of subsequent reviewer edits. Cached answers require matching case, corpus, provider/configuration and citation-validation revision. Durable evaluation steps return compact contributions so replay reconstructs aggregate metrics without repeating paid calls or duplicating case rows. The mock provider reads fixture/golden truth and therefore cannot establish live-model quality.
+
+## Operational boundaries
+
+Production uses a dedicated Supabase project and its session pooler, private Storage, and signed Inngest callbacks. The public default workspace is explicitly a synthetic demonstration. Hosted integrations remain pending external credentials; local mocks, SQL policy checks, browser flows and an optimized build are verified. See [the deployment runbook](deployment.md).
