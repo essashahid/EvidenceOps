@@ -1,0 +1,295 @@
+{
+  "deployedUrl": "https://evidenceops.vercel.app",
+  "qaReportUrl": "https://evidenceops.vercel.app/reports/44e7b61d-3e9c-4cb2-8d03-ed39fa9a9305",
+  "provider": "mock",
+  "liveOpenAiVerified": false,
+  "inngestDeliveryVerified": false,
+  "environmentVerification": [
+    {
+      "environment": "production",
+      "mismatches": [],
+      "configured": 18
+    },
+    {
+      "environment": "preview",
+      "mismatches": [],
+      "configured": 18
+    },
+    {
+      "environment": "development",
+      "mismatches": [],
+      "configured": 18
+    }
+  ],
+  "browser": {
+    "results": [
+      {
+        "route": "/",
+        "width": 1440,
+        "status": 200,
+        "title": "Workspace overview",
+        "overflow": false
+      },
+      {
+        "route": "/documents",
+        "width": 1440,
+        "status": 200,
+        "title": "Document library",
+        "overflow": false
+      },
+      {
+        "route": "/review",
+        "width": 1440,
+        "status": 200,
+        "title": "Review queue",
+        "overflow": false
+      },
+      {
+        "route": "/ask",
+        "width": 1440,
+        "status": 200,
+        "title": "Ask & draft",
+        "overflow": false
+      },
+      {
+        "route": "/evals",
+        "width": 1440,
+        "status": 200,
+        "title": "Evaluations",
+        "overflow": false
+      },
+      {
+        "route": "/runs",
+        "width": 1440,
+        "status": 200,
+        "title": "Processing runs",
+        "overflow": false
+      },
+      {
+        "route": "/upload",
+        "width": 1440,
+        "status": 200,
+        "title": "Upload documents",
+        "overflow": false
+      },
+      {
+        "route": "/login",
+        "width": 1440,
+        "status": 200,
+        "title": "Sign in",
+        "overflow": false
+      },
+      {
+        "route": "/",
+        "width": 390,
+        "status": 200,
+        "title": "Workspace overview",
+        "overflow": false
+      },
+      {
+        "route": "/documents",
+        "width": 390,
+        "status": 200,
+        "title": "Document library",
+        "overflow": false
+      },
+      {
+        "route": "/review",
+        "width": 390,
+        "status": 200,
+        "title": "Review queue",
+        "overflow": false
+      },
+      {
+        "route": "/ask",
+        "width": 390,
+        "status": 200,
+        "title": "Ask & draft",
+        "overflow": false
+      },
+      {
+        "route": "/evals",
+        "width": 390,
+        "status": 200,
+        "title": "Evaluations",
+        "overflow": false
+      },
+      {
+        "route": "/runs",
+        "width": 390,
+        "status": 200,
+        "title": "Processing runs",
+        "overflow": false
+      },
+      {
+        "route": "/upload",
+        "width": 390,
+        "status": 200,
+        "title": "Upload documents",
+        "overflow": false
+      },
+      {
+        "route": "/login",
+        "width": 390,
+        "status": 200,
+        "title": "Sign in",
+        "overflow": false
+      }
+    ],
+    "errors": [],
+    "signedIn": true,
+    "passed": true
+  },
+  "evaluation": {
+    "id": "91835aeb-cbbf-4969-9bb4-827baf25c29f",
+    "status": "completed",
+    "aggregate_metrics_json": {
+      "rag": {
+        "correctness": 1,
+        "completeness": 1,
+        "semantic_score": 1,
+        "evidence_support": 1,
+        "refusal_accuracy": 1,
+        "citation_precision": 1,
+        "false_refusal_rate": 0,
+        "retrieval_failures": 1,
+        "unanswerable_cases": 10,
+        "cross_document_cases": 10,
+        "average_evidence_rank": 1.0333333333333334,
+        "retrieval_recall_at_5": 0.9833333333333333,
+        "single_document_cases": 20,
+        "evidence_supported_rate": 1
+      },
+      "cost": {
+        "input_tokens": 89350,
+        "output_tokens": 4436,
+        "latency_p50_ms": 415,
+        "latency_p95_ms": 7277,
+        "estimated_cost_usd": 0,
+        "cached_answer_cases": 0
+      },
+      "cases": {
+        "total": 146,
+        "failed": 5,
+        "passed": 141,
+        "by_type": {
+          "answer": {
+            "total": 30,
+            "passed": 30
+          },
+          "refusal": {
+            "total": 10,
+            "passed": 10
+          },
+          "version": {
+            "total": 2,
+            "passed": 2
+          },
+          "duplicate": {
+            "total": 2,
+            "passed": 2
+          },
+          "retrieval": {
+            "total": 30,
+            "passed": 29
+          },
+          "extraction": {
+            "total": 18,
+            "passed": 15
+          },
+          "provenance": {
+            "total": 18,
+            "passed": 17
+          },
+          "classification": {
+            "total": 18,
+            "passed": 18
+          },
+          "review_routing": {
+            "total": 18,
+            "passed": 18
+          }
+        }
+      },
+      "review": {
+        "recall": 1,
+        "review": 3,
+        "routed": 16,
+        "blocked": 13,
+        "planted": 16,
+        "precision": 1,
+        "auto_approved": 294,
+        "planted_caught": 16,
+        "below_threshold_missing": 0
+      },
+      "integrity": {
+        "version_cases": 2,
+        "duplicate_cases": 2,
+        "reprocess_count": 0,
+        "duplicate_records": 0,
+        "resumability_passed": true,
+        "version_cases_passed": 2,
+        "duplicate_cases_passed": 2
+      },
+      "extraction": {
+        "documents": 18,
+        "list_micro_f1": 0.9701149425287356,
+        "scalar_fields": 90,
+        "provenance_exact": 309,
+        "provenance_valid": 309,
+        "provenance_claims": 310,
+        "provenance_invalid": 1,
+        "provenance_validity": 0.9967741935483871,
+        "scalar_exact_accuracy": 0.9666666666666667,
+        "classification_accuracy": 1
+      },
+      "resumability": {
+        "checks": [
+          {
+            "name": "run reached a terminal state",
+            "detail": "status completed",
+            "passed": true
+          },
+          {
+            "name": "completed previous steps remain persisted",
+            "detail": "parse=succeeded extract=succeeded",
+            "passed": true
+          },
+          {
+            "name": "failed step is recorded",
+            "detail": "2 step.failed events",
+            "passed": true
+          },
+          {
+            "name": "retries occur",
+            "detail": "independent_verify attempts 3",
+            "passed": true
+          },
+          {
+            "name": "run resumed and completed the failed step",
+            "detail": "verify=succeeded finalize=succeeded",
+            "passed": true
+          },
+          {
+            "name": "original file was not re-uploaded",
+            "detail": "1 version(s) in the workspace",
+            "passed": true
+          },
+          {
+            "name": "completed parsing was not repeated",
+            "detail": "parse attempts 1",
+            "passed": true
+          },
+          {
+            "name": "paid extraction output was not repeated",
+            "detail": "1 extract call(s), extract attempts 1",
+            "passed": true
+          }
+        ],
+        "passed": true,
+        "processingRunId": "7f0f2df5-2a39-4311-a557-ff1b5df7f21a"
+      },
+      "corpus_version": "c6dc84752cdaea3b"
+    }
+  }
+}
