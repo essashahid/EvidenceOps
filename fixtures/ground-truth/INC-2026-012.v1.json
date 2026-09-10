@@ -1,0 +1,127 @@
+{
+  "logical_key": "INC-2026-012",
+  "version": 1,
+  "format": "pdf",
+  "filename": "INC-2026-012-v1-granite-peak-incident-report.pdf",
+  "display_name": "Granite Peak Energy Cooperative Incident Report: Juniper Flats Ice Storm Outage",
+  "record": {
+    "report_title": "Granite Peak Energy Cooperative Incident Report: Juniper Flats Substation Outage of 22 February 2026",
+    "report_number": "INC-2026-012",
+    "issuing_organization": "Granite Peak Energy Cooperative",
+    "publication_date": "2026-03-18",
+    "document_type": "incident_report",
+    "subject_entities": [
+      { "name": "Juniper Flats Substation", "entity_type": "facility" },
+      { "name": "Outage Management System", "entity_type": "system" },
+      { "name": "Summit Line Contractors", "entity_type": "vendor" }
+    ],
+    "key_findings": [
+      { "text": "Ice accumulation caused a 69 kV transmission structure to fail, de-energizing the Juniper Flats Substation for 31 hours.", "severity": "critical" },
+      { "text": "The mobile generator staged at the substation could not be connected because the transfer switch had not been tested since 2023.", "severity": "high" },
+      { "text": "The Outage Management System overstated the number of restored members by 2,300 for six hours because of a stale feeder mapping.", "severity": "medium" },
+      { "text": "Summit Line Contractors mobilised line crews within four hours, ahead of the eight-hour contractual standard.", "severity": "low" }
+    ],
+    "recommendations": [
+      { "text": "Test every substation transfer switch annually and record the results in the maintenance register.", "priority": "high" },
+      { "text": "Replace the failed 69 kV structure and its two neighbouring structures with steel poles rated for heavier ice loading.", "priority": "high" },
+      { "text": "Reload feeder mapping into the Outage Management System after every switching change.", "priority": "medium" }
+    ],
+    "monetary_amounts": [
+      { "amount": 1340000, "currency": "USD", "label": "storm restoration cost" },
+      { "amount": 215000, "currency": "USD", "label": "unserved energy revenue" }
+    ]
+  },
+  "evidence": {
+    "report_title": "Granite Peak Energy Cooperative Incident Report: Juniper Flats Substation Outage of 22 February 2026",
+    "report_number": "Report No. INC-2026-012",
+    "issuing_organization": "Issued by Granite Peak Energy Cooperative, Reliability and Compliance Department",
+    "publication_date": "Published 18 March 2026",
+    "document_type": "This incident report describes the loss of supply to the Juniper Flats Substation during the ice storm of 22 February 2026",
+    "subject_entities[0].name": "The Juniper Flats Substation is a 69 kV to 12.47 kV distribution facility that serves about 8,900 members in the eastern part of the service territory.",
+    "subject_entities[0].entity_type": "The Juniper Flats Substation is a 69 kV to 12.47 kV distribution facility that serves about 8,900 members in the eastern part of the service territory.",
+    "subject_entities[1].name": "Member outages are tracked in the Outage Management System, a system that predicts the affected device from member calls and smart meter last-gasp messages.",
+    "subject_entities[1].entity_type": "Member outages are tracked in the Outage Management System, a system that predicts the affected device from member calls and smart meter last-gasp messages.",
+    "subject_entities[2].name": "Storm restoration work beyond the capacity of the cooperative's own crews is performed by Summit Line Contractors, a line construction vendor under a standing emergency services agreement.",
+    "subject_entities[2].entity_type": "Storm restoration work beyond the capacity of the cooperative's own crews is performed by Summit Line Contractors, a line construction vendor under a standing emergency services agreement.",
+    "key_findings[0].text": "Ice accumulation caused a 69 kV transmission structure to fail, de-energizing the Juniper Flats Substation for 31 hours.",
+    "key_findings[0].severity": "Ice accumulation caused a 69 kV transmission structure to fail, de-energizing the Juniper Flats Substation for 31 hours. Severity: Critical.",
+    "key_findings[1].text": "The mobile generator staged at the substation could not be connected because the transfer switch had not been tested since 2023.",
+    "key_findings[1].severity": "The mobile generator staged at the substation could not be connected because the transfer switch had not been tested since 2023. Severity: High.",
+    "key_findings[2].text": "The Outage Management System overstated the number of restored members by 2,300 for six hours because of a stale feeder mapping.",
+    "key_findings[2].severity": "The Outage Management System overstated the number of restored members by 2,300 for six hours because of a stale feeder mapping. Severity: Medium.",
+    "key_findings[3].text": "Summit Line Contractors mobilised line crews within four hours, ahead of the eight-hour contractual standard.",
+    "key_findings[3].severity": "Summit Line Contractors mobilised line crews within four hours, ahead of the eight-hour contractual standard. Severity: Low.",
+    "recommendations[0].text": "Test every substation transfer switch annually and record the results in the maintenance register.",
+    "recommendations[0].priority": "Test every substation transfer switch annually and record the results in the maintenance register. Priority: High.",
+    "recommendations[1].text": "Replace the failed 69 kV structure and its two neighbouring structures with steel poles rated for heavier ice loading.",
+    "recommendations[1].priority": "Replace the failed 69 kV structure and its two neighbouring structures with steel poles rated for heavier ice loading. Priority: High.",
+    "recommendations[2].text": "Reload feeder mapping into the Outage Management System after every switching change.",
+    "recommendations[2].priority": "Reload feeder mapping into the Outage Management System after every switching change. Priority: Medium.",
+    "monetary_amounts[0].amount": "The storm restoration cost for the Juniper Flats event, including contractor crews, materials and the temporary structure, is $1,340,000.",
+    "monetary_amounts[0].currency": "The storm restoration cost for the Juniper Flats event, including contractor crews, materials and the temporary structure, is $1,340,000.",
+    "monetary_amounts[0].label": "The storm restoration cost for the Juniper Flats event, including contractor crews, materials and the temporary structure, is $1,340,000.",
+    "monetary_amounts[1].amount": "Unserved energy revenue lost during the 31-hour outage is estimated at USD 215,000.",
+    "monetary_amounts[1].currency": "Unserved energy revenue lost during the 31-hour outage is estimated at USD 215,000.",
+    "monetary_amounts[1].label": "Unserved energy revenue lost during the 31-hour outage is estimated at USD 215,000."
+  },
+  "planted": [],
+  "body": [
+    {
+      "heading": "Granite Peak Energy Cooperative Incident Report: Juniper Flats Substation Outage of 22 February 2026",
+      "paragraphs": [
+        "Report No. INC-2026-012",
+        "Issued by Granite Peak Energy Cooperative, Reliability and Compliance Department",
+        "Published 18 March 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This incident report describes the loss of supply to the Juniper Flats Substation during the ice storm of 22 February 2026, the restoration effort that followed and the lessons the cooperative has drawn from the event. The report was prepared by the Reliability and Compliance Department at the direction of the Board of Directors.",
+        "Freezing rain began on the evening of 21 February and by 03:40 on 22 February ice loading had brought down a 69 kV transmission structure on the single line feeding the substation. About 8,900 members lost supply. A mobile generator was staged at the substation within six hours but could not be connected. Supply was restored at 10:40 on 23 February after a temporary structure was erected.",
+        "The investigation identified four findings and makes three recommendations, all of which have been accepted by the Chief Executive Officer."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Granite Peak Energy Cooperative serves about 41,000 members across a mountainous rural territory. The Juniper Flats Substation is a 69 kV to 12.47 kV distribution facility that serves about 8,900 members in the eastern part of the service territory. It is fed by a single 69 kV line and has no alternate transmission source.",
+        "Member outages are tracked in the Outage Management System, a system that predicts the affected device from member calls and smart meter last-gasp messages. The system also publishes the outage map on the cooperative's website and drives the member notification texts.",
+        "Storm restoration work beyond the capacity of the cooperative's own crews is performed by Summit Line Contractors, a line construction vendor under a standing emergency services agreement. The agreement requires the contractor to mobilise crews within eight hours of a call-out.",
+        "The investigation reviewed weather data, control centre logs, the outage system event history and the substation maintenance register, and interviewed control centre staff, line crews and the contractor's storm manager."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Ice accumulation caused a 69 kV transmission structure to fail, de-energizing the Juniper Flats Substation for 31 hours. Severity: Critical. Radial ice on the conductors was measured at 1.4 inches, well above the 0.5 inch design loading of the wooden structures installed in 1986. The structure that failed was one of three consecutive structures on an exposed ridge.",
+        "Finding 2: The mobile generator staged at the substation could not be connected because the transfer switch had not been tested since 2023. Severity: High. When crews attempted to close the switch, a control relay failed and the switch would not operate. The maintenance register shows the switch was scheduled for annual testing but the tests for 2024 and 2025 were not performed. Had the generator been connected, roughly 3,000 members could have been restored on the morning of 22 February.",
+        "Finding 3: The Outage Management System overstated the number of restored members by 2,300 for six hours because of a stale feeder mapping. Severity: Medium. A feeder tie that had been closed during maintenance in January was still shown as open in the system, so members on that section were counted as restored when the neighbouring feeder was energised. Member calls corrected the picture, but the public map and notification texts were wrong for part of the day.",
+        "Finding 4: Summit Line Contractors mobilised line crews within four hours, ahead of the eight-hour contractual standard. Severity: Low. Four crews and a specialised structure crew arrived on site by 08:00 on 22 February and worked continuously with the cooperative's crews. The investigation notes this as a positive result."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Test every substation transfer switch annually and record the results in the maintenance register. Priority: High. The engineering department should add the tests to the substation inspection calendar and report overdue tests to the Chief Operating Officer each quarter.",
+        "Recommendation 2: Replace the failed 69 kV structure and its two neighbouring structures with steel poles rated for heavier ice loading. Priority: High. The design should use the ice loading measured during this event as the minimum standard for the exposed ridge section.",
+        "Recommendation 3: Reload feeder mapping into the Outage Management System after every switching change. Priority: Medium. The control centre procedure should require the mapping refresh to be confirmed before a switching order is closed."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The storm restoration cost for the Juniper Flats event, including contractor crews, materials and the temporary structure, is $1,340,000. The cooperative expects to recover a portion of this cost through its storm reserve and will seek disaster assistance for the remainder.",
+        "Unserved energy revenue lost during the 31-hour outage is estimated at USD 215,000. This estimate is based on the average hourly load of the substation for the month of February."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Restoration timeline. 03:40 on 22 February structure failure and loss of supply. 08:00 contractor crews on site. 09:50 mobile generator staged. 10:30 transfer switch failure identified. 22:15 temporary structure raised. 10:40 on 23 February supply restored to all members.",
+        "Appendix B: Action owners. Recommendation 1 is owned by the Engineering Manager with a target date of 30 June 2026. Recommendation 2 is owned by the Transmission Supervisor with a target date of 30 September 2026. Recommendation 3 is owned by the Control Centre Manager with a target date of 30 April 2026.",
+        "Appendix C: Distribution. This report is distributed to the Board of Directors, the Chief Executive Officer and the state utility commission as part of the cooperative's major event reporting."
+      ]
+    }
+  ]
+}

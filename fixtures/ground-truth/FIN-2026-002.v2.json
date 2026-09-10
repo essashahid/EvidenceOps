@@ -1,0 +1,141 @@
+{
+  "logical_key": "FIN-2026-002",
+  "version": 2,
+  "format": "pdf",
+  "filename": "FIN-2026-002-v2-silverline-rail-financial-review-corrected.pdf",
+  "display_name": "Silverline Rail Financial Review: Yard Modernization Program (corrected edition R1)",
+  "record": {
+    "report_title": "Silverline Rail Financial Review: Yard Modernization Program at Westgate Intermodal Yard (Corrected Edition)",
+    "report_number": "FIN-2026-002-R1",
+    "issuing_organization": "Silverline Rail",
+    "publication_date": "2026-04-03",
+    "document_type": "financial_review",
+    "subject_entities": [
+      { "name": "Yard Modernization Program", "entity_type": "program" },
+      { "name": "Westgate Intermodal Yard", "entity_type": "facility" },
+      { "name": "Ironbridge Signal Works", "entity_type": "vendor" }
+    ],
+    "key_findings": [
+      { "text": "The Yard Modernization Program is forecast to exceed its approved budget by $3.9 million at completion.", "severity": "high" },
+      { "text": "Change orders from Ironbridge Signal Works were approved without an independent cost estimate in nine of twelve cases.", "severity": "high" },
+      { "text": "Capitalised interest on the Westgate Intermodal Yard works was calculated using an outdated borrowing rate.", "severity": "medium" },
+      { "text": "Monthly program cost reports were issued within five working days of month end in every month reviewed.", "severity": "low" }
+    ],
+    "recommendations": [
+      { "text": "Rebaseline the Yard Modernization Program budget and present the revised forecast to the Board in April 2026.", "priority": "high" },
+      { "text": "Require an independent cost estimate for every Ironbridge Signal Works change order above $25,000 and a quarterly review of all change orders by the Audit Committee.", "priority": "high" },
+      { "text": "Recalculate capitalised interest using the current weighted borrowing rate and adjust the asset ledger.", "priority": "medium" }
+    ],
+    "monetary_amounts": [
+      { "amount": 3900000, "currency": "USD", "label": "forecast cost overrun at completion" },
+      { "amount": 38500000, "currency": "USD", "label": "approved program budget" },
+      { "amount": 2820000, "currency": "USD", "label": "signal change orders approved" }
+    ]
+  },
+  "evidence": {
+    "report_title": "Silverline Rail Financial Review: Yard Modernization Program at Westgate Intermodal Yard (Corrected Edition)",
+    "report_number": "Report No. FIN-2026-002-R1",
+    "issuing_organization": "Issued by Silverline Rail, Corporate Finance Department",
+    "publication_date": "Published 3 April 2026",
+    "document_type": "This financial review examines the cost position of the Yard Modernization Program at Silverline Rail",
+    "subject_entities[0].name": "The Yard Modernization Program is a three-year capital program to rebuild the receiving tracks, install centralised signalling and extend the container loading pad.",
+    "subject_entities[0].entity_type": "The Yard Modernization Program is a three-year capital program to rebuild the receiving tracks, install centralised signalling and extend the container loading pad.",
+    "subject_entities[1].name": "The Westgate Intermodal Yard is the company's principal container transfer facility and handles about 310,000 lifts a year.",
+    "subject_entities[1].entity_type": "The Westgate Intermodal Yard is the company's principal container transfer facility and handles about 310,000 lifts a year.",
+    "subject_entities[2].name": "Signalling design and installation is contracted to Ironbridge Signal Works, a specialist vendor engaged under a fixed-price contract with a change order mechanism.",
+    "subject_entities[2].entity_type": "Signalling design and installation is contracted to Ironbridge Signal Works, a specialist vendor engaged under a fixed-price contract with a change order mechanism.",
+    "key_findings[0].text": "The Yard Modernization Program is forecast to exceed its approved budget by $3.9 million at completion.",
+    "key_findings[0].severity": "The Yard Modernization Program is forecast to exceed its approved budget by $3.9 million at completion. Severity: High.",
+    "key_findings[1].text": "Change orders from Ironbridge Signal Works were approved without an independent cost estimate in nine of twelve cases.",
+    "key_findings[1].severity": "Change orders from Ironbridge Signal Works were approved without an independent cost estimate in nine of twelve cases. Severity: High.",
+    "key_findings[2].text": "Capitalised interest on the Westgate Intermodal Yard works was calculated using an outdated borrowing rate.",
+    "key_findings[2].severity": "Capitalised interest on the Westgate Intermodal Yard works was calculated using an outdated borrowing rate. Severity: Medium.",
+    "key_findings[3].text": "Monthly program cost reports were issued within five working days of month end in every month reviewed.",
+    "key_findings[3].severity": "Monthly program cost reports were issued within five working days of month end in every month reviewed. Severity: Low.",
+    "recommendations[0].text": "Rebaseline the Yard Modernization Program budget and present the revised forecast to the Board in April 2026.",
+    "recommendations[0].priority": "Rebaseline the Yard Modernization Program budget and present the revised forecast to the Board in April 2026. Priority: High.",
+    "recommendations[1].text": "Require an independent cost estimate for every Ironbridge Signal Works change order above $25,000 and a quarterly review of all change orders by the Audit Committee.",
+    "recommendations[1].priority": "Require an independent cost estimate for every Ironbridge Signal Works change order above $25,000 and a quarterly review of all change orders by the Audit Committee. Priority: High.",
+    "recommendations[2].text": "Recalculate capitalised interest using the current weighted borrowing rate and adjust the asset ledger.",
+    "recommendations[2].priority": "Recalculate capitalised interest using the current weighted borrowing rate and adjust the asset ledger. Priority: Medium.",
+    "monetary_amounts[0].amount": "The forecast cost overrun at completion is $3.9 million, which is 10.1 percent of the approved budget.",
+    "monetary_amounts[0].currency": "The forecast cost overrun at completion is $3.9 million, which is 10.1 percent of the approved budget.",
+    "monetary_amounts[0].label": "The forecast cost overrun at completion is $3.9 million, which is 10.1 percent of the approved budget.",
+    "monetary_amounts[1].amount": "The approved program budget is $38.5 million, set by the Board in June 2024.",
+    "monetary_amounts[1].currency": "The approved program budget is $38.5 million, set by the Board in June 2024.",
+    "monetary_amounts[1].label": "The approved program budget is $38.5 million, set by the Board in June 2024.",
+    "monetary_amounts[2].amount": "Signal change orders approved to date total USD 2,820,000 across twelve change orders after the vendor credit.",
+    "monetary_amounts[2].currency": "Signal change orders approved to date total USD 2,820,000 across twelve change orders after the vendor credit.",
+    "monetary_amounts[2].label": "Signal change orders approved to date total USD 2,820,000 across twelve change orders after the vendor credit."
+  },
+  "planted": [
+    {
+      "field_path": "publication_date",
+      "kind": "ambiguous_phrasing",
+      "extractor_value": "2026-03-27",
+      "extractor_quote": "Draft of this corrected edition circulated internally on 27 March 2026.",
+      "verifier_status": "partially_supported",
+      "verifier_corrected_value": "2026-04-03",
+      "note": "The title block gives the publication date as 3 April 2026 but the Appendix mentions an internal draft date of 27 March 2026. The publication date is the title block date; the draft date is not a publication date."
+    }
+  ],
+  "body": [
+    {
+      "heading": "Silverline Rail Financial Review: Yard Modernization Program at Westgate Intermodal Yard (Corrected Edition)",
+      "paragraphs": [
+        "Report No. FIN-2026-002-R1",
+        "Issued by Silverline Rail, Corporate Finance Department",
+        "Published 3 April 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This corrected edition supersedes the 3 March 2026 release of Report No. FIN-2026-002. The forecast cost overrun at completion previously reported as $4.2 million is revised to $3.9 million following the vendor's agreement to credit $300,000 of disputed signalling change orders. Recommendation 2 has been strengthened at the request of the Audit Committee, and the severity of Finding 2 is now stated explicitly.",
+        "This financial review examines the cost position of the Yard Modernization Program at Silverline Rail as at 31 January 2026, twenty months into a thirty-six month schedule. The review was requested by the Audit Committee after the program's monthly cost report first showed a forecast overrun in December 2025.",
+        "The review confirms that the program will exceed its approved budget unless scope is reduced, that the process for approving signalling change orders is weak, and that interest capitalised on the works has been overstated. Cost reporting itself is timely and the review found no errors in the reported actual costs. Four findings and three recommendations are presented."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "The Westgate Intermodal Yard is the company's principal container transfer facility and handles about 310,000 lifts a year. The Yard Modernization Program is a three-year capital program to rebuild the receiving tracks, install centralised signalling and extend the container loading pad. Civil works are performed by the company's own engineering division.",
+        "Signalling design and installation is contracted to Ironbridge Signal Works, a specialist vendor engaged under a fixed-price contract with a change order mechanism. Change orders are raised by the vendor when site conditions or design requirements differ from the tender documents, and are approved by the Program Director.",
+        "The review examined the program ledger, all twelve signalling change orders, the interest capitalisation schedule and the monthly cost reports from June 2024 to January 2026, and interviewed the Program Director, the program accountant and the vendor's contract manager. For this corrected edition the team also reviewed the vendor's credit note dated 20 March 2026."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: The Yard Modernization Program is forecast to exceed its approved budget by $3.9 million at completion. Severity: High. The overrun arises mainly from signalling change orders and from a six-month delay to the receiving track rebuild that extended the period of contractor site costs. The forecast assumes no further change orders, which the review considers optimistic. The original edition reported an overrun of $4.2 million before the vendor credit.",
+        "Finding 2: Change orders from Ironbridge Signal Works were approved without an independent cost estimate in nine of twelve cases. Severity: High. The Program Director approved the change orders on the basis of the vendor's own pricing, and the program has no engineer's estimate against which to test them. Three of the nine change orders were priced more than 40 percent above comparable items in the original tender, and the vendor has now credited part of that difference.",
+        "Finding 3: Capitalised interest on the Westgate Intermodal Yard works was calculated using an outdated borrowing rate. Severity: Medium. The schedule uses the 6.1 percent rate from the 2023 facility rather than the current weighted rate of 5.2 percent. The effect is an overstatement of capitalised interest of about $190,000 to date.",
+        "Finding 4: Monthly program cost reports were issued within five working days of month end in every month reviewed. Severity: Low. Reported actual costs agreed to the general ledger in every month tested. The review notes this as an effective control."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Rebaseline the Yard Modernization Program budget and present the revised forecast to the Board in April 2026. Priority: High. The rebaseline should include a contingency for further change orders and a decision on whether the container pad extension remains in scope.",
+        "Recommendation 2: Require an independent cost estimate for every Ironbridge Signal Works change order above $25,000 and a quarterly review of all change orders by the Audit Committee. Priority: High. This replaces the original recommendation, which set the threshold at $50,000 and did not include committee review.",
+        "Recommendation 3: Recalculate capitalised interest using the current weighted borrowing rate and adjust the asset ledger. Priority: Medium. The adjustment should be booked before the half-year close."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The forecast cost overrun at completion is $3.9 million, which is 10.1 percent of the approved budget. The approved program budget is $38.5 million, set by the Board in June 2024. Spending to 31 January 2026 was $24.7 million.",
+        "Signal change orders approved to date total USD 2,820,000 across twelve change orders after the vendor credit. The three change orders priced well above tender rates accounted for $610,000 before the credit and $310,000 after it."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Summary of corrections. Forecast cost overrun: $3.9 million, previously $4.2 million. Signal change orders approved: USD 2,820,000, previously USD 3,120,000. Recommendation 2: threshold lowered to $25,000 with quarterly Audit Committee review. Draft of this corrected edition circulated internally on 27 March 2026.",
+        "Appendix B: Management response. The Program Director accepts Recommendation 1 and will present the rebaseline at the April 2026 Board meeting. The Program Director accepts Recommendation 2 with immediate effect. The Financial Controller accepts Recommendation 3 and will book the adjustment by 30 June 2026.",
+        "Appendix C: Basis of the forecast. The forecast at completion combines actual costs to 31 January 2026 with committed contracts, the vendor credit note and the engineering division's estimate of remaining civil works. Escalation is included at 3 percent a year.",
+        "Appendix D: Distribution. This report is distributed to the Audit Committee, the Chief Financial Officer, the Chief Operating Officer and the Program Director."
+      ]
+    }
+  ]
+}

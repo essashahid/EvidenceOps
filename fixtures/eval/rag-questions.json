@@ -1,0 +1,362 @@
+[
+  {
+    "case_key": "rag-001",
+    "question": "What is the revised program cost of the Dock Optimization Program at Northstar Distribution?",
+    "answerable": true,
+    "expected_documents": ["OPS-2026-004"],
+    "expected_facts": ["$1.15 million"],
+    "reference_answer": "The corrected edition of the Northstar operational review (OPS-2026-004-R1) gives the revised program cost of the Dock Optimization Program as $1.15 million, restated from the $1.25 million in the original release.",
+    "tags": ["amount", "superseded"]
+  },
+  {
+    "case_key": "rag-002",
+    "question": "In how many weeks was carrier compliance reporting from Cardinal Fleet Services delivered late, according to the Northstar Distribution operational review?",
+    "answerable": true,
+    "expected_documents": ["OPS-2026-004"],
+    "expected_facts": ["five of thirteen weeks"],
+    "reference_answer": "After reconciliation of the reporting log, the corrected edition states that Cardinal Fleet Services reporting was late in five of thirteen weeks (the original edition had said seven).",
+    "tags": ["finding", "superseded"]
+  },
+  {
+    "case_key": "rag-003",
+    "question": "What is the forecast cost overrun at completion for the Silverline Rail Yard Modernization Program?",
+    "answerable": true,
+    "expected_documents": ["FIN-2026-002"],
+    "expected_facts": ["$3.9 million"],
+    "reference_answer": "The corrected Silverline Rail financial review forecasts a cost overrun at completion of $3.9 million, revised from $4.2 million after a vendor credit.",
+    "tags": ["amount", "superseded"]
+  },
+  {
+    "case_key": "rag-004",
+    "question": "Above what value must an Ironbridge Signal Works change order have an independent cost estimate, according to the Silverline Rail review?",
+    "answerable": true,
+    "expected_documents": ["FIN-2026-002"],
+    "expected_facts": ["$25,000"],
+    "reference_answer": "The corrected edition recommends an independent cost estimate for every Ironbridge Signal Works change order above $25,000, together with quarterly Audit Committee review.",
+    "tags": ["recommendation", "superseded"]
+  },
+  {
+    "case_key": "rag-005",
+    "question": "What is the report number of the corrected edition of the Northstar Distribution operational review?",
+    "answerable": true,
+    "expected_documents": ["OPS-2026-004"],
+    "expected_facts": ["OPS-2026-004-R1"],
+    "reference_answer": "The corrected edition is Report No. OPS-2026-004-R1, published 2 April 2026.",
+    "tags": ["report_number", "superseded"]
+  },
+  {
+    "case_key": "rag-006",
+    "question": "Which reports mention the carrier Cardinal Fleet Services?",
+    "answerable": true,
+    "expected_documents": ["OPS-2026-004", "INC-2026-007"],
+    "expected_facts": ["OPS-2026-004", "INC-2026-007"],
+    "reference_answer": "Cardinal Fleet Services appears in the Northstar Distribution operational review (OPS-2026-004) and in the Harbor Point Logistics incident report on the Pier 9 ammonia release (INC-2026-007).",
+    "tags": ["cross-document", "entity"]
+  },
+  {
+    "case_key": "rag-007",
+    "question": "Which reports involve the vendor Brightwater Controls?",
+    "answerable": true,
+    "expected_documents": ["AUD-2026-011", "PSR-2026-006"],
+    "expected_facts": ["AUD-2026-011", "PSR-2026-006"],
+    "reference_answer": "Brightwater Controls is discussed in the Meridian Water Authority metering and billing audit (AUD-2026-011) and in the Meridian Water Authority SCADA Modernization Project status report (PSR-2026-006).",
+    "tags": ["cross-document", "entity"]
+  },
+  {
+    "case_key": "rag-008",
+    "question": "Which reports discuss the Sentinel Access Control system?",
+    "answerable": true,
+    "expected_documents": ["CMP-2026-005", "INC-2026-002"],
+    "expected_facts": ["CMP-2026-005", "INC-2026-002"],
+    "reference_answer": "Sentinel Access Control is the subject of the Larkspur Health Network compliance assessment on records access (CMP-2026-005) and of the Larkspur incident report on the authentication outage of 2 February 2026 (INC-2026-002).",
+    "tags": ["cross-document", "entity"]
+  },
+  {
+    "case_key": "rag-009",
+    "question": "Which reports were issued by Orchard Valley School District?",
+    "answerable": true,
+    "expected_documents": ["AUD-2026-003", "FIN-2026-010"],
+    "expected_facts": ["AUD-2026-003", "FIN-2026-010"],
+    "reference_answer": "Orchard Valley School District issued the nutrition services procurement audit (AUD-2026-003) and the student transportation financial review (FIN-2026-010).",
+    "tags": ["cross-document", "organization"]
+  },
+  {
+    "case_key": "rag-010",
+    "question": "How much did Northstar Distribution pay in carrier detention charges during the quarter?",
+    "answerable": true,
+    "expected_documents": ["OPS-2026-004"],
+    "expected_facts": ["$316,400"],
+    "reference_answer": "Carrier detention charges paid during the quarter totaled $316,400.",
+    "tags": ["amount"]
+  },
+  {
+    "case_key": "rag-011",
+    "question": "What is the value of the deferred maintenance backlog at Redwood Municipal Transit?",
+    "answerable": true,
+    "expected_documents": ["OPS-2026-009"],
+    "expected_facts": ["$680,000"],
+    "reference_answer": "The Financial Impact section values the deferred maintenance backlog at $680,000 at the end of the review period.",
+    "tags": ["amount"]
+  },
+  {
+    "case_key": "rag-012",
+    "question": "What is the estimated under-billed revenue identified in the Meridian Water Authority metering and billing audit?",
+    "answerable": true,
+    "expected_documents": ["AUD-2026-011"],
+    "expected_facts": ["$742,000"],
+    "reference_answer": "The audit estimates under-billed revenue from estimated commercial meter reads at $742,000 for the audit period.",
+    "tags": ["amount"]
+  },
+  {
+    "case_key": "rag-013",
+    "question": "What was the product loss from the ammonia release at the Pier 9 Cold Storage Facility?",
+    "answerable": true,
+    "expected_documents": ["INC-2026-007"],
+    "expected_facts": ["$482,000"],
+    "reference_answer": "After inspection and condemnation of exposed inventory the product loss was $482,000.",
+    "tags": ["amount"]
+  },
+  {
+    "case_key": "rag-014",
+    "question": "What was the storm restoration cost for the Juniper Flats Substation outage?",
+    "answerable": true,
+    "expected_documents": ["INC-2026-012"],
+    "expected_facts": ["$1,340,000"],
+    "reference_answer": "The storm restoration cost for the Juniper Flats event, including contractor crews, materials and the temporary structure, was $1,340,000.",
+    "tags": ["amount"]
+  },
+  {
+    "case_key": "rag-015",
+    "question": "How much will the additional drainage blanket at the Black Mesa Tailings Facility cost?",
+    "answerable": true,
+    "expected_documents": ["PSR-2026-003"],
+    "expected_facts": ["CAD 950,000"],
+    "reference_answer": "The engineer of record estimates the additional drainage blanket at CAD 950,000 including materials, placement and supervision.",
+    "tags": ["amount", "currency"]
+  },
+  {
+    "case_key": "rag-016",
+    "question": "What is the estimated capital cost of the treatment vault at the Berth 14 Container Terminal?",
+    "answerable": true,
+    "expected_documents": ["CMP-2026-008"],
+    "expected_facts": ["$1,875,000"],
+    "reference_answer": "The treatment vault for the container stacking area outfall is estimated at $1,875,000 including design and permitting.",
+    "tags": ["amount"]
+  },
+  {
+    "case_key": "rag-017",
+    "question": "How much was Bluefin Aquaculture overcharged when feed was invoiced at the spot price?",
+    "answerable": true,
+    "expected_documents": ["FIN-2026-006"],
+    "expected_facts": ["USD 143,000"],
+    "reference_answer": "The spot price overcharge on the 212 tonnes invoiced outside the contract is USD 143,000.",
+    "tags": ["amount"]
+  },
+  {
+    "case_key": "rag-018",
+    "question": "What annual savings does Orchard Valley School District project from consolidating bus routes?",
+    "answerable": true,
+    "expected_documents": ["FIN-2026-010"],
+    "expected_facts": ["USD 380,000"],
+    "reference_answer": "Projected savings from route consolidation are estimated at USD 380,000 a year.",
+    "tags": ["amount"]
+  },
+  {
+    "case_key": "rag-019",
+    "question": "When was the Granite Peak Energy Cooperative incident report on the Juniper Flats outage published?",
+    "answerable": true,
+    "expected_documents": ["INC-2026-012"],
+    "expected_facts": ["18 March 2026"],
+    "reference_answer": "Report INC-2026-012 was published on 18 March 2026.",
+    "tags": ["date"]
+  },
+  {
+    "case_key": "rag-020",
+    "question": "On what date did the Sentinel Access Control authentication outage at Larkspur Health Network occur?",
+    "answerable": true,
+    "expected_documents": ["INC-2026-002"],
+    "expected_facts": ["2 February 2026"],
+    "reference_answer": "The outage began at 07:20 on 2 February 2026 when the authentication gateway certificate expired.",
+    "tags": ["date", "incident"]
+  },
+  {
+    "case_key": "rag-021",
+    "question": "When was the Meridian Water Authority metering and billing audit report published?",
+    "answerable": true,
+    "expected_documents": ["AUD-2026-011"],
+    "expected_facts": ["28 January 2026"],
+    "reference_answer": "Report AUD-2026-011 was published on 28 January 2026.",
+    "tags": ["date"]
+  },
+  {
+    "case_key": "rag-022",
+    "question": "On average, how many minutes behind schedule did outbound trailers depart from the Elk River Distribution Center?",
+    "answerable": true,
+    "expected_documents": ["OPS-2026-004"],
+    "expected_facts": ["47 minutes"],
+    "reference_answer": "Outbound trailers at the Elk River Distribution Center departed an average of 47 minutes behind schedule during the quarter.",
+    "tags": ["finding"]
+  },
+  {
+    "case_key": "rag-023",
+    "question": "How many Sentinel Access Control user accounts belonged to staff who had already left Larkspur Health Network?",
+    "answerable": true,
+    "expected_documents": ["CMP-2026-005"],
+    "expected_facts": ["412 user accounts"],
+    "reference_answer": "The compliance assessment found 412 user accounts belonging to staff who had left the organization more than 30 days earlier.",
+    "tags": ["finding"]
+  },
+  {
+    "case_key": "rag-024",
+    "question": "How far behind its baseline schedule is the Kestrel Aerospace Components Titanium Machining Line Project?",
+    "answerable": true,
+    "expected_documents": ["PSR-2026-009"],
+    "expected_facts": ["eleven weeks"],
+    "reference_answer": "The project is eleven weeks behind the baseline schedule because of late delivery of the second five-axis machining centre.",
+    "tags": ["finding", "schedule"]
+  },
+  {
+    "case_key": "rag-025",
+    "question": "Why could the mobile generator at the Juniper Flats Substation not be connected during the ice storm outage?",
+    "answerable": true,
+    "expected_documents": ["INC-2026-012"],
+    "expected_facts": ["transfer switch had not been tested since 2023"],
+    "reference_answer": "The mobile generator could not be connected because the transfer switch had not been tested since 2023 and a control relay failed when crews tried to operate it.",
+    "tags": ["finding", "cause"]
+  },
+  {
+    "case_key": "rag-026",
+    "question": "On how many days did particulate readings at the Copper Hollow Processing Plant boundary exceed the 24-hour permit limit?",
+    "answerable": true,
+    "expected_documents": ["CMP-2026-013"],
+    "expected_facts": ["nine days"],
+    "reference_answer": "Particulate readings exceeded the 24-hour permit limit on nine days in the assessment period.",
+    "tags": ["finding"]
+  },
+  {
+    "case_key": "rag-027",
+    "question": "What severity did Granite Peak Energy Cooperative assign to the finding about the failed 69 kV transmission structure?",
+    "answerable": true,
+    "expected_documents": ["INC-2026-012"],
+    "expected_facts": ["Severity: Critical"],
+    "reference_answer": "Finding 1, the ice-caused failure of the 69 kV structure that de-energized the substation for 31 hours, is rated Severity: Critical.",
+    "tags": ["finding", "severity"]
+  },
+  {
+    "case_key": "rag-028",
+    "question": "What does the Meridian Water Authority audit recommend about rate changes in the Customer Billing Platform?",
+    "answerable": true,
+    "expected_documents": ["AUD-2026-011"],
+    "expected_facts": ["second approver for every rate change"],
+    "reference_answer": "The audit recommends configuring the Customer Billing Platform to require a second approver for every rate change, rated Priority: High.",
+    "tags": ["recommendation"]
+  },
+  {
+    "case_key": "rag-029",
+    "question": "What alert schedule does the Larkspur incident report recommend for certificate expiry monitoring?",
+    "answerable": true,
+    "expected_documents": ["INC-2026-002"],
+    "expected_facts": ["30-day and 7-day alerts"],
+    "reference_answer": "The report recommends automated certificate expiry monitoring with 30-day and 7-day alerts for every Sentinel Access Control component.",
+    "tags": ["recommendation"]
+  },
+  {
+    "case_key": "rag-030",
+    "question": "Which vendor supplies replacement parts to Redwood Municipal Transit?",
+    "answerable": true,
+    "expected_documents": ["OPS-2026-009"],
+    "expected_facts": ["Pacific Coach Parts"],
+    "reference_answer": "Replacement parts are supplied under a three-year contract by Pacific Coach Parts, the agency's primary parts vendor.",
+    "tags": ["entity", "vendor"]
+  },
+  {
+    "case_key": "rag-031",
+    "question": "What type of document is report CMP-2026-008 from Tidewater Port Authority?",
+    "answerable": true,
+    "expected_documents": ["CMP-2026-008"],
+    "expected_facts": ["compliance assessment"],
+    "reference_answer": "CMP-2026-008 is a compliance assessment of stormwater discharge permit compliance at the Berth 14 Container Terminal.",
+    "tags": ["document_type"]
+  },
+  {
+    "case_key": "rag-032",
+    "question": "Which facility was the site of the ammonia release described in the Harbor Point Logistics incident report?",
+    "answerable": true,
+    "expected_documents": ["INC-2026-007"],
+    "expected_facts": ["Pier 9 Cold Storage Facility"],
+    "reference_answer": "The release occurred at the Pier 9 Cold Storage Facility, a refrigerated warehouse on the company's waterfront site.",
+    "tags": ["entity", "facility"]
+  },
+  {
+    "case_key": "rag-033",
+    "question": "How many employees did Ashford Textiles report in its 2026 operational review?",
+    "answerable": false,
+    "expected_documents": [],
+    "expected_facts": [],
+    "reference_answer": "The corpus contains no report from or about Ashford Textiles, so the question cannot be answered from the available documents.",
+    "tags": ["refusal", "unknown_organization"]
+  },
+  {
+    "case_key": "rag-034",
+    "question": "What was Northstar Distribution's total revenue for fiscal 2025?",
+    "answerable": false,
+    "expected_documents": [],
+    "expected_facts": [],
+    "reference_answer": "The Northstar Distribution operational review reports program costs, detention charges and projected savings but never states company revenue, so the answer is not available.",
+    "tags": ["refusal", "metric_not_reported"]
+  },
+  {
+    "case_key": "rag-035",
+    "question": "Which report discusses the cybersecurity penetration test at Tidewater Port Authority?",
+    "answerable": false,
+    "expected_documents": [],
+    "expected_facts": [],
+    "reference_answer": "No document in the corpus describes a penetration test at Tidewater Port Authority; the only Tidewater report is a stormwater permit compliance assessment.",
+    "tags": ["refusal", "topic_not_covered"]
+  },
+  {
+    "case_key": "rag-036",
+    "question": "What incident did Bluefin Aquaculture report at the Coral Bay Hatchery in 2026?",
+    "answerable": false,
+    "expected_documents": [],
+    "expected_facts": [],
+    "reference_answer": "The corpus contains a Bluefin Aquaculture financial review that mentions the Coral Bay Hatchery, but no incident report about the hatchery, so the question cannot be answered.",
+    "tags": ["refusal", "topic_not_covered"]
+  },
+  {
+    "case_key": "rag-037",
+    "question": "What is the total employee headcount of Granite Peak Energy Cooperative?",
+    "answerable": false,
+    "expected_documents": [],
+    "expected_facts": [],
+    "reference_answer": "The Granite Peak incident report gives member counts and crew details but never reports the cooperative's employee headcount.",
+    "tags": ["refusal", "metric_not_reported"]
+  },
+  {
+    "case_key": "rag-038",
+    "question": "How much did Meridian Water Authority spend on wastewater treatment upgrades in 2026?",
+    "answerable": false,
+    "expected_documents": [],
+    "expected_facts": [],
+    "reference_answer": "Neither Meridian Water Authority report covers wastewater; the audit explicitly excludes wastewater billing and the project status report concerns SCADA modernization, so no figure is available.",
+    "tags": ["refusal", "topic_not_covered"]
+  },
+  {
+    "case_key": "rag-039",
+    "question": "Which vendor supplied the battery-electric buses to Redwood Municipal Transit?",
+    "answerable": false,
+    "expected_documents": [],
+    "expected_facts": [],
+    "reference_answer": "The Redwood Municipal Transit review discusses the Fleet Electrification Program but never names the bus manufacturer or supplier.",
+    "tags": ["refusal", "entity_not_named"]
+  },
+  {
+    "case_key": "rag-040",
+    "question": "What average patient satisfaction score did Larkspur Health Network report for 2025?",
+    "answerable": false,
+    "expected_documents": [],
+    "expected_facts": [],
+    "reference_answer": "The two Larkspur Health Network reports cover records access compliance and an authentication outage; neither reports a patient satisfaction score.",
+    "tags": ["refusal", "metric_not_reported"]
+  }
+]

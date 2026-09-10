@@ -1,0 +1,128 @@
+{
+  "logical_key": "AUD-2026-003",
+  "version": 1,
+  "format": "pdf",
+  "filename": "AUD-2026-003-v1-orchard-valley-audit-report.pdf",
+  "display_name": "Orchard Valley School District Audit: Nutrition Services Procurement",
+  "record": {
+    "report_title": "Orchard Valley School District Internal Audit Report: Nutrition Services Procurement",
+    "report_number": "AUD-2026-003",
+    "issuing_organization": "Orchard Valley School District",
+    "publication_date": "2026-02-17",
+    "document_type": "audit_report",
+    "subject_entities": [
+      { "name": "Nutrition Services Program", "entity_type": "program" },
+      { "name": "Valley Fresh Provisions", "entity_type": "vendor" },
+      { "name": "Pinecrest Elementary Campus", "entity_type": "facility" }
+    ],
+    "key_findings": [
+      { "text": "Food purchases from Valley Fresh Provisions exceeded the competitive bid threshold in four months without a documented bid waiver.", "severity": "high" },
+      { "text": "Freezer temperature logs at the Pinecrest Elementary Campus kitchen were missing for 23 school days.", "severity": "medium" },
+      { "text": "Meal counts claimed for reimbursement under the Nutrition Services Program matched point-of-sale records in all sampled weeks.", "severity": "low" }
+    ],
+    "recommendations": [
+      { "text": "Obtain competitive bids or a board-approved waiver before any further purchases from Valley Fresh Provisions above the threshold.", "priority": "high" },
+      { "text": "Install automated temperature monitoring with alerts in the Pinecrest Elementary Campus kitchen freezer.", "priority": "medium" }
+    ],
+    "monetary_amounts": [
+      { "amount": 218400, "currency": "USD", "label": "purchases above the bid threshold" },
+      { "amount": 1900000, "currency": "USD", "label": "Nutrition Services Program annual food budget" }
+    ]
+  },
+  "evidence": {
+    "report_title": "Orchard Valley School District Internal Audit Report: Nutrition Services Procurement",
+    "report_number": "Report No. AUD-2026-003",
+    "issuing_organization": "Issued by Orchard Valley School District, Internal Audit Department",
+    "publication_date": "Published 17 February 2026",
+    "document_type": "This audit report sets out the results of an internal audit of procurement in the Nutrition Services Program of Orchard Valley School District",
+    "subject_entities[0].name": "The Nutrition Services Program serves breakfast and lunch at all fourteen district schools and is funded through federal reimbursement and district contributions.",
+    "subject_entities[0].entity_type": "The Nutrition Services Program serves breakfast and lunch at all fourteen district schools and is funded through federal reimbursement and district contributions.",
+    "subject_entities[1].name": "Fresh produce and dairy are supplied by Valley Fresh Provisions, a regional vendor that has held the district account since 2021.",
+    "subject_entities[1].entity_type": "Fresh produce and dairy are supplied by Valley Fresh Provisions, a regional vendor that has held the district account since 2021.",
+    "subject_entities[2].name": "The Pinecrest Elementary Campus is the largest elementary facility in the district and operates a production kitchen that prepares meals for three smaller schools.",
+    "subject_entities[2].entity_type": "The Pinecrest Elementary Campus is the largest elementary facility in the district and operates a production kitchen that prepares meals for three smaller schools.",
+    "key_findings[0].text": "Food purchases from Valley Fresh Provisions exceeded the competitive bid threshold in four months without a documented bid waiver.",
+    "key_findings[0].severity": "Food purchases from Valley Fresh Provisions exceeded the competitive bid threshold in four months without a documented bid waiver. Severity: High.",
+    "key_findings[1].text": "Freezer temperature logs at the Pinecrest Elementary Campus kitchen were missing for 23 school days.",
+    "key_findings[1].severity": "Freezer temperature logs at the Pinecrest Elementary Campus kitchen were missing for 23 school days. Severity: Medium.",
+    "key_findings[2].text": "Meal counts claimed for reimbursement under the Nutrition Services Program matched point-of-sale records in all sampled weeks.",
+    "key_findings[2].severity": "Meal counts claimed for reimbursement under the Nutrition Services Program matched point-of-sale records in all sampled weeks. Severity: Low.",
+    "recommendations[0].text": "Obtain competitive bids or a board-approved waiver before any further purchases from Valley Fresh Provisions above the threshold.",
+    "recommendations[0].priority": "Obtain competitive bids or a board-approved waiver before any further purchases from Valley Fresh Provisions above the threshold. Priority: High.",
+    "recommendations[1].text": "Install automated temperature monitoring with alerts in the Pinecrest Elementary Campus kitchen freezer.",
+    "recommendations[1].priority": "Install automated temperature monitoring with alerts in the Pinecrest Elementary Campus kitchen freezer. Priority: Medium.",
+    "monetary_amounts[0].amount": "Purchases above the bid threshold made without a waiver during the audit period total $218,400.",
+    "monetary_amounts[0].currency": "Purchases above the bid threshold made without a waiver during the audit period total $218,400.",
+    "monetary_amounts[0].label": "Purchases above the bid threshold made without a waiver during the audit period total $218,400.",
+    "monetary_amounts[1].amount": "The Nutrition Services Program annual food budget is $1.9 million for the 2025-2026 school year.",
+    "monetary_amounts[1].currency": "The Nutrition Services Program annual food budget is $1.9 million for the 2025-2026 school year.",
+    "monetary_amounts[1].label": "The Nutrition Services Program annual food budget is $1.9 million for the 2025-2026 school year."
+  },
+  "planted": [
+    {
+      "field_path": "monetary_amounts[2].amount",
+      "kind": "missing_evidence",
+      "extractor_value": 75000,
+      "extractor_quote": "A contingency of $75,000 has been set aside for freezer replacement at Pinecrest.",
+      "verifier_status": "unsupported",
+      "note": "The report mentions the possibility of replacing the freezer but never states a contingency amount. A third monetary amount of $75,000 does not appear anywhere in the document; an extractor that reports it has fabricated the figure and its quote."
+    }
+  ],
+  "body": [
+    {
+      "heading": "Orchard Valley School District Internal Audit Report: Nutrition Services Procurement",
+      "paragraphs": [
+        "Report No. AUD-2026-003",
+        "Issued by Orchard Valley School District, Internal Audit Department",
+        "Published 17 February 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This audit report sets out the results of an internal audit of procurement in the Nutrition Services Program of Orchard Valley School District for the period from 1 August 2024 to 31 July 2025. The audit was requested by the Board Finance Committee following a citizen inquiry about the district's produce contract.",
+        "The audit found that the district's largest food vendor was paid above the competitive bid threshold in several months without the waiver that board policy requires, and that cold storage records at the district's production kitchen are incomplete. Meal count records supporting federal reimbursement claims were accurate in every sampled week.",
+        "Three findings and two recommendations are presented. The Director of Nutrition Services has accepted both recommendations. The overall audit opinion is that procurement controls are partially effective."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "The Nutrition Services Program serves breakfast and lunch at all fourteen district schools and is funded through federal reimbursement and district contributions. The program serves about 9,800 meals on a typical school day and employs 71 kitchen staff.",
+        "Fresh produce and dairy are supplied by Valley Fresh Provisions, a regional vendor that has held the district account since 2021. Board policy requires three competitive quotes for any vendor whose purchases exceed the bid threshold in a single month unless the board approves a written waiver.",
+        "The Pinecrest Elementary Campus is the largest elementary facility in the district and operates a production kitchen that prepares meals for three smaller schools. The kitchen has a walk-in freezer that was installed in 2009 and is approaching the end of its expected service life.",
+        "The audit team reviewed twelve months of purchase orders and invoices, inspected temperature logs at four kitchens and tested meal count claims for eight sampled weeks."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Food purchases from Valley Fresh Provisions exceeded the competitive bid threshold in four months without a documented bid waiver. Severity: High. Monthly purchases exceeded the threshold in October 2024, December 2024, March 2025 and May 2025. No quotes were obtained and no waiver was presented to the board. Program staff stated that the vendor was the only local supplier able to meet delivery schedules, but this justification was never documented.",
+        "Finding 2: Freezer temperature logs at the Pinecrest Elementary Campus kitchen were missing for 23 school days. Severity: Medium. Kitchen staff are required to record the freezer temperature twice a day. The missing days were spread across the year and were concentrated on days when the kitchen manager was absent. No food loss was identified, but the gap means the district cannot demonstrate safe storage for those days.",
+        "Finding 3: Meal counts claimed for reimbursement under the Nutrition Services Program matched point-of-sale records in all sampled weeks. Severity: Low. The audit traced claimed meals for eight weeks to the point-of-sale system at all fourteen schools and found no discrepancies. The audit notes this as an effective control."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Obtain competitive bids or a board-approved waiver before any further purchases from Valley Fresh Provisions above the threshold. Priority: High. The purchasing office should add a monthly threshold report so that program staff know when a bid or waiver is required before the purchase is made.",
+        "Recommendation 2: Install automated temperature monitoring with alerts in the Pinecrest Elementary Campus kitchen freezer. Priority: Medium. Automated monitoring removes the reliance on manual logging and would also give early warning if the aging freezer fails. The district should consider whether replacement of the freezer is more economical than monitoring alone."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "Purchases above the bid threshold made without a waiver during the audit period total $218,400. The audit does not conclude that the district overpaid, because no comparison quotes exist, but the absence of quotes means the district cannot show that the prices were competitive.",
+        "The Nutrition Services Program annual food budget is $1.9 million for the 2025-2026 school year. Purchases from the produce vendor represent roughly a quarter of that budget."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Management response. The Director of Nutrition Services accepts Recommendation 1 and will issue a request for quotes for produce and dairy supply by 30 April 2026. The Director of Facilities accepts Recommendation 2 and will install monitoring by 31 May 2026 pending a decision on freezer replacement.",
+        "Appendix B: Methodology. Purchase data were obtained from the district financial system and reconciled to vendor statements. Temperature logs were inspected on site. Meal count testing compared reimbursement claims to point-of-sale exports for the sampled weeks.",
+        "Appendix C: Distribution. This report is distributed to the Board Finance Committee, the Superintendent and the Director of Nutrition Services."
+      ]
+    }
+  ]
+}

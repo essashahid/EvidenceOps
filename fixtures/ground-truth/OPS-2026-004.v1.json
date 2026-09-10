@@ -1,0 +1,144 @@
+{
+  "logical_key": "OPS-2026-004",
+  "version": 1,
+  "format": "pdf",
+  "filename": "OPS-2026-004-v1-northstar-operational-review.pdf",
+  "display_name": "Northstar Distribution Operational Review, Q1 2026 (original)",
+  "record": {
+    "report_title": "Northstar Distribution Operational Review: Outbound Fulfillment, First Quarter 2026",
+    "report_number": "OPS-2026-004",
+    "issuing_organization": "Northstar Distribution",
+    "publication_date": "2026-03-12",
+    "document_type": "operational_review",
+    "subject_entities": [
+      { "name": "Elk River Distribution Center", "entity_type": "facility" },
+      { "name": "Dock Optimization Program", "entity_type": "program" },
+      { "name": "Cardinal Fleet Services", "entity_type": "vendor" },
+      { "name": "Atlas Warehouse Management System", "entity_type": "system" }
+    ],
+    "key_findings": [
+      { "text": "Outbound trailers at the Elk River Distribution Center departed an average of 47 minutes behind schedule during the quarter.", "severity": "high" },
+      { "text": "Carrier compliance reporting from Cardinal Fleet Services was delivered late in seven of thirteen weeks.", "severity": "medium" },
+      { "text": "Wave release rules in the Atlas Warehouse Management System were overridden manually on 31 percent of shifts.", "severity": "medium" },
+      { "text": "Safety walk documentation on the night shift was complete and required no corrective action.", "severity": "low" }
+    ],
+    "recommendations": [
+      { "text": "Introduce fixed dock appointment windows for all outbound carriers by the end of April 2026.", "priority": "high" },
+      { "text": "Amend the Cardinal Fleet Services contract to include a weekly reporting deadline with service credits.", "priority": "medium" },
+      { "text": "Restrict manual wave overrides in the Atlas Warehouse Management System to shift supervisors and log every override with a reason code.", "priority": "medium" }
+    ],
+    "monetary_amounts": [
+      { "amount": 1250000, "currency": "USD", "label": "revised program cost" },
+      { "amount": 316400, "currency": "USD", "label": "carrier detention charges" },
+      { "amount": 540000, "currency": "USD", "label": "projected annual savings" }
+    ]
+  },
+  "evidence": {
+    "report_title": "Northstar Distribution Operational Review: Outbound Fulfillment, First Quarter 2026",
+    "report_number": "Report No. OPS-2026-004",
+    "issuing_organization": "Issued by Northstar Distribution, Operations Excellence Office",
+    "publication_date": "Published 12 March 2026",
+    "document_type": "This operational review examines outbound fulfillment performance at Northstar Distribution for the first quarter of 2026",
+    "subject_entities[0].name": "The Elk River Distribution Center is the largest facility in the network and handles roughly 58 percent of outbound volume.",
+    "subject_entities[0].entity_type": "The Elk River Distribution Center is the largest facility in the network and handles roughly 58 percent of outbound volume.",
+    "subject_entities[1].name": "Its 42 dock doors were rebuilt in 2025 under the Dock Optimization Program, a two-year capital program intended to cut trailer turnaround time by a third.",
+    "subject_entities[1].entity_type": "Its 42 dock doors were rebuilt in 2025 under the Dock Optimization Program, a two-year capital program intended to cut trailer turnaround time by a third.",
+    "subject_entities[2].name": "Outbound transport is provided under contract by Cardinal Fleet Services, a regional carrier and vendor that supplies dedicated tractors and drivers for the retail lanes.",
+    "subject_entities[2].entity_type": "Outbound transport is provided under contract by Cardinal Fleet Services, a regional carrier and vendor that supplies dedicated tractors and drivers for the retail lanes.",
+    "subject_entities[3].name": "Order picking, wave release and trailer loading are directed by the Atlas Warehouse Management System, which was upgraded in November 2025 to add automated wave scheduling.",
+    "subject_entities[3].entity_type": "Order picking, wave release and trailer loading are directed by the Atlas Warehouse Management System, which was upgraded in November 2025 to add automated wave scheduling.",
+    "key_findings[0].text": "Outbound trailers at the Elk River Distribution Center departed an average of 47 minutes behind schedule during the quarter.",
+    "key_findings[0].severity": "Outbound trailers at the Elk River Distribution Center departed an average of 47 minutes behind schedule during the quarter. Severity: High.",
+    "key_findings[1].text": "Carrier compliance reporting from Cardinal Fleet Services was delivered late in seven of thirteen weeks.",
+    "key_findings[1].severity": "Carrier compliance reporting from Cardinal Fleet Services was delivered late in seven of thirteen weeks. Severity: Medium.",
+    "key_findings[2].text": "Wave release rules in the Atlas Warehouse Management System were overridden manually on 31 percent of shifts.",
+    "key_findings[2].severity": "Wave release rules in the Atlas Warehouse Management System were overridden manually on 31 percent of shifts. Severity: Medium.",
+    "key_findings[3].text": "Safety walk documentation on the night shift was complete and required no corrective action.",
+    "key_findings[3].severity": "Safety walk documentation on the night shift was complete and required no corrective action. Severity: Low.",
+    "recommendations[0].text": "Introduce fixed dock appointment windows for all outbound carriers by the end of April 2026.",
+    "recommendations[0].priority": "Introduce fixed dock appointment windows for all outbound carriers by the end of April 2026. Priority: High.",
+    "recommendations[1].text": "Amend the Cardinal Fleet Services contract to include a weekly reporting deadline with service credits.",
+    "recommendations[1].priority": "Amend the Cardinal Fleet Services contract to include a weekly reporting deadline with service credits. Priority: Medium.",
+    "recommendations[2].text": "Restrict manual wave overrides in the Atlas Warehouse Management System to shift supervisors and log every override with a reason code.",
+    "recommendations[2].priority": "Restrict manual wave overrides in the Atlas Warehouse Management System to shift supervisors and log every override with a reason code. Priority: Medium.",
+    "monetary_amounts[0].amount": "The revised program cost of the Dock Optimization Program is $1.25 million.",
+    "monetary_amounts[0].currency": "The revised program cost of the Dock Optimization Program is $1.25 million.",
+    "monetary_amounts[0].label": "The revised program cost of the Dock Optimization Program is $1.25 million.",
+    "monetary_amounts[1].amount": "Carrier detention charges paid during the quarter totaled $316,400.",
+    "monetary_amounts[1].currency": "Carrier detention charges paid during the quarter totaled $316,400.",
+    "monetary_amounts[1].label": "Carrier detention charges paid during the quarter totaled $316,400.",
+    "monetary_amounts[2].amount": "If the recommendations are implemented, projected annual savings are estimated at USD 540,000",
+    "monetary_amounts[2].currency": "If the recommendations are implemented, projected annual savings are estimated at USD 540,000",
+    "monetary_amounts[2].label": "If the recommendations are implemented, projected annual savings are estimated at USD 540,000"
+  },
+  "planted": [
+    {
+      "field_path": "monetary_amounts[0].amount",
+      "kind": "contradiction",
+      "extractor_value": 1200000,
+      "extractor_quote": "the summary figures circulated to the leadership team in February placed the dock program at roughly $1.2 million",
+      "verifier_status": "partially_supported",
+      "verifier_corrected_value": 1250000,
+      "note": "The Executive Summary quotes an older rounded figure of $1.2 million for the dock program while the Financial Impact section gives the reconciled revised program cost of $1.25 million. A reviewer should confirm that the Financial Impact figure is the authoritative one."
+    }
+  ],
+  "body": [
+    {
+      "heading": "Northstar Distribution Operational Review: Outbound Fulfillment, First Quarter 2026",
+      "paragraphs": [
+        "Report No. OPS-2026-004",
+        "Issued by Northstar Distribution, Operations Excellence Office",
+        "Published 12 March 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This operational review examines outbound fulfillment performance at Northstar Distribution for the first quarter of 2026, covering the period from 1 January 2026 to 29 February 2026 and the dock and carrier processes that support it. The review was commissioned by the Chief Operating Officer after two large retail customers reported late deliveries in January.",
+        "The review found that outbound trailer departures ran well behind the published schedule, that carrier performance reporting from our primary carrier was unreliable, and that the wave release logic in the warehouse system is routinely bypassed. Detention charges and expedited freight erased most of the savings that the dock program was expected to deliver. Program spending has increased, and the summary figures circulated to the leadership team in February placed the dock program at roughly $1.2 million; the reconciled figure appears in the Financial Impact section of this report.",
+        "Four findings and three recommendations are presented. Management has accepted all three recommendations and target dates are recorded in the Appendix."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Northstar Distribution operates three regional warehouses and a fleet of contracted carriers serving grocery and general merchandise retailers. The Elk River Distribution Center is the largest facility in the network and handles roughly 58 percent of outbound volume. Its 42 dock doors were rebuilt in 2025 under the Dock Optimization Program, a two-year capital program intended to cut trailer turnaround time by a third.",
+        "Outbound transport is provided under contract by Cardinal Fleet Services, a regional carrier and vendor that supplies dedicated tractors and drivers for the retail lanes. Order picking, wave release and trailer loading are directed by the Atlas Warehouse Management System, which was upgraded in November 2025 to add automated wave scheduling.",
+        "The review team interviewed 26 dock, planning and transport staff, observed 14 shifts and analysed gate logs, carrier scorecards and system override records for the quarter."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Outbound trailers at the Elk River Distribution Center departed an average of 47 minutes behind schedule during the quarter. Severity: High. Gate logs show that 63 percent of scheduled departures left more than 30 minutes late, compared with a target of no more than 10 percent. The delays were concentrated on the two evening waves that serve the grocery lanes, where loading crews were waiting on late pick completions.",
+        "Finding 2: Carrier compliance reporting from Cardinal Fleet Services was delivered late in seven of thirteen weeks. Severity: Medium. The contract requires a weekly on-time performance file by Monday noon. Late files meant that lane performance was not visible to planners until the following week, and two service failures were identified only when customers complained.",
+        "Finding 3: Wave release rules in the Atlas Warehouse Management System were overridden manually on 31 percent of shifts. Severity: Medium. Supervisors reported that the automated waves released grocery orders too late for the evening departures, and that manual release was the only way to protect the cutoffs. Override reasons were not recorded, so the review could not determine how many overrides were justified.",
+        "Finding 4: Safety walk documentation on the night shift was complete and required no corrective action. Severity: Low. All 61 scheduled safety walks for the quarter were recorded with named observers and closed actions. The review notes this as a positive control that should be maintained."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Introduce fixed dock appointment windows for all outbound carriers by the end of April 2026. Priority: High. Appointment windows should be published in the carrier portal and enforced through the gate system, with exceptions approved by the shift manager.",
+        "Recommendation 2: Amend the Cardinal Fleet Services contract to include a weekly reporting deadline with service credits. Priority: Medium. The amendment should also require the carrier to submit exception reports within 24 hours of any missed delivery.",
+        "Recommendation 3: Restrict manual wave overrides in the Atlas Warehouse Management System to shift supervisors and log every override with a reason code. Priority: Medium. The planning team should review the override log weekly and adjust wave timing where overrides are recurring."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The revised program cost of the Dock Optimization Program is $1.25 million. This figure reconciles the capital ledger through 29 February 2026 and includes the gate system integration that was added to scope in December 2025. The original approved budget was $1.05 million.",
+        "Carrier detention charges paid during the quarter totaled $316,400. Detention was charged whenever a trailer waited more than two hours at the dock, and the charges were concentrated on the late evening waves described in Finding 1.",
+        "If the recommendations are implemented, projected annual savings are estimated at USD 540,000, made up of avoided detention, reduced expedited freight and lower overtime on the loading crews."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Management response and target dates. Recommendation 1 is targeted for 30 April 2026 and is owned by the Director of Transportation. Recommendation 2 is targeted for 31 May 2026 and is owned by the Procurement Manager. Recommendation 3 is targeted for 15 April 2026 and is owned by the Planning Manager.",
+        "Appendix B: Methodology. Gate log data were extracted from the yard management module for all outbound movements between 1 January and 29 February 2026. Override records were taken from the Atlas Warehouse Management System audit table. Interviews were conducted on site at the Elk River Distribution Center between 16 and 27 February 2026.",
+        "Appendix C: Distribution. This report is distributed to the Chief Operating Officer, the Vice President of Supply Chain and the Audit Committee. Questions should be directed to the Operations Excellence Office."
+      ]
+    }
+  ]
+}

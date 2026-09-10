@@ -1,0 +1,144 @@
+{
+  "logical_key": "AUD-2026-011",
+  "version": 1,
+  "format": "pdf",
+  "filename": "AUD-2026-011-v1-meridian-water-audit-report.pdf",
+  "display_name": "Meridian Water Authority Internal Audit: Metering and Billing Controls",
+  "record": {
+    "report_title": "Meridian Water Authority Internal Audit Report: Metering and Billing Controls",
+    "report_number": "AUD-2026-011",
+    "issuing_organization": "Meridian Water Authority",
+    "publication_date": "2026-01-28",
+    "document_type": "audit_report",
+    "subject_entities": [
+      { "name": "Ridgeline Treatment Plant", "entity_type": "facility" },
+      { "name": "Brightwater Controls", "entity_type": "vendor" },
+      { "name": "Customer Billing Platform", "entity_type": "system" },
+      { "name": "Meter Replacement Program", "entity_type": "program" }
+    ],
+    "key_findings": [
+      { "text": "Meter readings for 2,140 commercial accounts were estimated rather than read for three or more consecutive billing cycles.", "severity": "high" },
+      { "text": "Rate changes in the Customer Billing Platform were approved by the same analyst who entered them in 17 of 40 sampled cases.", "severity": "high" },
+      { "text": "Brightwater Controls invoiced calibration visits at the Ridgeline Treatment Plant that were not supported by signed service tickets.", "severity": "medium" },
+      { "text": "Inventory counts of smart meters held for the Meter Replacement Program reconciled to the asset register without exception.", "severity": "low" }
+    ],
+    "recommendations": [
+      { "text": "Replace estimated reads with actual reads for all commercial accounts before the June 2026 billing cycle.", "priority": "high" },
+      { "text": "Configure the Customer Billing Platform to require a second approver for every rate change.", "priority": "high" },
+      { "text": "Withhold payment of Brightwater Controls invoices that lack a signed service ticket until the tickets are produced.", "priority": "medium" }
+    ],
+    "monetary_amounts": [
+      { "amount": 742000, "currency": "USD", "label": "estimated under-billed revenue" },
+      { "amount": 58300, "currency": "USD", "label": "unsupported calibration invoices" },
+      { "amount": 6400000, "currency": "USD", "label": "Meter Replacement Program approved budget" }
+    ]
+  },
+  "evidence": {
+    "report_title": "Meridian Water Authority Internal Audit Report: Metering and Billing Controls",
+    "report_number": "Report No. AUD-2026-011",
+    "issuing_organization": "Issued by Meridian Water Authority, Office of Internal Audit",
+    "publication_date": "Published 28 January 2026",
+    "document_type": "This audit report presents the results of an internal audit of metering and billing controls at Meridian Water Authority",
+    "subject_entities[0].name": "Treated water is supplied from the Ridgeline Treatment Plant, the authority's largest facility, which also houses the master flow meters used to reconcile production against billed consumption.",
+    "subject_entities[0].entity_type": "Treated water is supplied from the Ridgeline Treatment Plant, the authority's largest facility, which also houses the master flow meters used to reconcile production against billed consumption.",
+    "subject_entities[1].name": "Calibration of the master flow meters and of large commercial meters is outsourced to Brightwater Controls, an instrumentation vendor under a four-year service agreement.",
+    "subject_entities[1].entity_type": "Calibration of the master flow meters and of large commercial meters is outsourced to Brightwater Controls, an instrumentation vendor under a four-year service agreement.",
+    "subject_entities[2].name": "Bills are calculated and issued by the Customer Billing Platform, a system implemented in 2023 that also stores the rate tables.",
+    "subject_entities[2].entity_type": "Bills are calculated and issued by the Customer Billing Platform, a system implemented in 2023 that also stores the rate tables.",
+    "subject_entities[3].name": "The Meter Replacement Program is a multi-year program to replace 84,000 mechanical meters with smart meters that report consumption daily.",
+    "subject_entities[3].entity_type": "The Meter Replacement Program is a multi-year program to replace 84,000 mechanical meters with smart meters that report consumption daily.",
+    "key_findings[0].text": "Meter readings for 2,140 commercial accounts were estimated rather than read for three or more consecutive billing cycles.",
+    "key_findings[0].severity": "Meter readings for 2,140 commercial accounts were estimated rather than read for three or more consecutive billing cycles. Severity: High.",
+    "key_findings[1].text": "Rate changes in the Customer Billing Platform were approved by the same analyst who entered them in 17 of 40 sampled cases.",
+    "key_findings[1].severity": "Rate changes in the Customer Billing Platform were approved by the same analyst who entered them in 17 of 40 sampled cases. Severity: High.",
+    "key_findings[2].text": "Brightwater Controls invoiced calibration visits at the Ridgeline Treatment Plant that were not supported by signed service tickets.",
+    "key_findings[2].severity": "Brightwater Controls invoiced calibration visits at the Ridgeline Treatment Plant that were not supported by signed service tickets. Severity: Medium.",
+    "key_findings[3].text": "Inventory counts of smart meters held for the Meter Replacement Program reconciled to the asset register without exception.",
+    "key_findings[3].severity": "Inventory counts of smart meters held for the Meter Replacement Program reconciled to the asset register without exception. Severity: Low.",
+    "recommendations[0].text": "Replace estimated reads with actual reads for all commercial accounts before the June 2026 billing cycle.",
+    "recommendations[0].priority": "Replace estimated reads with actual reads for all commercial accounts before the June 2026 billing cycle. Priority: High.",
+    "recommendations[1].text": "Configure the Customer Billing Platform to require a second approver for every rate change.",
+    "recommendations[1].priority": "Configure the Customer Billing Platform to require a second approver for every rate change. Priority: High.",
+    "recommendations[2].text": "Withhold payment of Brightwater Controls invoices that lack a signed service ticket until the tickets are produced.",
+    "recommendations[2].priority": "Withhold payment of Brightwater Controls invoices that lack a signed service ticket until the tickets are produced. Priority: Medium.",
+    "monetary_amounts[0].amount": "The estimated under-billed revenue from the estimated commercial reads is $742,000 for the audit period.",
+    "monetary_amounts[0].currency": "The estimated under-billed revenue from the estimated commercial reads is $742,000 for the audit period.",
+    "monetary_amounts[0].label": "The estimated under-billed revenue from the estimated commercial reads is $742,000 for the audit period.",
+    "monetary_amounts[1].amount": "Unsupported calibration invoices from Brightwater Controls total USD 58,300 across eleven invoices.",
+    "monetary_amounts[1].currency": "Unsupported calibration invoices from Brightwater Controls total USD 58,300 across eleven invoices.",
+    "monetary_amounts[1].label": "Unsupported calibration invoices from Brightwater Controls total USD 58,300 across eleven invoices.",
+    "monetary_amounts[2].amount": "The Meter Replacement Program approved budget is $6.4 million over four years, and spending to date is in line with the approved schedule.",
+    "monetary_amounts[2].currency": "The Meter Replacement Program approved budget is $6.4 million over four years, and spending to date is in line with the approved schedule.",
+    "monetary_amounts[2].label": "The Meter Replacement Program approved budget is $6.4 million over four years, and spending to date is in line with the approved schedule."
+  },
+  "planted": [
+    {
+      "field_path": "recommendations[3].text",
+      "kind": "missing_evidence",
+      "extractor_value": "Engage an external firm to re-audit commercial meter billing within 90 days.",
+      "extractor_quote": "The audit further recommends that an external firm re-audit commercial meter billing within 90 days.",
+      "verifier_status": "unsupported",
+      "note": "The report contains exactly three recommendations. A fourth recommendation about an external re-audit is not stated anywhere in the document; an extractor that produces it has invented both the recommendation and its quote."
+    }
+  ],
+  "body": [
+    {
+      "heading": "Meridian Water Authority Internal Audit Report: Metering and Billing Controls",
+      "paragraphs": [
+        "Report No. AUD-2026-011",
+        "Issued by Meridian Water Authority, Office of Internal Audit",
+        "Published 28 January 2026"
+      ]
+    },
+    {
+      "heading": "Executive Summary",
+      "paragraphs": [
+        "This audit report presents the results of an internal audit of metering and billing controls at Meridian Water Authority for the twelve months ended 31 October 2025. The audit was included in the approved annual audit plan and was carried out between November 2025 and January 2026.",
+        "The audit concluded that controls over meter reading and rate maintenance need improvement. A large group of commercial accounts has been billed on estimated consumption for extended periods, rate changes lack independent approval, and one vendor has been paid for calibration visits without proof of service. Controls over smart meter inventory are operating effectively.",
+        "Four findings and three recommendations are presented. Management responses are included in the Appendix. The overall audit opinion is that controls require improvement."
+      ]
+    },
+    {
+      "heading": "Background",
+      "paragraphs": [
+        "Meridian Water Authority supplies drinking water to about 96,000 residential and 4,300 commercial accounts. Treated water is supplied from the Ridgeline Treatment Plant, the authority's largest facility, which also houses the master flow meters used to reconcile production against billed consumption.",
+        "Calibration of the master flow meters and of large commercial meters is outsourced to Brightwater Controls, an instrumentation vendor under a four-year service agreement. Each calibration visit is meant to be recorded on a service ticket signed by plant staff before it is invoiced.",
+        "Bills are calculated and issued by the Customer Billing Platform, a system implemented in 2023 that also stores the rate tables. The Meter Replacement Program is a multi-year program to replace 84,000 mechanical meters with smart meters that report consumption daily. About 31,000 meters had been replaced by the end of the audit period.",
+        "The audit team sampled 40 rate changes, 60 vendor invoices and the full population of commercial accounts, and counted smart meter stock at the authority's two warehouses."
+      ]
+    },
+    {
+      "heading": "Findings",
+      "paragraphs": [
+        "Finding 1: Meter readings for 2,140 commercial accounts were estimated rather than read for three or more consecutive billing cycles. Severity: High. Estimates are calculated from the prior year's consumption and do not capture growth or new tenants. When actual reads were later obtained for a sample of 120 accounts, 87 had consumed more than the estimate. The authority has no report that flags accounts with repeated estimates.",
+        "Finding 2: Rate changes in the Customer Billing Platform were approved by the same analyst who entered them in 17 of 40 sampled cases. Severity: High. The platform allows any user with the rate maintenance role to both enter and approve a change. None of the 17 changes appeared to be incorrect, but the control does not prevent an erroneous or unauthorised rate from taking effect.",
+        "Finding 3: Brightwater Controls invoiced calibration visits at the Ridgeline Treatment Plant that were not supported by signed service tickets. Severity: Medium. Of 60 invoices sampled, eleven had no matching ticket and plant staff could not confirm that the visits took place. The invoices were approved for payment by the plant administrator without checking for tickets.",
+        "Finding 4: Inventory counts of smart meters held for the Meter Replacement Program reconciled to the asset register without exception. Severity: Low. The audit counted 6,212 meters across two warehouses and found every serial number in the register. The audit notes this as an effective control."
+      ]
+    },
+    {
+      "heading": "Recommendations",
+      "paragraphs": [
+        "Recommendation 1: Replace estimated reads with actual reads for all commercial accounts before the June 2026 billing cycle. Priority: High. Accounts with three or more consecutive estimates should be prioritised for a field visit or a smart meter installation, and a monthly exception report should be added to the billing close.",
+        "Recommendation 2: Configure the Customer Billing Platform to require a second approver for every rate change. Priority: High. The system vendor has confirmed that dual approval is a configuration setting and can be enabled within one release cycle.",
+        "Recommendation 3: Withhold payment of Brightwater Controls invoices that lack a signed service ticket until the tickets are produced. Priority: Medium. Accounts payable should match every calibration invoice to a ticket before approval, and the eleven unsupported invoices should be investigated with the vendor."
+      ]
+    },
+    {
+      "heading": "Financial Impact",
+      "paragraphs": [
+        "The estimated under-billed revenue from the estimated commercial reads is $742,000 for the audit period. This figure was calculated by applying the average difference between estimated and actual consumption in the 120-account sample to the full population of 2,140 accounts. Most of this revenue can be recovered through catch-up billing once actual reads are obtained.",
+        "Unsupported calibration invoices from Brightwater Controls total USD 58,300 across eleven invoices. Recovery will depend on whether the vendor can produce evidence that the visits occurred.",
+        "The Meter Replacement Program approved budget is $6.4 million over four years, and spending to date is in line with the approved schedule. The audit did not identify any financial exposure in the program."
+      ]
+    },
+    {
+      "heading": "Appendix",
+      "paragraphs": [
+        "Appendix A: Management response. The Director of Customer Services accepts Recommendation 1 and will complete the actual reads by 31 May 2026. The Chief Information Officer accepts Recommendation 2 and will enable dual approval by 31 March 2026. The Plant Manager accepts Recommendation 3 with immediate effect.",
+        "Appendix B: Audit scope and standards. The audit covered meter reading, rate maintenance, vendor invoice approval and smart meter inventory. It did not cover wastewater billing or customer refunds. The audit was conducted in accordance with the authority's internal audit charter.",
+        "Appendix C: Distribution. This report is distributed to the Audit and Finance Committee, the Chief Executive and the responsible directors."
+      ]
+    }
+  ]
+}
