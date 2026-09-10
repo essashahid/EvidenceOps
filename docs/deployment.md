@@ -25,7 +25,7 @@ Production, preview and development configuration lives in Vercel. A private, ig
 | DEMO_MUTATIONS_ENABLED | false; reviewers/viewers remain read-only |
 | DEMO_ADMIN_PASSWORD / DEMO_REVIEWER_PASSWORD / DEMO_VIEWER_PASSWORD | Generated strong account passwords in the private environment file |
 
-Model settings use gpt-5.6-luna and text-embedding-3-small with 768 dimensions. Changing models requires reprocessing and re-evaluation; mock scores are not evidence of live model quality.
+Model settings use gpt-5.6-luna and text-embedding-3-small with 768 dimensions. Changing models requires reprocessing and re-evaluation; full seeding detects stale model configurations and reprocesses them, and the evaluator rejects mismatched extraction configurations. Mock scores are not evidence of live model quality.
 
 ## Provider activation
 

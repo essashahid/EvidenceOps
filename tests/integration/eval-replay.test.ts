@@ -29,4 +29,7 @@ it("replays every evaluation checkpoint without repeating model calls or result 
   expect(first.results.length).toBe(146);
   const [stored] = await getDb().select().from(schema.evalRuns).where(eq(schema.evalRuns.id, run.id));
   expect(stored!.isBaseline).toBe(false); // skipped integrity checks cannot establish a baseline
+  const [record] = await getDb().select().from(schema.recordVersions).where(eq(schema.recordVersions.createdByType, "model")).limit(1);
+  await getDb().update(schema.recordVersions).set({ modelConfigHash: "different-provider" }).where(eq(schema.recordVersions.id, record!.id));
+  await expect(runEvaluation(options)).rejects.toThrow("Reprocess the corpus");
 }, 180_000);

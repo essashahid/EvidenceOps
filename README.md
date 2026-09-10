@@ -172,4 +172,3 @@ No OCR; no scanned-document interpretation; no image extraction; no complex tabl
 ## What I Would Add for a Client
 
 Client-specific source samples and acceptance tests, a reviewed retention policy, SSO and explicit invitation flows, usage budgets and provider billing reconciliation, asynchronous draft generation for larger contexts, OCR/table handling when required, and evaluation by independent human reviewers.
-

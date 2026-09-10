@@ -11,6 +11,7 @@ function main() {
   if (config.LLM_PROVIDER === "openai") required.push("OPENAI_API_KEY");
   const missing = required.filter(key => !config[key]);
   if (missing.length) throw new Error(`Fill ${missing.join(", ")} in ${file}. No deployment changes made.`);
+  if (config.AUTH_SECRET!.length < 48) throw new Error("AUTH_SECRET must be a random value of at least 48 characters.");
   const database = new URL(config.DATABASE_URL!);
   if (["localhost", "127.0.0.1", "::1"].includes(database.hostname) || database.port === "6543" || database.hostname.includes("-pooler.")) throw new Error("Production needs a hosted direct PostgreSQL connection.");
   if (config.AUTH_DRIVER !== "database" || config.STORAGE_DRIVER !== "blob" || config.JOB_DRIVER !== "inngest") throw new Error("Production drivers must be database/blob/inngest.");
@@ -25,7 +26,7 @@ function main() {
   for (const [key, value] of Object.entries(config)) {
     if (!value) continue;
     for (const environment of ["production", "preview", "development"]) {
-      const result = spawnSync("vercel", ["env", "add", key, environment, "--force"], { input: value, encoding: "utf8" });
+      const result = spawnSync("vercel", ["env", "add", key, environment, ...(environment === "preview" ? [""] : []), "--force", "--yes"], { input: value, encoding: "utf8" });
       if (result.status !== 0) throw new Error(`Could not configure ${key} for ${environment}.`);
     }
     console.log(`Configured ${key}`);

@@ -48,6 +48,7 @@ type VersionInfo = {
   contentHash: string;
   modelRecord: ReportRecord | null;
   modelRecordVersionId: string | null;
+  modelConfigHash: string | null;
   fields: (typeof schema.fieldValues.$inferSelect)[];
   evidence: Map<string, (typeof schema.fieldEvidence.$inferSelect)[]>;
   reviewItems: (typeof schema.reviewItems.$inferSelect)[];
@@ -91,6 +92,7 @@ async function loadCorpus(workspaceId: string): Promise<Map<string, VersionInfo>
       contentHash: v.contentHash,
       modelRecord: modelRecord ? (reportRecordSchema.parse(modelRecord.payloadJson) as ReportRecord) : null,
       modelRecordVersionId: modelRecord?.id ?? null,
+      modelConfigHash: modelRecord?.modelConfigHash ?? null,
       fields,
       evidence,
       reviewItems,
@@ -113,6 +115,9 @@ export async function runEvaluation(opts: EvalOptions): Promise<EvalOutcome> {
   const cases = await db.select().from(schema.evalCases).where(eq(schema.evalCases.active, true));
   if (cases.length === 0) throw new EvalFixtureError("no eval cases are seeded; run `pnpm db:seed`");
   const corpus = await loadCorpus(opts.workspaceId);
+  for (const version of corpus.values()) {
+    if (version.modelRecord && version.modelConfigHash !== configHash) throw new EvalFixtureError("Corpus model configuration differs from the evaluator. Reprocess the corpus with the selected provider before evaluating.");
+  }
   const corpusVersion = sha256(`${corpusFingerprint()}|${[...corpus.values()].map((v) => v.contentHash).sort().join("|")}`).slice(0, 16);
 
   const checkpoint = opts.checkpoint ?? (async <T>(_name: string, fn: () => Promise<T>) => fn());
