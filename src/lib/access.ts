@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { env } from "@/lib/env";
+import { env, jobsConfigured } from "@/lib/env";
 import type { SessionContext, WorkspaceRole } from "@/lib/workspace";
 
 export function mutationAllowed(context: SessionContext, roles: WorkspaceRole[] = ["admin", "reviewer"]): boolean {
@@ -10,6 +10,7 @@ export function mutationAllowed(context: SessionContext, roles: WorkspaceRole[] 
 /** Shared database counter, so limits hold across serverless instances. */
 export async function assertMutation(context: SessionContext, action: string, roles: WorkspaceRole[] = ["admin", "reviewer"], limit = 20) {
   if (!mutationAllowed(context, roles)) throw new Error("This workspace is read-only. Sign in with an authorized account to make changes.");
+  if (["upload", "upload-sign", "reprocess", "run", "eval"].includes(action) && !jobsConfigured()) throw new Error("Background processing is not configured yet. Connect Inngest to enable this action.");
   const key = `${context.workspace.workspaceId}:${context.user.id}:${action}`;
   const rows = await getDb().execute<{ hits: number }>(sql`
     insert into mutation_limits (key, window_start, hits) values (${key}, date_trunc('minute', now()), 1)

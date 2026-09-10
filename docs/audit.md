@@ -4,7 +4,7 @@
 
 The workbench is implemented, seeded and verified locally using the deterministic mock provider. The optimized production server runs at `http://localhost:3010`. The prior agent's implementation was repaired and extended rather than discarded. Earlier local databases were preserved; the final demonstration uses `evidenceops_verified`.
 
-Vercel project/GitHub linkage and known production/preview configuration are complete. **Hosted deployment is incomplete:** Supabase rejected project creation due to the free-project limit, and the required OpenAI/Inngest credentials are absent. No unrelated Supabase project was changed. Hosted Auth/Storage, Inngest delivery and real-model quality are not claimed as verified.
+The demo is deployed at https://evidenceops.vercel.app using dedicated Neon PostgreSQL, database-backed signed sessions, and private Vercel Blob. All three Vercel environments have the database, authentication, storage and demo configuration. Hosted desktop/mobile browsing, admin sign-in, private client-token uploads and source downloads pass. **Live processing remains incomplete:** Inngest terms acceptance and OpenAI credentials are still required. Background mutations are guarded until Inngest is configured; the demo explicitly identifies its mock provider.
 
 ## Findings and fixes
 
@@ -19,7 +19,7 @@ Vercel project/GitHub linkage and known production/preview configuration are com
 | Successful work could repeat after failure/reprocessing | Stable parse/chunk keys, step advisory locks, persisted extraction/verification batches, record insertion guard | Retry/resumability and idempotency tests |
 | Needs-source mutated historical data or could not be resolved later | Preserved original fields, kept item unresolved and supported later resolution | Integration test asserts snapshot equality and subsequent rejection |
 | Concurrent/stale reviewer changes could overwrite records | Document lock, current-record check, immutable snapshots and superseded pending review state | Reviewer conflict tests and E2E edit-and-accept |
-| Large uploads exceeded Vercel's function request limit | Direct signed Supabase upload followed by scoped descriptor/byte validation | Typecheck/local upload flow; hosted direct upload pending |
+| Large uploads exceeded Vercel's function request limit | Scoped private Blob client-token upload followed by ownership and byte validation | Real client-token upload/private read passed; anonymous Blob access returns 403 |
 | Evaluations ran in a long web request | Durable Inngest case checkpoints, replayable metric contributions and failure reporting | Replay integration test: identical metrics, no new calls or duplicate results |
 | Failed results could become the baseline | Gate baseline promotion on all success targets and regression rules; require corpus compatibility | Evaluation/replay verification |
 | A matching citation ID was treated as proof of claim support | Independent support verification, rejection of uncited answer tails, full preceding claim validation, source-block resolution and evidence snapshots | Citation tests, RAG integration, browser citation links |
@@ -69,6 +69,10 @@ See [evaluation-results.json](evaluation-results.json) for the uncached run `525
 
 The Vercel project is connected to `essashahid/EvidenceOps`, configured for Node 22 and pnpm, with known production/preview variables and generated strong demo passwords. The private `.data/production.env` file contains these passwords and placeholders for missing credentials; it is ignored by git and mode 600.
 
-To finish hosted delivery: provide an available/dedicated Supabase project, its connection credentials if already created, an OpenAI API key, and Inngest event/signing keys. `pnpm deploy:production` performs validation, migrations, full production seeding/evaluation, environment synchronization and deployment. The deployed Inngest endpoint must then be synced and hosted workflows verified. See [deployment.md](deployment.md).
+To enable live processing, accept Inngest Marketplace terms and provide an OpenAI API key privately. Sync Inngest and verify live uploads/evaluations after activation. See [deployment.md](deployment.md).
 
 No OCR, scanned-document interpretation, image extraction, complex table reconstruction, legal/compliance function or tariff/HTS logic is implemented. The synthetic mock intentionally reads truth/golden fixtures. Page-boundary fragments can appear in extractive mock answers. Real model and operational limits must be measured after credentials are supplied.
+
+## Neon/Vercel verification update
+
+49 unit tests, 20 integration tests, lint, typecheck and production build pass. Hosted browser checks cover eight routes at both 1440px and 390px: HTTP 200, no page errors, no horizontal overflow, and successful admin sign-in. A short-lived Blob token successfully uploads a private test object; anonymous access is denied (403), authenticated bytes match, and the test object is removed. A source downloaded through the application matches its stored SHA-256 and has private/no-store and nosniff headers. These checks do not substitute for live OpenAI or Inngest verification.

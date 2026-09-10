@@ -1,3 +1,4 @@
+import { jobsConfigured } from "@/lib/env";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isAdmin, requireWorkspace } from "@/lib/workspace";
@@ -36,7 +37,7 @@ export default async function RunPage({ params, searchParams }: { params: Promis
   const p95 = percentile(latencies, 95);
   const active = run.status === "queued" || run.status === "running";
   const duration = run.startedAt ? (run.completedAt ?? new Date()).getTime() - run.startedAt.getTime() : null;
-  const admin = isAdmin(workspace.role);
+  const admin = isAdmin(workspace.role) && jobsConfigured();
 
   const docLabel = (versionId: string | null) => {
     if (!versionId) return <span className="text-[var(--muted)]">run</span>;

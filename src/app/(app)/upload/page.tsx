@@ -1,4 +1,4 @@
-import { env } from "@/lib/env";
+import { env, jobsConfigured } from "@/lib/env";
 import { mutationAllowed } from "@/lib/access";
 import { requireWorkspace } from "@/lib/workspace";
 import { PageHeader } from "@/components/PageHeader";
@@ -9,7 +9,7 @@ export default async function UploadPage() {
   return (
     <>
       <PageHeader title="Upload documents" subtitle="Files are hashed, versioned by logical key, stored, then processed through parse, chunk, extract, validate, verify, score and route, embed." />
-      <UploadForm canUpload={mutationAllowed(context)} directUpload={env().STORAGE_DRIVER === "supabase"} />
+      <UploadForm canUpload={mutationAllowed(context) && jobsConfigured()} directUpload={env().STORAGE_DRIVER !== "local"} />
     </>
   );
 }

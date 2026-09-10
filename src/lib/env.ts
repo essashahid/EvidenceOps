@@ -9,7 +9,7 @@ const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   NEXT_PUBLIC_APP_NAME: z.string().default("EvidenceOps"),
 
-  // Database (Supabase PostgreSQL in production; any Postgres with pgvector locally)
+  // PostgreSQL with pgvector; use a direct Neon connection for session locks.
   DATABASE_URL: z.string().default("postgres://localhost:5432/evidenceops"),
   TEST_DATABASE_URL: z.string().default("postgres://localhost:5432/evidenceops_test"),
   EVIDENCEOPS_DB: z.enum(["default", "test"]).default("default"),
@@ -74,10 +74,11 @@ const schema = z.object({
   // Failure injection: "<step>" or "<step>:<attempts>" (applies to every new run; tests use run config instead)
   FAILURE_INJECTION_STEP: z.string().optional(),
 
-  // Local development drivers (Supabase Auth/Storage are the production drivers)
-  STORAGE_DRIVER: z.enum(["local", "supabase"]).default("local"),
+  // Database-backed sessions and private Blob storage are supported in production.
+  BLOB_READ_WRITE_TOKEN: z.string().optional(),
+  STORAGE_DRIVER: z.enum(["local", "supabase", "blob"]).default("local"),
   LOCAL_STORAGE_DIR: z.string().default(".data/storage"),
-  AUTH_DRIVER: z.enum(["local", "supabase"]).default("local"),
+  AUTH_DRIVER: z.enum(["local", "database", "supabase"]).default("local"),
   AUTH_SECRET: z.string().default("evidenceops-dev-secret-change-me"),
 
   EVIDENCEOPS_DEBUG: boolish,
@@ -101,12 +102,13 @@ export function env(): Env {
     throw new Error("AUTH_DRIVER=supabase requires NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY");
   }
   if (e.STORAGE_DRIVER === "supabase" && (!e.NEXT_PUBLIC_SUPABASE_URL || !e.SUPABASE_SERVICE_ROLE_KEY)) throw new Error("Supabase storage credentials are missing");
-  if (new URL(e.DATABASE_URL).port === "6543") throw new Error("Use the Supabase session pooler on port 5432; transaction pooling is incompatible with pipeline advisory locks.");
+  if (new URL(e.DATABASE_URL).port === "6543" || new URL(e.DATABASE_URL).hostname.includes("-pooler.")) throw new Error("Use a direct database connection; transaction pooling is incompatible with pipeline advisory locks.");
   if (process.env.VERCEL && process.env.NEXT_PHASE !== "phase-production-build") {
-    if (e.AUTH_DRIVER !== "supabase" || e.STORAGE_DRIVER !== "supabase" || e.JOB_DRIVER !== "inngest") throw new Error("Vercel requires Supabase Auth/Storage and Inngest jobs.");
-    if (!e.INNGEST_EVENT_KEY || !e.INNGEST_SIGNING_KEY) throw new Error("Inngest production keys are missing.");
+    if (e.AUTH_DRIVER === "local" || e.STORAGE_DRIVER === "local" || e.JOB_DRIVER !== "inngest") throw new Error("Vercel requires production authentication, persistent storage and Inngest jobs.");
+    if (e.AUTH_DRIVER === "database" && e.AUTH_SECRET.length < 48) throw new Error("Database authentication requires a random AUTH_SECRET of at least 48 characters.");
     if (e.LLM_PROVIDER === "openai" && !e.OPENAI_API_KEY) throw new Error("OpenAI production key is missing.");
   }
+  if (e.STORAGE_DRIVER === "blob" && !e.BLOB_READ_WRITE_TOKEN) throw new Error("Private Blob storage requires BLOB_READ_WRITE_TOKEN.");
   if (Math.abs(e.VECTOR_WEIGHT + e.LEXICAL_WEIGHT - 1) > 1e-6) throw new Error("VECTOR_WEIGHT + LEXICAL_WEIGHT must equal 1");
   cached = e;
   return e;
@@ -135,4 +137,10 @@ export function failureInjectionFromEnv(): { step: string; attempts: number } | 
 
 export function resetEnvCache() {
   cached = null;
+}
+
+/** Reads remain available while the background service is being connected. */
+export function jobsConfigured(): boolean {
+  const e = env();
+  return e.JOB_DRIVER === "inline" || Boolean(e.INNGEST_EVENT_KEY && e.INNGEST_SIGNING_KEY);
 }

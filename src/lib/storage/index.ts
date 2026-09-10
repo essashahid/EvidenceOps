@@ -4,7 +4,7 @@ import path from "node:path";
 import { env } from "@/lib/env";
 
 export interface ObjectStorage {
-  readonly driver: "local" | "supabase";
+  readonly driver: "local" | "supabase" | "blob";
   put(objectPath: string, bytes: Buffer, contentType: string): Promise<void>;
   get(objectPath: string): Promise<Buffer>;
   exists(objectPath: string): Promise<boolean>;
@@ -73,12 +73,35 @@ export function createSupabaseStorage(url: string, serviceKey: string, bucket: s
   };
 }
 
+export function createBlobStorage(token: string): ObjectStorage {
+  return {
+    driver: "blob",
+    async put(objectPath, bytes, contentType) {
+      const { put } = await import("@vercel/blob");
+      await put(objectPath, bytes, { access: "private", token, contentType, addRandomSuffix: false, allowOverwrite: true });
+    },
+    async get(objectPath) {
+      const { get } = await import("@vercel/blob");
+      const result = await get(objectPath, { access: "private", token, useCache: false });
+      if (!result || result.statusCode !== 200) throw new Error("Stored file not found.");
+      return Buffer.from(await new Response(result.stream).arrayBuffer());
+    },
+    async exists(objectPath) {
+      const { head, BlobNotFoundError } = await import("@vercel/blob");
+      try { await head(objectPath, { token }); return true; }
+      catch (error) { if (error instanceof BlobNotFoundError) return false; throw error; }
+    },
+  };
+}
+
 let cached: ObjectStorage | null = null;
 
 export function getStorage(): ObjectStorage {
   if (cached) return cached;
   const e = env();
-  if (e.STORAGE_DRIVER === "supabase") {
+  if (e.STORAGE_DRIVER === "blob") {
+    cached = createBlobStorage(e.BLOB_READ_WRITE_TOKEN!);
+  } else if (e.STORAGE_DRIVER === "supabase") {
     if (!e.NEXT_PUBLIC_SUPABASE_URL || !e.SUPABASE_SERVICE_ROLE_KEY) throw new Error("supabase storage requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY");
     cached = createSupabaseStorage(e.NEXT_PUBLIC_SUPABASE_URL, e.SUPABASE_SERVICE_ROLE_KEY, e.SUPABASE_STORAGE_BUCKET);
   } else {

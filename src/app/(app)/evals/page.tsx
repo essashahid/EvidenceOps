@@ -1,3 +1,4 @@
+import { jobsConfigured } from "@/lib/env";
 import Link from "next/link";
 import { isAdmin, requireWorkspace } from "@/lib/workspace";
 import { listEvalRuns, metricsOf } from "@/lib/queries/evals";
@@ -19,7 +20,7 @@ export default async function EvalsPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const { workspace } = await requireWorkspace();
   const [runs, corpusRun] = await Promise.all([listEvalRuns(workspace.workspaceId), latestCorpusRun(workspace.workspaceId)]);
-  const admin = isAdmin(workspace.role);
+  const admin = isAdmin(workspace.role) && jobsConfigured();
   const error = one(sp.error);
 
   return (

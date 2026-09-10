@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <div className="rounded border border-[var(--line)] bg-[var(--card)] p-5">
         <div className="mb-4">
           <div className="text-base font-semibold text-[var(--accent)]">EvidenceOps</div>
-          <div className="text-sm text-[var(--muted)]">Sign in to your workspace</div>
+          <h1 className="text-sm text-[var(--muted)]">Sign in to your workspace</h1>
         </div>
         <LoginForm next={next} initialError={params.error ? (ERRORS[params.error] ?? "Sign-in required") : null} />
         {showHints ? (

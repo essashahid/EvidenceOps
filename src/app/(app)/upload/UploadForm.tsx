@@ -17,12 +17,17 @@ export function UploadForm({ canUpload, directUpload }: { canUpload: boolean; di
       const files = data.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
       if (files.length > 20) throw new Error("Upload at most 20 files at a time.");
       const descriptors = new FormData();
-      const { createClient } = await import("@supabase/supabase-js");
       for (const file of files) {
         const target = await prepareSourceUpload(file.name, file.size);
+        if (target.driver === "blob") {
+          const { put } = await import("@vercel/blob/client");
+          await put(target.path, file, { access: "private", token: target.token, contentType: file.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+        } else {
+        const { createClient } = await import("@supabase/supabase-js");
         const sb = createClient(target.url, target.anonKey, { auth: { persistSession: false } });
         const { error } = await sb.storage.from(target.bucket).uploadToSignedUrl(target.path, target.token, file);
         if (error) throw new Error(`Upload failed for ${file.name}. Please retry.`);
+        }
         descriptors.append("uploaded", JSON.stringify({ filename: file.name, size: file.size, path: target.path }));
       }
       return uploadAction(previous, descriptors);

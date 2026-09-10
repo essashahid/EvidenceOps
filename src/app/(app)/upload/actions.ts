@@ -22,12 +22,18 @@ export async function prepareSourceUpload(filename: string, size: number) {
   await assertMutation(context, "upload-sign");
   if (!/\.(pdf|docx)$/i.test(filename) || filename.length > 240 || size <= 0 || size > UPLOAD_LIMITS.maxBytes) throw new Error("Choose a PDF or DOCX within the upload limit.");
   const e = env();
-  if (e.STORAGE_DRIVER !== "supabase" || !e.NEXT_PUBLIC_SUPABASE_URL || !e.NEXT_PUBLIC_SUPABASE_ANON_KEY || !e.SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase storage is not configured.");
   const path = `pending/${context.workspace.workspaceId}/${context.user.id}/${randomUUID()}/${filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  if (e.STORAGE_DRIVER === "blob") {
+    const { generateClientTokenFromReadWriteToken } = await import("@vercel/blob/client");
+    const token = await generateClientTokenFromReadWriteToken({ token: e.BLOB_READ_WRITE_TOKEN!, pathname: path, maximumSizeInBytes: size, validUntil: Date.now() + 10 * 60 * 1000, addRandomSuffix: false, allowOverwrite: false, allowedContentTypes: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] });
+    return { driver: "blob" as const, path, token };
+  }
+  if (e.STORAGE_DRIVER !== "supabase" || !e.NEXT_PUBLIC_SUPABASE_URL || !e.NEXT_PUBLIC_SUPABASE_ANON_KEY || !e.SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase storage is not configured.");
+
   const sb = createClient(e.NEXT_PUBLIC_SUPABASE_URL, e.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
   const { data, error } = await sb.storage.from(e.SUPABASE_STORAGE_BUCKET).createSignedUploadUrl(path);
   if (error || !data) throw new Error("Could not prepare the upload. Please retry.");
-  return { path, token: data.token, bucket: e.SUPABASE_STORAGE_BUCKET, url: e.NEXT_PUBLIC_SUPABASE_URL, anonKey: e.NEXT_PUBLIC_SUPABASE_ANON_KEY };
+  return { driver: "supabase" as const, path, token: data.token, bucket: e.SUPABASE_STORAGE_BUCKET, url: e.NEXT_PUBLIC_SUPABASE_URL, anonKey: e.NEXT_PUBLIC_SUPABASE_ANON_KEY };
 }
 
 export type UploadRow = {
@@ -69,7 +75,7 @@ export async function uploadAction(_prev: UploadState, formData: FormData): Prom
   if (files.length + uploaded.length > 20) return { rows: [], runId: null, runOutcome: null, error: "Upload at most 20 files at a time." };
   if (uploaded.length) {
     try {
-      if (env().STORAGE_DRIVER !== "supabase") throw new Error("Direct uploads require Supabase.");
+      if (env().STORAGE_DRIVER === "local") throw new Error("Direct uploads require persistent object storage.");
       for (const raw of uploaded) {
         const item = descriptor.parse(JSON.parse(String(raw)));
         if (!item.path.startsWith(`pending/${workspace.workspaceId}/${user.id}/`) || item.path.includes("..")) throw new Error("Invalid upload path.");
@@ -77,8 +83,13 @@ export async function uploadAction(_prev: UploadState, formData: FormData): Prom
         if (bytes.length !== item.size) throw new Error("Upload size did not match. Please retry.");
         files.push(new File([new Uint8Array(bytes)], item.filename));
         const e = env();
+        if (e.STORAGE_DRIVER === "blob") {
+          const { del } = await import("@vercel/blob");
+          await del(item.path, { token: e.BLOB_READ_WRITE_TOKEN });
+        } else {
         const sb = createClient(e.NEXT_PUBLIC_SUPABASE_URL!, e.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
         await sb.storage.from(e.SUPABASE_STORAGE_BUCKET).remove([item.path]);
+        }
       }
     } catch {
       return { rows: [], runId: null, runOutcome: null, error: "Could not validate uploaded files. Please select the files and retry." };

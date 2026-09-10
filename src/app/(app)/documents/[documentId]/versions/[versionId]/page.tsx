@@ -1,3 +1,4 @@
+import { jobsConfigured } from "@/lib/env";
 import Link from "next/link";
 import { mutationAllowed } from "@/lib/access";
 import { FormButton } from "@/components/FormButton";
@@ -68,7 +69,7 @@ export default async function VersionPage({ params }: { params: Promise<{ docume
         }
         actions={
           <nav className="flex flex-wrap gap-1 text-sm">
-            {mutationAllowed(context, ["admin"]) ? <form action={reprocessVersionAction}><input type="hidden" name="versionId" value={version.id}/><FormButton variant="secondary" pendingText="Starting…">Reprocess</FormButton></form> : null}
+            {mutationAllowed(context, ["admin"]) && jobsConfigured() ? <form action={reprocessVersionAction}><input type="hidden" name="versionId" value={version.id}/><FormButton variant="secondary" pendingText="Starting…">Reprocess</FormButton></form> : null}
             <a href={`/documents/${document.id}/versions/${version.id}/download`} className="rounded border border-[var(--line)] px-2 py-0.5 text-[var(--accent)]">Download source</a>
             {TABS.map((t) => (
               <a key={t.id} href={`#${t.id}`} className="rounded border border-[var(--line)] bg-[var(--card)] px-2 py-0.5 hover:bg-[var(--bg)]">

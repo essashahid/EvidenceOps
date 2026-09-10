@@ -1,60 +1,50 @@
 # Deployment runbook
 
-## Current status — 2026-09-10
+## Hosted architecture
 
-- Vercel project: `evidenceops`, team `essa-arshads-projects`.
-- Git repository connected: `essashahid/EvidenceOps`.
-- Framework: Next.js; Node 22; install `pnpm install --frozen-lockfile`; build `pnpm build`.
-- Production and preview environments contain the configured drivers, model names, embedding dimensions, demo flags, storage bucket and generated strong demo passwords.
-- Supabase CLI is authenticated. Creating a dedicated EvidenceOps project was rejected because the account has reached its free-project limit. No unrelated project was paused, deleted, reused or changed.
-- Hosted database/Auth/Storage provisioning is incomplete. OpenAI and Inngest credentials are missing. There is no working hosted deployment URL yet.
-- Local production build and synthetic demo work. This does not verify the hosted providers.
+EvidenceOps uses a dedicated Neon PostgreSQL 17 project (`purple-mud-53117871`, US East), database-backed signed sessions, and private Vercel Blob storage (`evidenceops-sources`, iad1). The Vercel project is `essa-arshads-projects/evidenceops`, linked to `essashahid/EvidenceOps`. Supabase is optional legacy support and is not required by this deployment.
 
-## What is needed
+Use a **direct Neon connection**, not a `-pooler` hostname: processing steps use session advisory locks. Migrations skip Supabase-specific policies when the Supabase auth schema is absent. Database credentials are server-only; application queries enforce workspace membership. No database API is exposed to browsers.
 
-Make a Supabase project slot available, or identify a dedicated project authorized for EvidenceOps. For a new project the connected CLI can provision it and retrieve its URL/API keys. An existing project also needs its database connection credentials. Do not reuse an application database containing unrelated tables: these migrations establish application-wide RLS and permissions.
+## Environment
 
-Add the OpenAI key and Inngest event/signing keys to the private `.data/production.env` file. The file is mode 600 and git-ignored; it already contains the generated demo passwords. Do not paste keys into issue comments or commit them.
+Production, preview and development configuration lives in Vercel. A private, ignored `.data/production.env` holds provisioning credentials locally. Never commit it or copy secrets into chat.
 
-## Required environment
-
-| Variable | Purpose |
+| Variable | Value or purpose |
 | --- | --- |
-| `DATABASE_URL` | Supabase direct Postgres connection or **session pooler, port 5432**, including password |
-| `NEXT_PUBLIC_SUPABASE_URL` | Project API URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser-safe anon/publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only Auth administration and private Storage |
-| `OPENAI_API_KEY` | Server-only structured generation and embeddings |
-| `INNGEST_EVENT_KEY` | Dispatch document/evaluation events |
-| `INNGEST_SIGNING_KEY` | Authenticate Inngest delivery |
-| `AUTH_DRIVER` / `STORAGE_DRIVER` | Both `supabase` |
-| `JOB_DRIVER` | `inngest` |
-| `LLM_PROVIDER` | `openai` for measured live results; `mock` is an explicit synthetic test mode |
-| `PUBLIC_DEMO_MODE` | `true` allows anonymous browsing of the default workspace |
-| `DEMO_MUTATIONS_ENABLED` | `false` makes reviewer/viewer demo sessions read-only; authenticated admins may manage it |
-| `SUPABASE_STORAGE_BUCKET` | `sources`, private |
-| `DEMO_ADMIN_PASSWORD`, `DEMO_REVIEWER_PASSWORD`, `DEMO_VIEWER_PASSWORD` | Unique strong seed passwords; at least 16 characters |
+| DATABASE_URL | Direct Neon PostgreSQL URL with TLS |
+| AUTH_DRIVER | database |
+| AUTH_SECRET | Random server-only session signing secret, at least 48 characters |
+| STORAGE_DRIVER | blob |
+| BLOB_READ_WRITE_TOKEN | Private store credential, installed by Vercel store linkage |
+| JOB_DRIVER | inngest |
+| INNGEST_EVENT_KEY / INNGEST_SIGNING_KEY | Required before background mutations are enabled |
+| LLM_PROVIDER | mock for the labeled synthetic demo; openai for live processing |
+| OPENAI_API_KEY | Required for the openai provider |
+| PUBLIC_DEMO_MODE | true for public browsing of synthetic sources only |
+| DEMO_MUTATIONS_ENABLED | false; reviewers/viewers remain read-only |
+| DEMO_ADMIN_PASSWORD / DEMO_REVIEWER_PASSWORD / DEMO_VIEWER_PASSWORD | Generated strong account passwords in the private environment file |
 
-Models: `OPENAI_EXTRACT_MODEL`, `OPENAI_VERIFY_MODEL`, `OPENAI_RAG_MODEL`, `OPENAI_EVAL_MODEL` default to `gpt-5.6-luna`; `OPENAI_EMBED_MODEL=text-embedding-3-small`; `OPENAI_EMBED_DIMENSIONS=768`. Pricing is configurable in `src/lib/config.ts`. The current Luna model supports structured output; see [official model documentation](https://developers.openai.com/api/docs/models/gpt-5.6-luna). Recheck pricing before changing providers/models.
+Model settings use gpt-5.6-luna and text-embedding-3-small with 768 dimensions. Changing models requires reprocessing and re-evaluation; mock scores are not evidence of live model quality.
 
-Transaction pooling on port 6543 is rejected because pipeline advisory locks need session affinity. Use Supabase's IPv4-compatible session pooler if the workstation cannot reach its direct IPv6 host. Never expose the service-role key in `NEXT_PUBLIC_*` variables.
+## Provider activation
 
-## Finish deployment
+1. Accept the Inngest free-plan terms in the Vercel Marketplace, then install `inngest/account` into this project. The CLI requires interactive terms acceptance by the account owner.
+2. Pull the resulting environment into a private temporary file and merge event/signing keys into `.data/production.env`. Do not overwrite local development configuration.
+3. Add OPENAI_API_KEY privately, set LLM_PROVIDER=openai when ready to run the live evaluation, and sync all target environments.
+4. Sync the deployed `/api/inngest` endpoint. Expect process-document, retry-document, and evaluate-corpus. Exercise upload, retry, and evaluation through the actual service.
+5. Run `pnpm deploy:production` for a fully provisioned live deployment. It validates credentials, migrates, seeds/evaluates, syncs environments and deploys. It never resets production data.
 
-1. Provision/link the dedicated Supabase project and fill the seven missing connection/service values in `.data/production.env`.
-2. Run `pnpm deploy:production`. It validates all inputs before changes, applies migrations, creates Supabase Auth users and workspace memberships, ingests and evaluates the demo using hosted Storage/DB and local inline orchestration, synchronizes environment variables, and deploys to Vercel. It stops if seeding/evaluation fails. It never resets the production database.
-3. Configure the Supabase Auth site URL and allowed redirects for the deployment domain. Password-based login does not use an OAuth callback, but these settings should match the application.
-4. Sync `https://<deployment-domain>/api/inngest` in Inngest Cloud. Expect `process-document`, `retry-document`, and `evaluate-corpus`. Each evaluation case uses a durable `step.run` checkpoint; see [Inngest's step documentation](https://www.inngest.com/docs/reference/typescript/v4/functions/step-run).
-5. Test hosted anonymous browsing, admin/reviewer login, a direct signed upload, extraction/verification, a duplicate, a corrected source, human correction, a cited answer, refusal, a failed step retry, a background evaluation and report download. Inspect Inngest and Vercel logs and the database rows. Confirm no service keys are in client bundles.
+The read-only demo can deploy while Inngest credentials are absent. Job mutations are explicitly rejected before creating uploads or runs; signed-in users see a setup notice. This is not a fully enabled live processing deployment.
 
-Sources and reports use private Supabase Storage. The browser sends large source bytes directly to a signed upload URL; the server validates the resulting object before registering it. Vercel's 4.5 MB request limit cannot be raised by the Next server-action body-size setting, so production must use this direct flow. Hosted signed upload behavior is not yet verified.
+## Storage and authentication
 
-The Vercel function handling Inngest has `maxDuration=300`. Model requests have explicit timeouts, and pipeline retries are owned by the workflow rather than multiplied by SDK retries. Verification batches persist progress in the database. Larger live workloads may need smaller batches or separate draft jobs after measurement.
+Upload authorization issues short-lived Blob client tokens restricted to one random workspace/user path, a maximum size, allowed file types, and no overwrite. Browsers send source bytes directly to Blob, avoiding Vercel's request-body limit. The server checks ownership and actual size before ingestion. Stored sources and QA reports remain private and are served through workspace-scoped application routes.
 
-## Local checks and limits
+Database passwords use scrypt. Session cookies are signed, HTTP-only, secure in production, and SameSite=Lax. Login attempts are limited by a shared database counter. Production credentials are never shown on the login page.
 
-`pnpm verify:rls` creates a temporary local PostgreSQL database with minimal Supabase-compatible `auth` and `storage` schemas, applies the real migrations, checks isolation/denied writes/credential protection, then removes the database and any roles it created. This validates SQL policies; it does not substitute for hosted Supabase Auth, Storage or PostgREST testing.
+## Verification
 
-Preview currently has the same known configuration as production. Use separate Supabase/Inngest resources before introducing destructive preview fixtures or real private documents. The public default workspace must contain only material intended for public viewing.
+Run lint, typecheck, unit tests, integration tests, production build, then browser checks against the hosted URL. Verify desktop/mobile routes, anonymous mutation restrictions, authenticated login, private source/report downloads, and no browser errors. Full provider verification additionally requires actual Inngest processing and live OpenAI evaluations.
 
-GitHub linkage is configured, but the unfinished deployment has not been represented as live. Production secrets, migrations and provider validation must be finished before publishing a working deployment.
+Preview/development currently share the synthetic production database and store. Provision isolated resources before testing destructive changes or adding private documents. Public demo mode must only be used with material intended for public viewing.

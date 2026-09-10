@@ -7,12 +7,13 @@ function main() {
   const file = process.env.PRODUCTION_ENV_FILE ?? ".data/production.env";
   if (!fs.existsSync(file)) throw new Error(`Create ${file} from .env.example and fill the production credentials.`);
   const config = dotenv.parse(fs.readFileSync(file));
-  const required = ["DATABASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "OPENAI_API_KEY", "INNGEST_EVENT_KEY", "INNGEST_SIGNING_KEY", "DEMO_ADMIN_PASSWORD", "DEMO_REVIEWER_PASSWORD", "DEMO_VIEWER_PASSWORD"];
+  const required = ["DATABASE_URL", "AUTH_SECRET", "BLOB_READ_WRITE_TOKEN", "INNGEST_EVENT_KEY", "INNGEST_SIGNING_KEY", "DEMO_ADMIN_PASSWORD", "DEMO_REVIEWER_PASSWORD", "DEMO_VIEWER_PASSWORD"];
+  if (config.LLM_PROVIDER === "openai") required.push("OPENAI_API_KEY");
   const missing = required.filter(key => !config[key]);
   if (missing.length) throw new Error(`Fill ${missing.join(", ")} in ${file}. No deployment changes made.`);
   const database = new URL(config.DATABASE_URL!);
-  if (["localhost", "127.0.0.1", "::1"].includes(database.hostname) || database.port === "6543") throw new Error("Production needs the hosted Supabase direct connection or session pooler on port 5432.");
-  if (config.AUTH_DRIVER !== "supabase" || config.STORAGE_DRIVER !== "supabase" || config.JOB_DRIVER !== "inngest") throw new Error("Production drivers must be supabase/supabase/inngest.");
+  if (["localhost", "127.0.0.1", "::1"].includes(database.hostname) || database.port === "6543" || database.hostname.includes("-pooler.")) throw new Error("Production needs a hosted direct PostgreSQL connection.");
+  if (config.AUTH_DRIVER !== "database" || config.STORAGE_DRIVER !== "blob" || config.JOB_DRIVER !== "inngest") throw new Error("Production drivers must be database/blob/inngest.");
   for (const key of required.filter(key => key.endsWith("PASSWORD"))) if (config[key]!.length < 16) throw new Error(`${key} must have at least 16 characters.`);
   function run(command: string, args: string[], overrides: Record<string, string> = {}) {
     const result = spawnSync(command, args, { stdio: "inherit", env: { ...process.env, ...config, ...overrides } });
@@ -23,7 +24,7 @@ function main() {
   run("pnpm", ["seed:demo"], { JOB_DRIVER: "inline" });
   for (const [key, value] of Object.entries(config)) {
     if (!value) continue;
-    for (const environment of ["production", "preview"]) {
+    for (const environment of ["production", "preview", "development"]) {
       const result = spawnSync("vercel", ["env", "add", key, environment, "--force"], { input: value, encoding: "utf8" });
       if (result.status !== 0) throw new Error(`Could not configure ${key} for ${environment}.`);
     }
