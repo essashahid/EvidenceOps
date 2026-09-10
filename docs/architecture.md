@@ -45,4 +45,4 @@ Model evaluation reads the latest machine-produced record, independently of subs
 
 ## Operational boundaries
 
-Production uses a dedicated Neon project with a direct database connection, signed database sessions, private Vercel Blob storage, and signed Inngest callbacks. The public default workspace is explicitly a synthetic demonstration. Hosted Neon, authentication, storage, browser flows and Inngest delivery are verified. Live OpenAI activation remains pending its API key. See [the deployment runbook](deployment.md).
+Production uses a dedicated Neon project with a direct database connection, signed database sessions, private Vercel Blob storage, signed Inngest callbacks and OpenAI. The public default workspace is explicitly a synthetic demonstration. Hosted Neon, authentication, storage, browser flows, Inngest delivery, live OpenAI document processing and cited answering are verified. The published 146-case benchmark remains the deterministic mock baseline. See [the deployment runbook](deployment.md).

@@ -4,7 +4,7 @@
 
 A document intelligence and RAG quality workbench built with Next.js 16, React, TypeScript, PostgreSQL/pgvector and Drizzle. Neon stores production data and password hashes; signed sessions provide authentication and Vercel Blob provides private storage; Inngest runs durable document and evaluation jobs; OpenAI provides structured extraction, independent verification, answers and judging.
 
-**Status:** the synthetic demo is live at https://evidenceops.vercel.app with Neon, private Blob storage, verified sign-in and verified Inngest background processing. An OpenAI key is still required to replace the explicitly labeled mock provider and measure live-model quality. See [deployment status](docs/deployment.md) and the [implementation audit](docs/audit.md).
+**Status:** the synthetic demo is live at https://evidenceops.vercel.app with Neon, private Blob storage, verified sign-in, Inngest background processing and OpenAI. All 16 current documents were reprocessed with the live provider, and a cited-answer smoke test passed. The committed 146-case benchmark remains the deterministic mock baseline. See [deployment status](docs/deployment.md) and the [implementation audit](docs/audit.md).
 
 ## The Problem
 
@@ -157,9 +157,9 @@ Additional browser audit: eight desktop routes and seven mobile routes returned 
 
 ## Deployment
 
-Vercel project `evidenceops` is linked to `essashahid/EvidenceOps`; Node 22 and pnpm build/install commands are configured. The demo is live at https://evidenceops.vercel.app. Database, storage, authentication and demo settings are synchronized across production, preview and development. The Production Inngest app is synced with six functions, and a hosted document job completed successfully against Neon. OpenAI activation remains pending.
+Vercel project `evidenceops` is linked to `essashahid/EvidenceOps`; Node 22 and pnpm build/install commands are configured. The demo is live at https://evidenceops.vercel.app. Database, storage, authentication and demo settings are synchronized across production, preview and development. Production uses OpenAI with a synced six-function Inngest app. All 16 current documents completed live reprocessing with zero failures, and a cited answer persisted with two validated citations.
 
-The private `.data/production.env` file contains generated passwords and the current deployment credentials; the OpenAI key remains empty. `pnpm deploy:production` validates configuration, migrates, seeds and evaluates through production Auth/Storage, synchronizes Vercel variables and deploys. [Detailed runbook](docs/deployment.md).
+The private `.data/production.env` file contains generated passwords and the current deployment credentials, including OpenAI. `pnpm deploy:production` validates configuration, migrates, seeds and evaluates through production Auth/Storage, synchronizes Vercel variables and deploys. [Detailed runbook](docs/deployment.md).
 
 ## Security & Privacy
 
@@ -167,7 +167,7 @@ Server actions enforce workspace membership and role; public access is read-only
 
 ## Limitations
 
-No OCR; no scanned-document interpretation; no image extraction; no complex table reconstruction; synthetic corpus; no legal/compliance function; no tariff/HTS logic. The deterministic provider uses fixture truth and golden questions, so live-model quality remains unmeasured. Hosted Neon authentication, Blob storage, Vercel pages and Inngest delivery are verified; live OpenAI quality remains unverified until activation. Source PDFs can contain page-split sentences, so extractive mock answers may include fragments. Model verification reduces unsupported answers but cannot guarantee correctness. Full-text quality is tuned for English. Five individual evaluation cases remain unsuccessful despite passing aggregate targets.
+No OCR; no scanned-document interpretation; no image extraction; no complex table reconstruction; synthetic corpus; no legal/compliance function; no tariff/HTS logic. Hosted Neon authentication, Blob storage, Vercel pages, Inngest delivery and live OpenAI processing are verified. The full 146-case live-provider benchmark has not been run, so the published quality metrics remain the deterministic mock baseline. Source PDFs can contain page-split sentences, so extractive answers may include fragments. Model verification reduces unsupported answers but cannot guarantee correctness. Full-text quality is tuned for English. Five individual mock evaluation cases remain unsuccessful despite passing aggregate targets.
 
 ## What I Would Add for a Client
 

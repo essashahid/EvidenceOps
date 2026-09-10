@@ -29,11 +29,13 @@ Model settings use gpt-5.6-luna and text-embedding-3-small with 768 dimensions. 
 
 ## Provider activation
 
-Inngest Marketplace activation is complete. The Production event/signing keys are installed, `/api/inngest` is synced, six functions are registered (including failure handlers), and a real document-processing event completed through the hosted callback and Neon.
+Inngest Marketplace activation is complete. The Production event/signing keys are installed, `/api/inngest` is synced, six functions are registered (including failure handlers), and real document-processing events complete through the hosted callback and Neon.
 
-To activate OpenAI, add `OPENAI_API_KEY` privately, set `LLM_PROVIDER=openai`, and run `pnpm deploy:production`. The command validates credentials, migrates, seeds/evaluates, synchronizes Vercel variables and deploys. It never resets production data. Re-run live processing and evaluation after changing providers.
+OpenAI is active in Production with `gpt-5.6-luna` and 768-dimension `text-embedding-3-small` embeddings. All current documents were reprocessed after activation so retrieval does not mix incompatible mock and OpenAI vector spaces. The full-corpus migration completed 16/16 documents with zero failures; a cited-answer smoke test also passed. Preview and Development remain on the mock provider to avoid accidental spend.
 
-The public synthetic demo remains read-only. Signed-in authorized workflows can use the configured Inngest background processor. Live model calls remain disabled while `LLM_PROVIDER=mock`.
+`pnpm deploy:production` validates credentials, migrates, seeds/evaluates, synchronizes Vercel variables and deploys. It never resets production data. Run a full live evaluation explicitly when updated OpenAI benchmark metrics are required.
+
+The public synthetic demo remains read-only. Signed-in authorized workflows use the configured Inngest background processor and OpenAI provider in Production.
 
 ## Storage and authentication
 

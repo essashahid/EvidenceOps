@@ -1,8 +1,23 @@
 {
   "deployedUrl": "https://evidenceops.vercel.app",
   "qaReportUrl": "https://evidenceops.vercel.app/reports/44e7b61d-3e9c-4cb2-8d03-ed39fa9a9305",
-  "provider": "mock",
-  "liveOpenAiVerified": false,
+  "provider": "openai",
+  "liveOpenAiVerified": true,
+  "openAiVerification": {
+    "verifiedAt": "2026-09-10T17:48:48.866Z",
+    "model": "gpt-5.6-luna",
+    "embeddingModel": "text-embedding-3-small",
+    "embeddingDimensions": 768,
+    "processingRunId": "dcea7cd5-3212-42ca-a723-4c61281e8d6b",
+    "status": "completed_with_review",
+    "documentsCompleted": 16,
+    "documentsFailed": 0,
+    "processingCostUsd": 0.124435,
+    "answerId": "249ea123-3006-434c-ac77-633fc6f5cae2",
+    "validatedCitations": 2,
+    "invalidCitations": 0,
+    "answerCostUsd": 0.002045
+  },
   "inngestDeliveryVerified": true,
   "inngestVerification": {
     "verifiedAt": "2026-09-10T17:20:40.760Z",
