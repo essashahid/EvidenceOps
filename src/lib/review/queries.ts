@@ -22,10 +22,16 @@ export async function listReviewItems(workspaceId: string, filters: ReviewFilter
       item: schema.reviewItems,
       field: schema.fieldValues,
       version: { id: schema.documentVersions.id, versionNumber: schema.documentVersions.versionNumber, sourceFilename: schema.documentVersions.sourceFilename },
-      document: { id: schema.documents.id, displayName: schema.documents.displayName, logicalKey: schema.documents.logicalKey },
+      document: {
+        id: schema.documents.id,
+        // Prefer the extracted report title so the queue names documents the way the rest of the app does.
+        displayName: sql<string>`coalesce(${schema.recordVersions.payloadJson}->>'report_title', ${schema.documents.displayName})`,
+        logicalKey: schema.documents.logicalKey,
+      },
     })
     .from(schema.reviewItems)
     .innerJoin(schema.fieldValues, eq(schema.fieldValues.id, schema.reviewItems.fieldValueId))
+    .innerJoin(schema.recordVersions, eq(schema.recordVersions.id, schema.reviewItems.recordVersionId))
     .innerJoin(schema.documentVersions, eq(schema.documentVersions.id, schema.reviewItems.documentVersionId))
     .innerJoin(schema.documents, eq(schema.documents.id, schema.documentVersions.documentId))
     .where(and(...conds))
@@ -55,6 +61,7 @@ export async function getReviewItemDetail(workspaceId: string, reviewItemId: str
       version: schema.documentVersions,
       document: schema.documents,
       record: schema.recordVersions,
+      documentTitle: sql<string>`coalesce(${schema.recordVersions.payloadJson}->>'report_title', ${schema.documents.displayName})`,
     })
     .from(schema.reviewItems)
     .innerJoin(schema.fieldValues, eq(schema.fieldValues.id, schema.reviewItems.fieldValueId))

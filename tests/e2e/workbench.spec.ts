@@ -38,7 +38,7 @@ test("runs page shows steps, events and cost for the ingest run", async ({ page 
   await login(page);
   await page.goto("/runs");
   // pick a run that processed at least one document (the duplicate-upload run has 0 / 0 / 0)
-  const row = page.locator("tbody tr").filter({ hasText: /\d+ \/ \d+ \/ [1-9]\d*/ }).first();
+  const row = page.locator("tbody tr").filter({ hasText: /\d+\/[1-9]\d*/ }).first();
   await row.locator('a[href^="/runs/"]').first().click();
   await expect(page.getByText(/route_review/).first()).toBeVisible();
   await expect(page.getByText(/step\.succeeded|succeeded/i).first()).toBeVisible();
@@ -57,7 +57,7 @@ test("review queue lists planted uncertain fields and edit & accept creates a ne
   const candidate = JSON.parse(await editor.inputValue());
   await editor.fill(JSON.stringify({ ...candidate, amount: 512000 }));
   await page.locator('[name="comment"]').fill("The reconciliation paragraph revises the amount to USD 512,000.");
-  await page.getByRole("button", { name: "Edit & Accept", exact: true }).click();
+  await page.getByRole("button", { name: /edit & accept/i }).click();
   await expect(page).toHaveURL(/\/review/);
 });
 

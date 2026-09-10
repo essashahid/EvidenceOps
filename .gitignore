@@ -15,3 +15,6 @@ reports/*.html
 .vercel
 
 supabase/.temp/
+
+# Upwork/portfolio export staging (large 2x captures + thumbnails)
+portfolio

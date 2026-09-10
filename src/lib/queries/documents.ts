@@ -43,14 +43,23 @@ export async function listDocuments(workspaceId: string, limit?: number): Promis
     for (const c of counts) openCounts.set(c.documentVersionId, Number(c.n));
   }
 
-  const metadata = versionIds.length ? await db.select({
-    versionId: schema.recordVersions.documentVersionId,
-    publicationDate: sql<string | null>`${schema.recordVersions.payloadJson}->>'publication_date'`,
-    documentType: sql<string | null>`${schema.recordVersions.payloadJson}->>'document_type'`,
-    title: sql<string | null>`${schema.recordVersions.payloadJson}->>'report_title'`,
-    confidence: sql<number>`(select coalesce(avg(confidence),0) from field_values where record_version_id = ${schema.recordVersions.id})`,
-  }).from(schema.recordVersions).where(and(inArray(schema.recordVersions.documentVersionId, versionIds), eq(schema.recordVersions.isCurrent, true))) : [];
-  const meta = new Map(metadata.map(m => [m.versionId, m]));
+  const metadata = versionIds.length
+    ? await db
+        .select({
+          versionId: schema.recordVersions.documentVersionId,
+          publicationDate: sql<string | null>`${schema.recordVersions.payloadJson}->>'publication_date'`,
+          documentType: sql<string | null>`${schema.recordVersions.payloadJson}->>'document_type'`,
+          title: sql<string | null>`${schema.recordVersions.payloadJson}->>'report_title'`,
+          // Averaged over the record's own field values; joined rather than correlated so the
+          // aggregate is computed per record version in one pass.
+          confidence: sql<string | null>`avg(${schema.fieldValues.confidence})`,
+        })
+        .from(schema.recordVersions)
+        .leftJoin(schema.fieldValues, eq(schema.fieldValues.recordVersionId, schema.recordVersions.id))
+        .where(and(inArray(schema.recordVersions.documentVersionId, versionIds), eq(schema.recordVersions.isCurrent, true)))
+        .groupBy(schema.recordVersions.id)
+    : [];
+  const meta = new Map(metadata.map((m) => [m.versionId, m]));
   const versionCounts = await db.select({ id:schema.documentVersions.documentId, n:count() }).from(schema.documentVersions).where(eq(schema.documentVersions.workspaceId,workspaceId)).groupBy(schema.documentVersions.documentId);
   const counts = new Map(versionCounts.map(v => [v.id,Number(v.n)]));
   return rows.map(({ doc, version }) => ({

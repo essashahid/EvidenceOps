@@ -1,22 +1,27 @@
 import { jobsConfigured } from "@/lib/env";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Download, ExternalLink } from "lucide-react";
 import { mutationAllowed } from "@/lib/access";
 import { FormButton } from "@/components/FormButton";
 import { reprocessVersionAction } from "./actions";
-import { notFound } from "next/navigation";
 import { requireWorkspace } from "@/lib/workspace";
 import { getCurrentRecord, getVersion, listRecordHistory, listSourceBlocks, listStepsForVersion, listOpenReviewForVersion, type FieldRow } from "@/lib/queries/documents";
-import { fieldLabel, LIST_FIELDS, SCALAR_FIELDS, parseFieldPath } from "@/lib/schema/report";
-import { PageHeader, SectionHeader } from "@/components/PageHeader";
-import { StatusBadge } from "@/components/StatusBadge";
+import { fieldLabel, LIST_FIELDS, SCALAR_FIELDS, parseFieldPath, type ReportRecord } from "@/lib/schema/report";
+import { PageHeader } from "@/components/PageHeader";
+import { Panel, SectionTitle } from "@/components/ui/panel";
+import { StatusBadge } from "@/components/ui/badge";
 import { ConfidenceBar } from "@/components/ConfidenceBar";
-import { EmptyState } from "@/components/EmptyState";
-import { Table, THead, Th, Tr, Td, Mono, TableEmpty } from "@/components/DataTable";
-import { fmtBytes, fmtDate, fmtDuration, fmtValue, shortId } from "@/components/format";
+import { FieldValue } from "@/components/FieldValue";
+import { EmptyState, EmptyLine } from "@/components/ui/empty";
+import { Button } from "@/components/ui/button";
+import { Table, THead, Th, Tr, Td, Mono } from "@/components/ui/table";
+import { TimeStamp } from "@/components/ui/time";
+import { fmtBytes, fmtDate, fmtDuration, plural, shortId } from "@/components/format";
 
 export const dynamic = "force-dynamic";
 
-const TABS = [
+const SECTIONS = [
   { id: "record", label: "Record" },
   { id: "history", label: "History" },
   { id: "source", label: "Source" },
@@ -39,192 +44,274 @@ export default async function VersionPage({ params }: { params: Promise<{ docume
   ]);
   const runIds = Array.from(new Set(steps.map((s) => s.step.processingRunId)));
   const openByField = new Map(openReview.map((r) => [r.fieldPath, r]));
+  const versionHref = `/documents/${document.id}/versions/${version.id}`;
+  const payload = (current?.record.payloadJson ?? null) as ReportRecord | null;
+  const title = payload?.report_title || document.displayName;
+  const canReprocess = mutationAllowed(context, ["admin"]) && jobsConfigured();
 
   return (
     <>
       <PageHeader
+        breadcrumbs={[
+          { label: "Documents", href: "/documents" },
+          { label: document.logicalKey, href: `/documents/${document.id}` },
+          { label: `v${version.versionNumber}` },
+        ]}
         title={
-          <span>
-            {document.displayName} <span className="text-[var(--muted)]">v{version.versionNumber}</span>
-          </span>
+          <>
+            <span className="min-w-0 break-words">{title}</span>
+            <span className="text-[var(--muted)]">v{version.versionNumber}</span>
+            <StatusBadge status={version.isCurrent ? "current" : "superseded"} />
+          </>
         }
-        subtitle={
-          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <Link href={`/documents/${document.id}`} className="text-[var(--accent)] underline">
-              <Mono>{document.logicalKey}</Mono>
-            </Link>
-            <span>{version.sourceFilename}</span>
+        meta={
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-[var(--muted)]">
+            <span className="max-w-[320px] truncate" title={version.sourceFilename}>
+              {version.sourceFilename}
+            </span>
             <span>{fmtBytes(version.byteSize)}</span>
-            <span>{version.pageCount !== null ? `${version.pageCount} page(s)` : ""}</span>
+            {version.pageCount !== null ? <span>{plural(version.pageCount, "page")}</span> : null}
             <Mono title={version.contentHash}>sha256 {version.contentHash.slice(0, 12)}</Mono>
-            <span>
-              parse <StatusBadge status={version.parseStatus} />
+            <span className="flex items-center gap-1.5">
+              Parse <StatusBadge status={version.parseStatus} size="sm" />
             </span>
-            <span>
-              processing <StatusBadge status={version.processingStatus} />
+            <span className="flex items-center gap-1.5">
+              Processing <StatusBadge status={version.processingStatus} size="sm" />
             </span>
-            {version.isCurrent ? <StatusBadge status="accepted" title="current version" /> : <span className="text-xs">superseded</span>}
-            <span>uploaded {fmtDate(version.createdAt)}</span>
-          </span>
+            <span title={fmtDate(version.createdAt, true)}>Uploaded {fmtDate(version.createdAt)}</span>
+          </div>
         }
         actions={
-          <nav className="flex flex-wrap gap-1 text-sm">
-            {mutationAllowed(context, ["admin"]) && jobsConfigured() ? <form action={reprocessVersionAction}><input type="hidden" name="versionId" value={version.id}/><FormButton variant="secondary" pendingText="Starting…">Reprocess</FormButton></form> : null}
-            <a href={`/documents/${document.id}/versions/${version.id}/download`} className="rounded border border-[var(--line)] px-2 py-0.5 text-[var(--accent)]">Download source</a>
-            {TABS.map((t) => (
-              <a key={t.id} href={`#${t.id}`} className="rounded border border-[var(--line)] bg-[var(--card)] px-2 py-0.5 hover:bg-[var(--bg)]">
-                {t.label}
+          <>
+            {canReprocess ? (
+              <form action={reprocessVersionAction}>
+                <input type="hidden" name="versionId" value={version.id} />
+                <FormButton variant="secondary" size="sm" pendingText="Starting…" title="Run the pipeline again for this version">
+                  Reprocess
+                </FormButton>
+              </form>
+            ) : null}
+            <Button asChild variant="secondary" size="sm">
+              <a href={`${versionHref}/download`}>
+                <Download size={14} aria-hidden />
+                Source file
               </a>
-            ))}
-          </nav>
+            </Button>
+          </>
         }
       />
 
-      {/* (a) Record */}
-      <SectionHeader id="record" title="Record" count={current?.fields.length} actions={current ? <span className="text-xs text-[var(--muted)]">record version {current.record.versionNumber}, {current.record.createdByType}</span> : null} />
+      {/* In-page section nav; the header above it is sticky, so this sits just below it. */}
+      <nav aria-label="Sections" className="sticky top-[96px] z-20 -mx-4 mb-5 border-y border-[var(--line)] bg-[var(--bg)]/90 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 no-print">
+        <ul className="flex flex-wrap gap-1.5 text-[13px]">
+          {SECTIONS.map((s) => (
+            <li key={s.id}>
+              <a href={`#${s.id}`} className="inline-flex rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1 font-medium text-[var(--muted)] transition-colors hover:border-[var(--accent-border)] hover:text-[var(--accent)]">
+                {s.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* -------------------------------- Record -------------------------------- */}
+      <SectionTitle
+        id="record"
+        title="Extracted record"
+        count={current?.fields.length}
+        description="Every value with the evidence it came from, the confidence code assigned it, and where it was routed."
+        actions={
+          current ? (
+            <span className="flex items-center gap-2 text-[12.5px] text-[var(--muted)]">
+              Record v{current.record.versionNumber}
+              <StatusBadge status={current.record.createdByType === "reviewer" ? "accepted" : "auto_approved"} size="sm" title={`Created by ${current.record.createdByType}`} />
+            </span>
+          ) : null
+        }
+      />
       {!current ? (
-        <EmptyState title="No record version yet">The extraction has not produced a record for this version. Check the Processing section.</EmptyState>
+        <EmptyState title="No record has been extracted for this version">
+          Extraction has not produced a record yet. The Processing section below shows where the pipeline stopped.
+        </EmptyState>
       ) : (
-        <RecordView fields={current.fields} openByField={openByField} versionHref={`/documents/${document.id}/versions/${version.id}`} />
+        <RecordView fields={current.fields} openByField={openByField} versionHref={versionHref} />
       )}
 
-      {/* (b) History */}
-      <SectionHeader id="history" title="History" count={history.length} />
-      <Table>
-        <THead>
-          <Th align="right">Version</Th>
-          <Th>Origin</Th>
-          <Th>Model config</Th>
-          <Th>Changed fields</Th>
-          <Th>Created by</Th>
-          <Th>Parent</Th>
-          <Th>Current</Th>
-          <Th>Created</Th>
-        </THead>
-        <tbody>
-          {history.length === 0 ? <TableEmpty colSpan={8}>No record versions.</TableEmpty> : null}
-          {history.map(({ record, createdByName }) => (
-            <Tr key={record.id}>
-              <Td align="right">{record.versionNumber}</Td>
-              <Td>
-                <StatusBadge status={record.createdByType} />
-                <details className="mt-2"><summary className="cursor-pointer text-[var(--accent)]">View saved record</summary><pre className="mt-2 max-h-80 max-w-xl overflow-auto whitespace-pre-wrap text-xs">{JSON.stringify(record.payloadJson, null, 2)}</pre></details>
-              </Td>
-              <Td>
-                <Mono title={record.modelConfigHash ?? undefined}>{shortId(record.modelConfigHash)}</Mono>
-              </Td>
-              <Td className="max-w-[420px]">
-                {record.changedFields.length === 0 ? (
-                  <span className="text-[var(--muted)]">{record.versionNumber === 1 ? "initial extraction" : "none"}</span>
-                ) : (
-                  <span className="flex flex-wrap gap-1">
-                    {record.changedFields.map((f) => (
-                      <Mono key={f} className="rounded bg-[var(--bg)] px-1">
-                        {f}
-                      </Mono>
-                    ))}
-                  </span>
-                )}
-              </Td>
-              <Td>{createdByName ?? (record.createdByType === "model" ? "pipeline" : "")}</Td>
-              <Td>
-                <Mono title={record.parentRecordVersionId ?? undefined}>{shortId(record.parentRecordVersionId)}</Mono>
-              </Td>
-              <Td>{record.isCurrent ? <StatusBadge status="accepted" /> : ""}</Td>
-              <Td>
-                <Mono>{fmtDate(record.createdAt, true)}</Mono>
-              </Td>
-            </Tr>
-          ))}
-        </tbody>
-      </Table>
+      {/* -------------------------------- History -------------------------------- */}
+      <SectionTitle id="history" title="Record history" count={history.length} className="mt-8" description="Model output is never overwritten. Reviewer decisions and reprocessing each create a new version." />
+      {history.length === 0 ? (
+        <EmptyLine>No record versions exist for this document version.</EmptyLine>
+      ) : (
+        <Table minWidth={900}>
+          <THead>
+            <Th align="right" width={70}>
+              Version
+            </Th>
+            <Th width={130}>Origin</Th>
+            <Th width={120}>Model config</Th>
+            <Th>Changed fields</Th>
+            <Th width={150}>Created by</Th>
+            <Th width={110}>State</Th>
+            <Th align="right" width={160}>
+              Created
+            </Th>
+          </THead>
+          <tbody>
+            {history.map(({ record, createdByName }) => (
+              <Tr key={record.id}>
+                <Td align="right" className="font-medium">
+                  v{record.versionNumber}
+                </Td>
+                <Td>
+                  <StatusBadge status={record.createdByType === "reviewer" ? "accepted" : record.createdByType === "reprocess" ? "processing" : "auto_approved"} size="sm" title={record.createdByType} />
+                  <div className="mt-0.5 text-[12px] capitalize text-[var(--muted)]">{record.createdByType}</div>
+                </Td>
+                <Td>
+                  <Mono title={record.modelConfigHash ?? undefined} className="text-[var(--muted)]">
+                    {shortId(record.modelConfigHash) || "—"}
+                  </Mono>
+                </Td>
+                <Td className="max-w-[380px]">
+                  {record.changedFields.length === 0 ? (
+                    <span className="text-[var(--muted)]">{record.versionNumber === 1 ? "Initial extraction" : "No field changes"}</span>
+                  ) : (
+                    <span className="flex flex-wrap gap-1">
+                      {record.changedFields.slice(0, 6).map((f) => (
+                        <Mono key={f} className="rounded-[var(--r-sm)] bg-[var(--surface-sunken)] px-1.5 py-0.5 text-[11px]">
+                          {f}
+                        </Mono>
+                      ))}
+                      {record.changedFields.length > 6 ? <span className="text-[12px] text-[var(--muted)]">+{record.changedFields.length - 6} more</span> : null}
+                    </span>
+                  )}
+                  <details className="mt-1.5 text-[12px]">
+                    <summary className="cursor-pointer text-[var(--muted)] transition-colors hover:text-[var(--accent)]">Saved record</summary>
+                    <pre className="scroll-thin mt-1 max-h-72 overflow-auto rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--surface-sunken)] p-2 font-mono text-[11.5px] leading-5">{JSON.stringify(record.payloadJson, null, 2)}</pre>
+                  </details>
+                </Td>
+                <Td className="truncate">{createdByName ?? (record.createdByType === "model" ? <span className="text-[var(--muted)]">Pipeline</span> : "—")}</Td>
+                <Td>{record.isCurrent ? <StatusBadge status="current" size="sm" /> : <span className="text-[12px] text-[var(--muted)]">Superseded</span>}</Td>
+                <Td align="right">
+                  <TimeStamp value={record.createdAt} withSeconds />
+                </Td>
+              </Tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
 
-      {/* (c) Source */}
-      <SectionHeader id="source" title="Source" count={blocks.length} actions={<span className="text-xs text-[var(--muted)]">Full document text by block. Each block is addressable as #{"{locator}"}.</span>} />
+      {/* -------------------------------- Source -------------------------------- */}
+      <SectionTitle
+        id="source"
+        title="Parsed source"
+        count={blocks.length}
+        className="mt-8"
+        description="The document as the pipeline sees it. Every block has a stable locator that evidence and citations link to."
+      />
       {blocks.length === 0 ? (
-        <EmptyState title="No source blocks">The document has not been parsed, or parsing failed.</EmptyState>
+        <EmptyState title="No source blocks">This version has not been parsed, or parsing failed. See the Processing section.</EmptyState>
       ) : (
-        <div className="max-h-[640px] overflow-y-auto rounded border border-[var(--line)] bg-[var(--card)]">
-          {blocks.map((b) => (
-            <div key={b.id} id={b.locator} className="scroll-mt-4 border-b border-[var(--line)] px-3 py-2 last:border-b-0 target:bg-[color-mix(in_srgb,var(--accent)_8%,white)]">
-              <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
-                <a href={`#${b.locator}`} className="font-mono text-[var(--accent)]">
-                  {b.locator}
-                </a>
-                <span>{b.blockType}</span>
-                {b.pageNumber !== null ? <span>page {b.pageNumber}</span> : null}
-                {b.paragraphNumber !== null ? <span>paragraph {b.paragraphNumber}</span> : null}
-                <span>
-                  chars {b.charStart}..{b.charEnd}
-                </span>
-              </div>
-              <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-5">{b.rawText}</pre>
-            </div>
-          ))}
-        </div>
+        <Panel>
+          <div className="scroll-thin max-h-[640px] divide-y divide-[var(--line)] overflow-y-auto">
+            {blocks.map((b) => (
+              <article key={b.id} id={b.locator} className="px-4 py-3">
+                <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-[var(--muted)]">
+                  <a href={`#${b.locator}`} className="font-mono font-medium text-[var(--accent)] transition-colors hover:underline">
+                    {b.locator}
+                  </a>
+                  <span className="capitalize">{b.blockType}</span>
+                  {b.pageNumber !== null ? <span>page {b.pageNumber}</span> : null}
+                  {b.paragraphNumber !== null ? <span>paragraph {b.paragraphNumber}</span> : null}
+                  <span className="tnum text-[var(--faint)]">
+                    chars {b.charStart}–{b.charEnd}
+                  </span>
+                </div>
+                <p className="whitespace-pre-wrap break-words text-[13px] leading-6">{b.rawText}</p>
+              </article>
+            ))}
+          </div>
+        </Panel>
       )}
 
-      {/* (d) Processing */}
-      <SectionHeader
+      {/* ------------------------------ Processing ------------------------------ */}
+      <SectionTitle
         id="processing"
-        title="Processing"
+        title="Processing steps"
         count={steps.length}
+        className="mt-8"
+        description="Durable steps for this version, including retries. Successful steps are reused when the version is reprocessed."
         actions={
           runIds.length > 0 ? (
-            <span className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-[var(--muted)]">Runs:</span>
+            <span className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-[var(--muted)]">
+              Runs:
               {runIds.map((id) => (
-                <Link key={id} href={`/runs/${id}`} className="text-[var(--accent)] underline">
+                <Link key={id} href={`/runs/${id}`} className="inline-flex items-center gap-1 text-[var(--accent)] transition-colors hover:underline">
                   <Mono>{shortId(id)}</Mono>
+                  <ExternalLink size={11} aria-hidden />
                 </Link>
               ))}
             </span>
           ) : null
         }
       />
-      <Table>
-        <THead>
-          <Th>Step</Th>
-          <Th>Status</Th>
-          <Th align="right">Attempts</Th>
-          <Th align="right">Latency</Th>
-          <Th>Run</Th>
-          <Th>Error</Th>
-          <Th>Started</Th>
-        </THead>
-        <tbody>
-          {steps.length === 0 ? <TableEmpty colSpan={7}>No run steps recorded for this version.</TableEmpty> : null}
-          {steps.map(({ step }) => (
-            <Tr key={step.id}>
-              <Td>
-                <Mono>{step.stepName}</Mono>
-              </Td>
-              <Td>
-                <StatusBadge status={step.status} />
-              </Td>
-              <Td align="right">{step.attemptCount}</Td>
-              <Td align="right">{fmtDuration(step.latencyMs)}</Td>
-              <Td>
-                <Link href={`/runs/${step.processingRunId}`} className="text-[var(--accent)] underline">
-                  <Mono>{shortId(step.processingRunId)}</Mono>
-                </Link>
-              </Td>
-              <Td className="max-w-[420px] text-xs text-[var(--bad)]">
-                {step.errorCode ? <Mono>{step.errorCode}</Mono> : null}
-                {step.errorMessage ? <span className="ml-1">{step.errorMessage}</span> : null}
-              </Td>
-              <Td>
-                <Mono>{fmtDate(step.startedAt, true)}</Mono>
-              </Td>
-            </Tr>
-          ))}
-        </tbody>
-      </Table>
+      {steps.length === 0 ? (
+        <EmptyLine>No run steps have been recorded for this version.</EmptyLine>
+      ) : (
+        <Table minWidth={860}>
+          <THead>
+            <Th width={190}>Step</Th>
+            <Th width={130}>Status</Th>
+            <Th align="right" width={90}>
+              Attempts
+            </Th>
+            <Th align="right" width={100}>
+              Latency
+            </Th>
+            <Th width={110}>Run</Th>
+            <Th>Error</Th>
+            <Th align="right" width={160}>
+              Started
+            </Th>
+          </THead>
+          <tbody>
+            {steps.map(({ step }) => (
+              <Tr key={step.id}>
+                <Td>
+                  <Mono className="font-medium text-[var(--fg)]">{step.stepName}</Mono>
+                </Td>
+                <Td>
+                  <StatusBadge status={step.status} size="sm" />
+                </Td>
+                <Td align="right" className={step.attemptCount > 1 ? "font-semibold text-[var(--warn)]" : ""}>
+                  {step.attemptCount}
+                </Td>
+                <Td align="right">{fmtDuration(step.latencyMs) || <span className="text-[var(--faint)]">—</span>}</Td>
+                <Td>
+                  <Link href={`/runs/${step.processingRunId}`} className="text-[var(--accent)] transition-colors hover:underline">
+                    <Mono>{shortId(step.processingRunId)}</Mono>
+                  </Link>
+                </Td>
+                <Td className="max-w-[380px] text-[12.5px] text-[var(--bad)]">
+                  {step.errorCode ? <Mono className="font-semibold">{step.errorCode}</Mono> : null}
+                  {step.errorMessage ? <span className="ml-1.5">{step.errorMessage}</span> : null}
+                  {!step.errorCode && !step.errorMessage ? <span className="text-[var(--faint)]">—</span> : null}
+                </Td>
+                <Td align="right">
+                  <TimeStamp value={step.startedAt} withSeconds />
+                </Td>
+              </Tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
     </>
   );
 }
 
-/** Group leaf field values by their root field so lists render as item groups. */
+/**
+ * Scalar fields share a single group (their row labels already name them); each list
+ * field gets its own group so items read as a numbered set.
+ */
 function RecordView({ fields, openByField, versionHref }: { fields: FieldRow[]; openByField: Map<string, { id: string }>; versionHref: string }) {
   const byRoot = new Map<string, FieldRow[]>();
   for (const f of fields) {
@@ -233,28 +320,35 @@ function RecordView({ fields, openByField, versionHref }: { fields: FieldRow[]; 
     list.push(f);
     byRoot.set(root, list);
   }
-  const roots: string[] = [...SCALAR_FIELDS, ...LIST_FIELDS];
-  for (const r of byRoot.keys()) if (!roots.includes(r)) roots.push(r);
+  const scalarRoots = (SCALAR_FIELDS as readonly string[]).filter((r) => byRoot.has(r));
+  const listRoots: string[] = [...(LIST_FIELDS as readonly string[]).filter((r) => byRoot.has(r)), ...[...byRoot.keys()].filter((r) => !(SCALAR_FIELDS as readonly string[]).includes(r) && !(LIST_FIELDS as readonly string[]).includes(r))];
 
   return (
-    <div className="rounded border border-[var(--line)] bg-[var(--card)]">
-      {roots.map((root) => {
+    <Panel>
+      {scalarRoots.length > 0 ? (
+        <section className="border-b border-[var(--line)] last:border-b-0">
+          <h3 className="bg-[var(--surface-sunken)] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]">Document details</h3>
+          {scalarRoots.flatMap((root) => (byRoot.get(root) ?? []).map((f) => <FieldLine key={f.id} field={f} label={fieldLabel(root)} openItemId={openByField.get(f.fieldPath)?.id ?? null} versionHref={versionHref} />))}
+        </section>
+      ) : null}
+
+      {listRoots.map((root) => {
         const rows = byRoot.get(root) ?? [];
-        const isList = (LIST_FIELDS as readonly string[]).includes(root);
         return (
-          <div key={root} className="border-b border-[var(--line)] last:border-b-0">
-            <div className="flex items-center gap-2 bg-[var(--bg)] px-3 py-1 text-[11px] uppercase tracking-wide text-[var(--muted)]">
-              <span>{fieldLabel(root)}</span>
-              {isList ? <span>{countItems(rows)} item(s)</span> : null}
-            </div>
-            {rows.length === 0 ? <div className="px-3 py-1.5 text-sm text-[var(--muted)]">empty</div> : null}
-            {rows.map((f) => (
-              <FieldLine key={f.id} field={f} label={isList ? fieldLabel(f.fieldPath).replace(`${fieldLabel(root)} `, "") : fieldLabel(root)} open={openByField.has(f.fieldPath)} versionHref={versionHref} />
-            ))}
-          </div>
+          <section key={root} className="border-b border-[var(--line)] last:border-b-0">
+            <h3 className="flex items-center gap-2 bg-[var(--surface-sunken)] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]">
+              {fieldLabel(root)}
+              <span className="tnum font-normal normal-case tracking-normal">{plural(countItems(rows), "item")}</span>
+            </h3>
+            {rows.length === 0 ? (
+              <p className="px-4 py-3 text-[13px] text-[var(--faint)]">Nothing extracted for this field.</p>
+            ) : (
+              rows.map((f) => <FieldLine key={f.id} field={f} label={fieldLabel(f.fieldPath).replace(`${fieldLabel(root)} `, "Item ")} openItemId={openByField.get(f.fieldPath)?.id ?? null} versionHref={versionHref} />)
+            )}
+          </section>
         );
       })}
-    </div>
+    </Panel>
   );
 }
 
@@ -267,50 +361,69 @@ function countItems(rows: FieldRow[]): number {
   return idx.size;
 }
 
-function FieldLine({ field, label, open, versionHref }: { field: FieldRow; label: string; open: boolean; versionHref: string }) {
-  const value = fmtValue(field.valueJson);
+function FieldLine({ field, label, openItemId, versionHref }: { field: FieldRow; label: string; openItemId: string | null; versionHref: string }) {
+  const suggested = field.verifierCorrectedValueJson;
+  const differs = suggested !== null && suggested !== undefined && JSON.stringify(suggested) !== JSON.stringify(field.valueJson);
   return (
-    <div className="grid grid-cols-1 gap-x-4 gap-y-1 border-t border-[var(--line)] px-3 py-2 text-sm first:border-t-0 md:grid-cols-[200px_minmax(0,1fr)_170px_120px_100px]">
-      <div className="text-[var(--muted)]">
+    <div className="grid grid-cols-1 gap-x-5 gap-y-2 border-t border-[var(--line)] px-4 py-3 first:border-t-0 lg:grid-cols-[168px_minmax(0,1fr)_132px_190px]">
+      <div className="text-[12.5px] font-medium text-[var(--muted)]">
         {label}
-        {field.isRequired ? <span className="ml-1 text-[var(--bad)]" title="required">*</span> : null}
-      </div>
-      <div className="min-w-0">
-        <div className="break-words">{value === "" ? <span className="text-[var(--muted)]">null</span> : value}</div>
-        {field.verifierCorrectedValueJson !== null && field.verifierCorrectedValueJson !== undefined ? (
-          <div className="text-xs text-[var(--warn)]">verifier suggests: {fmtValue(field.verifierCorrectedValueJson)}</div>
+        {field.isRequired ? (
+          <span className="ml-1 text-[var(--bad)]" title="Required field">
+            *
+          </span>
         ) : null}
+      </div>
+
+      <div className="min-w-0 text-[13px]">
+        <div className="leading-6">
+          <FieldValue fieldPath={field.fieldPath} value={field.valueJson} />
+        </div>
+
+        {differs ? (
+          <p className="mt-1 text-[12.5px] text-[var(--warn)]">
+            Verifier suggests: <FieldValue fieldPath={field.fieldPath} value={suggested} compact />
+          </p>
+        ) : null}
+
         {field.validationMessages.map((m, i) => (
-          <div key={i} className={`text-xs ${m.level === "error" ? "text-[var(--bad)]" : "text-[var(--warn)]"}`}>
-            {m.code}: {m.message}
-          </div>
+          <p key={i} className={`mt-1 text-[12.5px] ${m.level === "error" ? "text-[var(--bad)]" : "text-[var(--warn)]"}`}>
+            <Mono>{m.code}</Mono> {m.message}
+          </p>
         ))}
+
         {field.evidence.length === 0 ? (
-          <div className="mt-0.5 text-xs text-[var(--bad)]">no evidence</div>
+          <p className="mt-1.5 text-[12.5px] text-[var(--bad)]">No evidence recorded</p>
         ) : (
-          field.evidence.map((e, i) => (
-            <div key={i} className="mt-0.5 text-xs text-[var(--muted)]">
-              <a href={`${versionHref}#${e.sourceLocator}`} className="font-mono text-[var(--accent)]" title="open in source">
-                {e.sourceLocator}
-              </a>
-              <span className={`ml-1 ${e.exactMatch ? "" : "text-[var(--warn)]"}`} title={e.exactMatch ? "quote matches the source verbatim" : "quote not found verbatim in the source block"}>
-                {e.exactMatch ? "exact" : "fuzzy"}
-              </span>
-              <span className="ml-1 italic">&ldquo;{e.quoteText}&rdquo;</span>
-            </div>
-          ))
+          <ul className="mt-1.5 space-y-1">
+            {field.evidence.map((e, i) => (
+              <li key={i} className="flex flex-wrap items-baseline gap-x-2 text-[12.5px] text-[var(--muted)]">
+                <a href={`${versionHref}#${e.sourceLocator}`} className="font-mono text-[var(--accent)] transition-colors hover:underline" title="Open this block in the parsed source">
+                  {e.sourceLocator}
+                </a>
+                <span className={e.exactMatch ? "text-[var(--ok)]" : "text-[var(--warn)]"} title={e.exactMatch ? "The quote occurs verbatim in the source block" : "The quote could not be located verbatim in the source block"}>
+                  {e.exactMatch ? "found verbatim" : "not found verbatim"}
+                </span>
+                <span className="min-w-0 italic">&ldquo;{e.quoteText}&rdquo;</span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
-      <div>
-        <ConfidenceBar value={field.confidence} />
+
+      <div className="flex items-start lg:justify-end">
+        <ConfidenceBar value={field.confidence} width={70} />
       </div>
-      <div className="flex flex-wrap items-center gap-1">
-        <StatusBadge status={field.routingStatus} />
-        {open ? <StatusBadge status="open" title="open review item" /> : null}
-      </div>
-      <div className="flex flex-wrap items-center gap-1">
-        <StatusBadge status={field.verifierStatus ?? "unverified"} title="verifier status" />
-        {field.contradiction ? <StatusBadge status="contradicted" /> : null}
+
+      <div className="flex flex-wrap items-start gap-1.5">
+        <StatusBadge status={field.routingStatus} size="sm" />
+        <StatusBadge status={field.verifierStatus ?? "unverified"} size="sm" title="Verifier verdict" />
+        {field.contradiction ? <StatusBadge status="contradicted" size="sm" /> : null}
+        {openItemId ? (
+          <Link href={`/review/${openItemId}`} className="inline-flex items-center rounded-full border border-[var(--warn-border)] bg-[var(--warn-soft)] px-2 py-0.5 text-[12px] font-medium text-[var(--warn)] transition-colors hover:brightness-98">
+            Review →
+          </Link>
+        ) : null}
       </div>
     </div>
   );

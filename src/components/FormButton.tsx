@@ -1,45 +1,46 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import type { ReactNode } from "react";
+import { Button, type ButtonProps } from "@/components/ui/button";
 
-type Variant = "primary" | "secondary" | "danger";
-
-const VARIANT: Record<Variant, string> = {
-  primary: "bg-[var(--accent)] text-white border-[var(--accent)] hover:opacity-90",
-  secondary: "bg-[var(--card)] text-[var(--fg)] border-[var(--line)] hover:bg-[var(--bg)]",
-  danger: "bg-[var(--card)] text-[var(--bad)] border-[var(--bad)] hover:bg-[var(--bg)]",
-};
-
+/**
+ * Submit button wired to the enclosing form's pending state. Shows a spinner and
+ * swaps its label so long server actions never look unresponsive.
+ */
 export function FormButton({
   children,
   pendingText,
   variant = "primary",
+  size = "md",
   disabled,
   title,
-  size = "md",
   className = "",
+  name,
+  value,
 }: {
   children: ReactNode;
   pendingText?: ReactNode;
-  variant?: Variant;
+  variant?: ButtonProps["variant"];
+  size?: ButtonProps["size"];
   disabled?: boolean;
   title?: string;
-  size?: "sm" | "md";
   className?: string;
+  name?: string;
+  value?: string;
 }) {
   const { pending } = useFormStatus();
-  const sizing = size === "sm" ? "px-2 py-0.5 text-xs" : "px-3 py-1.5 text-sm";
   return (
-    <Button
-      type="submit"
-      disabled={disabled || pending}
-      title={title}
-      aria-disabled={disabled || pending}
-      className={`inline-flex items-center gap-1.5 rounded border font-medium disabled:cursor-not-allowed disabled:opacity-50 ${sizing} ${VARIANT[variant]} ${className}`}
-    >
-      {pending ? (pendingText ?? "Working...") : children}
+    <Button type="submit" name={name} value={value} variant={variant} size={size} disabled={disabled || pending} aria-disabled={disabled || pending} title={title} className={className}>
+      {pending ? (
+        <>
+          <Loader2 size={14} aria-hidden className="animate-spin" />
+          {pendingText ?? "Working…"}
+        </>
+      ) : (
+        children
+      )}
     </Button>
   );
 }

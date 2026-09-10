@@ -1,14 +1,22 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
+import { FileText, UploadCloud, X } from "lucide-react";
 import { FormButton } from "@/components/FormButton";
-import { StatusBadge } from "@/components/StatusBadge";
-import { Table, THead, Th, Tr, Td, Mono } from "@/components/DataTable";
-import { fmtBytes, shortId } from "@/components/format";
+import { StatusBadge } from "@/components/ui/badge";
+import { Panel, PanelHeader, PanelBody, PanelFooter, SectionTitle, Notice } from "@/components/ui/panel";
+import { Table, THead, Th, Tr, Td, Mono, rowLink } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { fmtBytes, plural, shortId } from "@/components/format";
 import { prepareSourceUpload, uploadAction, type UploadState } from "./actions";
+import { cn } from "@/lib/utils";
 
 const MAX_MB = 10;
+const MAX_BYTES = MAX_MB * 1024 * 1024;
+const ACCEPT = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+type Picked = { name: string; size: number };
 
 export function UploadForm({ canUpload, directUpload }: { canUpload: boolean; directUpload: boolean }) {
   async function submit(previous: UploadState, data: FormData): Promise<UploadState> {
@@ -21,12 +29,16 @@ export function UploadForm({ canUpload, directUpload }: { canUpload: boolean; di
         const target = await prepareSourceUpload(file.name, file.size);
         if (target.driver === "blob") {
           const { put } = await import("@vercel/blob/client");
-          await put(target.path, file, { access: "private", token: target.token, contentType: file.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+          await put(target.path, file, {
+            access: "private",
+            token: target.token,
+            contentType: file.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          });
         } else {
-        const { createClient } = await import("@supabase/supabase-js");
-        const sb = createClient(target.url, target.anonKey, { auth: { persistSession: false } });
-        const { error } = await sb.storage.from(target.bucket).uploadToSignedUrl(target.path, target.token, file);
-        if (error) throw new Error(`Upload failed for ${file.name}. Please retry.`);
+          const { createClient } = await import("@supabase/supabase-js");
+          const sb = createClient(target.url, target.anonKey, { auth: { persistSession: false } });
+          const { error } = await sb.storage.from(target.bucket).uploadToSignedUrl(target.path, target.token, file);
+          if (error) throw new Error(`Upload failed for ${file.name}. Please retry.`);
         }
         descriptors.append("uploaded", JSON.stringify({ filename: file.name, size: file.size, path: target.path }));
       }
@@ -35,110 +47,201 @@ export function UploadForm({ canUpload, directUpload }: { canUpload: boolean; di
       return { rows: [], runId: null, runOutcome: null, error: error instanceof Error ? error.message : "Upload failed." };
     }
   }
+
   const [state, action] = useActionState<UploadState, FormData>(submit, { rows: [], runId: null, runOutcome: null, error: null });
-  const [selected, setSelected] = useState<{ name: string; size: number }[]>([]);
-  const oversized = selected.filter((f) => f.size > MAX_MB * 1024 * 1024);
+  const [selected, setSelected] = useState<Picked[]>([]);
+  const [dragging, setDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const oversized = selected.filter((f) => f.size > MAX_BYTES);
+  const wrongType = selected.filter((f) => !/\.(pdf|docx)$/i.test(f.name));
+  const usable = selected.length - oversized.length - wrongType.length;
+
+  const sync = (files: FileList | null) => setSelected(Array.from(files ?? []).map((f) => ({ name: f.name, size: f.size })));
 
   return (
-    <div className="space-y-4">
-      <form action={action} className="rounded border border-[var(--line)] bg-[var(--card)] p-4">
-        <label className="block text-sm">
-          <span className="mb-1 block text-[var(--muted)]">Files (.pdf, .docx; max {MAX_MB} MB each)</span>
-          <input
-            name="files"
-            type="file"
-            multiple
-            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            disabled={!canUpload}
-            onChange={(e) => setSelected(Array.from(e.target.files ?? []).map((f) => ({ name: f.name, size: f.size })))}
-            className="block w-full text-sm file:mr-3 file:rounded file:border file:border-[var(--line)] file:bg-[var(--bg)] file:px-2.5 file:py-1 file:text-sm"
-          />
-        </label>
-        {selected.length > 0 ? (
-          <ul className="mt-2 space-y-0.5 text-xs text-[var(--muted)]">
-            {selected.map((f) => (
-              <li key={f.name} className={f.size > MAX_MB * 1024 * 1024 ? "text-[var(--bad)]" : ""}>
-                {f.name} ({fmtBytes(f.size)}){f.size > MAX_MB * 1024 * 1024 ? " exceeds the size limit and will be rejected" : ""}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <div className="mt-3 flex items-center gap-3">
-          <FormButton disabled={!canUpload || selected.length === 0 || oversized.length === selected.length} pendingText="Uploading and processing...">
-            Upload and process
-          </FormButton>
-          <span className="text-xs text-[var(--muted)]">
-            {canUpload ? "Each new content hash creates a version; identical files are recorded as duplicates. Track progress and retries from the run page." : "This workspace is read-only. Sign in with an authorized account to upload."}
-          </span>
-        </div>
-        {state.error ? <div className="mt-3 text-sm text-[var(--bad)]">{state.error}</div> : null}
-      </form>
+    <div className="flex flex-col gap-5">
+      <Panel as="div">
+        <form action={action}>
+          <PanelBody>
+            {/* Drop zone doubles as the file picker; the input stays in the DOM for the form post. */}
+            <div
+              onDragOver={(e) => {
+                if (!canUpload) return;
+                e.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(e) => {
+                if (!canUpload) return;
+                e.preventDefault();
+                setDragging(false);
+                if (inputRef.current && e.dataTransfer.files.length) {
+                  inputRef.current.files = e.dataTransfer.files;
+                  sync(e.dataTransfer.files);
+                }
+              }}
+              className={cn(
+                "flex flex-col items-center justify-center rounded-[var(--r-lg)] border-2 border-dashed px-6 py-9 text-center transition-colors",
+                dragging ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--line-strong)] bg-[var(--surface-sunken)]",
+                !canUpload && "opacity-60",
+              )}
+            >
+              <span className="mb-3 grid size-11 place-items-center rounded-full bg-[var(--surface)] text-[var(--accent)] shadow-[var(--shadow-sm)]">
+                <UploadCloud size={20} aria-hidden />
+              </span>
+              <p className="text-[14px] font-medium">{dragging ? "Drop to add these files" : "Drag PDF or DOCX files here"}</p>
+              <p className="mt-1 text-[12.5px] text-[var(--muted)]">Up to {MAX_MB} MB and 50 pages each, 20 files at a time.</p>
+              <Button type="button" variant="secondary" size="sm" className="mt-3" disabled={!canUpload} onClick={() => inputRef.current?.click()}>
+                Choose files
+              </Button>
+              <input ref={inputRef} name="files" type="file" multiple accept={ACCEPT} disabled={!canUpload} onChange={(e) => sync(e.target.files)} className="sr-only" aria-label="Choose PDF or DOCX files" />
+            </div>
+
+            {selected.length > 0 ? (
+              <ul className="mt-3 flex flex-col gap-1.5">
+                {selected.map((f) => {
+                  const bad = f.size > MAX_BYTES || !/\.(pdf|docx)$/i.test(f.name);
+                  return (
+                    <li
+                      key={f.name}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-[var(--r-md)] border px-3 py-2 text-[13px]",
+                        bad ? "border-[var(--bad-border)] bg-[var(--bad-soft)]" : "border-[var(--line)] bg-[var(--surface)]",
+                      )}
+                    >
+                      <FileText size={15} aria-hidden className={bad ? "text-[var(--bad)]" : "text-[var(--muted)]"} />
+                      <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                      <span className="tnum shrink-0 text-[12px] text-[var(--muted)]">{fmtBytes(f.size)}</span>
+                      {bad ? <span className="shrink-0 text-[12px] font-medium text-[var(--bad)]">{f.size > MAX_BYTES ? `over ${MAX_MB} MB` : "unsupported type"}</span> : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+
+            {state.error ? (
+              <Notice tone="bad" className="mt-3">
+                {state.error}
+              </Notice>
+            ) : null}
+          </PanelBody>
+
+          <PanelFooter>
+            <span className="min-w-0">
+              {!canUpload
+                ? "This workspace is read-only. Sign in with an authorized account to upload."
+                : selected.length === 0
+                  ? "Each new content hash creates a version; an identical file is recorded as a duplicate and never reprocessed."
+                  : `${plural(usable, "file")} ready${oversized.length + wrongType.length > 0 ? `, ${oversized.length + wrongType.length} will be rejected` : ""}.`}
+            </span>
+            <span className="ml-auto flex items-center gap-2">
+              {selected.length > 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (inputRef.current) inputRef.current.value = "";
+                    setSelected([]);
+                  }}
+                >
+                  <X size={14} aria-hidden />
+                  Clear
+                </Button>
+              ) : null}
+              <FormButton disabled={!canUpload || usable === 0} pendingText="Uploading and processing…">
+                Upload and process
+              </FormButton>
+            </span>
+          </PanelFooter>
+        </form>
+      </Panel>
 
       {state.rows.length > 0 ? (
-        <div>
-          <div className="mb-2 flex flex-wrap items-center gap-3 text-sm">
-            <span className="font-semibold">Results</span>
-            {state.runId ? (
-              <>
-                <Link href={`/runs/${state.runId}`} className="text-[var(--accent)] underline">
-                  Run <Mono>{shortId(state.runId)}</Mono>
-                </Link>
-                <span className="text-xs text-[var(--muted)]">{state.runOutcome}</span>
-              </>
-            ) : (
-              <span className="text-xs text-[var(--muted)]">No new versions were created, so no processing run was started.</span>
-            )}
-          </div>
-          <Table>
+        <section>
+          <SectionTitle
+            title="Results"
+            count={state.rows.length}
+            actions={
+              state.runId ? (
+                <span className="flex items-center gap-2 text-[12.5px] text-[var(--muted)]">
+                  {state.runOutcome}
+                  <Button asChild variant="secondary" size="xs">
+                    <Link href={`/runs/${state.runId}`}>
+                      Open run <Mono>{shortId(state.runId)}</Mono>
+                    </Link>
+                  </Button>
+                </span>
+              ) : (
+                <span className="text-[12.5px] text-[var(--muted)]">No new versions were created, so no processing run started.</span>
+              )
+            }
+          />
+          <Table minWidth={900}>
             <THead>
               <Th>File</Th>
-              <Th>Type</Th>
-              <Th align="right">Size</Th>
-              <Th>SHA-256</Th>
-              <Th>Logical key</Th>
-              <Th align="right">Version</Th>
+              <Th width={80}>Type</Th>
+              <Th align="right" width={90}>
+                Size
+              </Th>
+              <Th width={130}>SHA-256</Th>
+              <Th width={140}>Logical key</Th>
+              <Th align="right" width={80}>
+                Version
+              </Th>
               <Th>Outcome</Th>
-              <Th>Run</Th>
             </THead>
             <tbody>
               {state.rows.map((r, i) => (
                 <Tr key={`${r.filename}-${i}`}>
-                  <Td>
+                  <Td className="max-w-[300px]">
                     {r.documentId && r.documentVersionId ? (
-                      <Link href={`/documents/${r.documentId}/versions/${r.documentVersionId}`} className="text-[var(--accent)] underline">
+                      <Link href={`/documents/${r.documentId}/versions/${r.documentVersionId}`} className={rowLink} title={r.filename}>
                         {r.filename}
                       </Link>
                     ) : (
-                      r.filename
+                      <span className="truncate" title={r.filename}>
+                        {r.filename}
+                      </span>
                     )}
                   </Td>
-                  <Td>{r.type}</Td>
+                  <Td className="uppercase text-[var(--muted)]">{r.type}</Td>
                   <Td align="right">{fmtBytes(r.size)}</Td>
-                  <Td>{r.contentHash ? <Mono title={r.contentHash}>{r.contentHash.slice(0, 12)}</Mono> : ""}</Td>
-                  <Td>{r.logicalKey ? <Mono>{r.logicalKey}</Mono> : ""}</Td>
-                  <Td align="right">{r.versionNumber !== null ? `v${r.versionNumber}` : ""}</Td>
+                  <Td>{r.contentHash ? <Mono title={r.contentHash} className="text-[var(--muted)]">{r.contentHash.slice(0, 12)}</Mono> : <span className="text-[var(--faint)]">—</span>}</Td>
+                  <Td>{r.logicalKey ? <Mono>{r.logicalKey}</Mono> : <span className="text-[var(--faint)]">—</span>}</Td>
+                  <Td align="right">{r.versionNumber !== null ? `v${r.versionNumber}` : <span className="text-[var(--faint)]">—</span>}</Td>
                   <Td>
                     <Outcome row={r} />
-                  </Td>
-                  <Td>
-                    {r.outcome.kind === "duplicate" ? (
-                      <Link href={`/runs/${r.outcome.duplicateRunId}`} className="text-[var(--accent)] underline">
-                        <Mono>{shortId(r.outcome.duplicateRunId)}</Mono>
-                      </Link>
-                    ) : r.outcome.kind === "rejected" || !state.runId ? (
-                      ""
-                    ) : (
-                      <Link href={`/runs/${state.runId}`} className="text-[var(--accent)] underline">
-                        <Mono>{shortId(state.runId)}</Mono>
-                      </Link>
-                    )}
                   </Td>
                 </Tr>
               ))}
             </tbody>
           </Table>
-        </div>
+        </section>
       ) : null}
+
+      <Panel>
+        <PanelHeader dense title="What happens next" />
+        <PanelBody>
+          <ol className="grid gap-2.5 text-[13px] leading-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["Hash and version", "The file is hashed. An identical hash is a duplicate; a new hash for the same logical key becomes the next version."],
+              ["Parse and chunk", "PDF pages or DOCX paragraphs become addressable source blocks, then overlapping chunks."],
+              ["Extract with evidence", "Every value the model returns must cite a source block and quote it verbatim."],
+              ["Validate and verify", "Deterministic checks run in code, then a second model verifies each value without seeing the first one's confidence."],
+              ["Score and route", "Code computes confidence from five components and routes each value to auto-approval, review or blocked."],
+              ["Embed and index", "Chunks are embedded for hybrid retrieval so the document can be asked about."],
+            ].map(([title, body], i) => (
+              <li key={title} className="flex gap-2.5">
+                <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[11px] font-semibold text-[var(--accent)]">{i + 1}</span>
+                <span>
+                  <span className="font-medium">{title}.</span> <span className="text-[var(--muted)]">{body}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </PanelBody>
+      </Panel>
     </div>
   );
 }
@@ -148,32 +251,41 @@ function Outcome({ row }: { row: UploadState["rows"][number] }) {
   switch (o.kind) {
     case "created":
       return (
-        <span className="flex items-center gap-1.5">
-          <StatusBadge status="completed" /> created
+        <span className="flex flex-wrap items-center gap-1.5">
+          <StatusBadge status="created" size="sm" />
+          <span className="text-[12.5px] text-[var(--muted)]">first version of this document</span>
         </span>
       );
     case "new_version":
       return (
         <span className="flex flex-wrap items-center gap-1.5">
-          <StatusBadge status="review" /> new version superseding{" "}
-          <Link href={`/documents/${row.documentId}/versions/${o.supersedesVersionId}`} className="text-[var(--accent)] underline">
-            v{o.supersedesVersionNumber ?? "?"}
-          </Link>
+          <StatusBadge status="new_version" size="sm" />
+          <span className="text-[12.5px] text-[var(--muted)]">
+            supersedes{" "}
+            <Link href={`/documents/${row.documentId}/versions/${o.supersedesVersionId}`} className="text-[var(--accent)] hover:underline">
+              v{o.supersedesVersionNumber ?? "?"}
+            </Link>
+          </span>
         </span>
       );
     case "duplicate":
       return (
         <span className="flex flex-wrap items-center gap-1.5">
-          <StatusBadge status="skipped" /> duplicate of{" "}
-          <Link href={`/documents/${o.documentId}/versions/${o.existingVersionId}`} className="text-[var(--accent)] underline">
-            existing version {row.versionNumber !== null ? `v${row.versionNumber}` : shortId(o.existingVersionId)}
-          </Link>
+          <StatusBadge status="duplicate" size="sm" />
+          <span className="text-[12.5px] text-[var(--muted)]">
+            identical to{" "}
+            <Link href={`/documents/${o.documentId}/versions/${o.existingVersionId}`} className="text-[var(--accent)] hover:underline">
+              {row.versionNumber !== null ? `v${row.versionNumber}` : shortId(o.existingVersionId)}
+            </Link>
+            ; not reprocessed
+          </span>
         </span>
       );
     case "rejected":
       return (
         <span className="flex flex-wrap items-center gap-1.5">
-          <StatusBadge status="failed" /> <span className="text-[var(--bad)]">{o.message}</span>
+          <StatusBadge status="failed" size="sm" />
+          <span className="text-[12.5px] text-[var(--bad)]">{o.message}</span>
         </span>
       );
   }

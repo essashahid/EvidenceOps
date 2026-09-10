@@ -1,198 +1,309 @@
-import { QualityTrend } from "@/components/QualityCharts";
 import Link from "next/link";
+import { ArrowRight, FileText, Upload } from "lucide-react";
+import { QualityTrend } from "@/components/QualityCharts";
 import { requireWorkspace } from "@/lib/workspace";
 import { getDashboardStats, listRecentRuns } from "@/lib/queries/dashboard";
 import { listDocuments } from "@/lib/queries/documents";
 import { listEvalRuns, latestEvalRun, metricsOf, regressionOf } from "@/lib/queries/evals";
-import { PageHeader, SectionHeader } from "@/components/PageHeader";
-import { StatCard } from "@/components/StatCard";
-import { StatusBadge } from "@/components/StatusBadge";
-import { Table, THead, Th, Tr, Td, Mono, TableEmpty } from "@/components/DataTable";
-import { fmtDate, fmtNumber, fmtPct, fmtUsd, shortId } from "@/components/format";
+import { PageHeader } from "@/components/PageHeader";
+import { SectionTitle, Panel, PanelHeader, PanelBody } from "@/components/ui/panel";
+import { Metric, MetricGroup, MetricStrip } from "@/components/ui/metric";
+import { StatusBadge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, THead, Th, Tr, Td, Mono, CellStack, TableEmpty, rowLink, inlineLink } from "@/components/ui/table";
+import { TimeAgo } from "@/components/ui/time";
+import { EmptyState } from "@/components/ui/empty";
+import { fmtCompact, fmtNumber, fmtPct, fmtUsd, plural, shortId } from "@/components/format";
+import { SUCCESS_TARGETS } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const { workspace } = await requireWorkspace();
-  const [stats, runs, docs, evalRun] = await Promise.all([getDashboardStats(workspace.workspaceId), listRecentRuns(workspace.workspaceId, 10), listDocuments(workspace.workspaceId, 10), latestEvalRun(workspace.workspaceId)]);
-  const evalMetrics = evalRun ? metricsOf(evalRun) : null;
-  const evalRegression = evalRun ? regressionOf(evalRun) : null;
-  const history = await listEvalRuns(workspace.workspaceId, 8);
-  const trend = history.toReversed().flatMap((r, i) => { const m = metricsOf(r); return m ? [{ name: `Run ${i+1}`, extraction: m.extraction.scalar_exact_accuracy * 100, citations: m.rag.citation_precision * 100, recall: m.rag.retrieval_recall_at_5 * 100 }] : []; });
+  const [stats, runs, docs, evalRun, history] = await Promise.all([
+    getDashboardStats(workspace.workspaceId),
+    listRecentRuns(workspace.workspaceId, 6),
+    listDocuments(workspace.workspaceId, 6),
+    latestEvalRun(workspace.workspaceId),
+    listEvalRuns(workspace.workspaceId, 8),
+  ]);
+  const metrics = evalRun ? metricsOf(evalRun) : null;
+  const regression = evalRun ? regressionOf(evalRun) : null;
+  const trend = history
+    .toReversed()
+    .flatMap((r, i) => {
+      const m = metricsOf(r);
+      return m ? [{ name: `Run ${i + 1}`, extraction: m.extraction.scalar_exact_accuracy * 100, citations: m.rag.citation_precision * 100, recall: m.rag.retrieval_recall_at_5 * 100 }] : [];
+    });
+  const latestRun = runs[0];
+  const empty = stats.documents === 0;
+
   return (
     <>
       <PageHeader
         title="Workspace overview"
-        subtitle="Production Document Intelligence & RAG Quality Workbench"
+        subtitle="Documents, review load and measured quality across the corpus."
         actions={
           <>
-            <NavButton href="/upload">Upload</NavButton>
-            <NavButton href="/review">Review</NavButton>
-            <NavButton href="/runs">Runs</NavButton>
-            <NavButton href="/ask">Ask</NavButton>
-            <NavButton href="/evals">Evals</NavButton>
+            <Button asChild variant="secondary" size="sm">
+              <Link href="/documents">
+                <FileText size={14} aria-hidden />
+                Browse documents
+              </Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/upload">
+                <Upload size={14} aria-hidden />
+                Upload documents
+              </Link>
+            </Button>
           </>
         }
       />
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Current documents" value={fmtNumber(stats.documents)} hint="logical document identities" />
-        <StatCard label="Current source versions" value={fmtNumber(stats.documents)} hint={`${stats.versions} editions preserved`} />
-        <StatCard label="Open review items" value={fmtNumber(stats.openReviewItems)} tone={stats.openReviewItems ? "warn" : "ok"} hint={<Link href="/review" className="underline">Inspect flagged evidence →</Link>} />
-        <StatCard label="Extraction accuracy" value={evalMetrics ? fmtPct(evalMetrics.extraction.scalar_exact_accuracy, 1) : "—"} hint="latest evaluation · target ≥ 95%" tone="accent" />
-        <StatCard label="Citation precision" value={evalMetrics ? fmtPct(evalMetrics.rag.citation_precision, 1) : "—"} hint="latest evaluation · target ≥ 95%" tone="accent" />
-        <StatCard label="Latest run cost" value={runs[0] ? fmtUsd(runs[0].estimatedCostUsd) : "—"} hint="estimated provider usage" />
-        <StatCard label="Latest run status" value={<span className="text-sm"><StatusBadge status={runs[0]?.status} /></span>} hint={`${stats.runsTotal} runs recorded`} />
-        <StatCard label="Open failures" value={stats.deadLettersOpen} hint="dead letters requiring attention" tone={stats.deadLettersOpen ? "bad" : "ok"} />
-      </div>
-      <QualityTrend data={trend} />
 
-      {evalRun ? (
+      {empty ? (
+        <EmptyState
+          icon={<Upload size={18} aria-hidden />}
+          title="No documents in this workspace yet"
+          action={
+            <Button asChild>
+              <Link href="/upload">Upload the first documents</Link>
+            </Button>
+          }
+        >
+          Upload a PDF or DOCX file to start the pipeline. Every value it extracts will be linked back to the page or paragraph it came from.
+        </EmptyState>
+      ) : (
         <>
-          <SectionHeader
-            title="Latest evaluation"
+          {/* The four numbers that describe the workspace right now. */}
+          <MetricGroup className="mb-3">
+            <Metric size="lg" label="Documents" value={fmtNumber(stats.documents)} hint={`${plural(stats.versions, "source version")} preserved`} href="/documents" />
+            <Metric
+              size="lg"
+              label="Open review items"
+              value={fmtNumber(stats.openReviewItems)}
+              tone={stats.openReviewItems > 0 ? "warn" : "ok"}
+              hint={stats.openReviewItems > 0 ? "Awaiting a reviewer decision" : "Nothing waiting on a reviewer"}
+              href="/review"
+            />
+            <Metric
+              size="lg"
+              label="Extraction accuracy"
+              value={metrics ? fmtPct(metrics.extraction.scalar_exact_accuracy, 1) : "—"}
+              tone={metrics ? (metrics.extraction.scalar_exact_accuracy >= SUCCESS_TARGETS.scalarExactAccuracy ? "ok" : "bad") : "default"}
+              hint="Latest evaluation"
+              target={metrics ? { met: metrics.extraction.scalar_exact_accuracy >= SUCCESS_TARGETS.scalarExactAccuracy, text: `target ${fmtPct(SUCCESS_TARGETS.scalarExactAccuracy)}` } : undefined}
+              href={evalRun ? `/evals/${evalRun.id}` : "/evals"}
+            />
+            <Metric
+              size="lg"
+              label="Citation precision"
+              value={metrics ? fmtPct(metrics.rag.citation_precision, 1) : "—"}
+              tone={metrics ? (metrics.rag.citation_precision >= SUCCESS_TARGETS.citationPrecision ? "ok" : "bad") : "default"}
+              hint="Latest evaluation"
+              target={metrics ? { met: metrics.rag.citation_precision >= SUCCESS_TARGETS.citationPrecision, text: `target ${fmtPct(SUCCESS_TARGETS.citationPrecision)}` } : undefined}
+              href={evalRun ? `/evals/${evalRun.id}` : "/evals"}
+            />
+          </MetricGroup>
+
+          {/* Operational secondaries stay quiet: one strip, no cards. */}
+          <Panel className="mb-6">
+            <MetricStrip
+              items={[
+                { label: "Latest run", value: latestRun ? <StatusBadge status={latestRun.status} /> : "—", title: latestRun ? `run ${latestRun.id}` : undefined },
+                { label: "Latest run cost", value: latestRun ? fmtUsd(latestRun.estimatedCostUsd) : "—" },
+                { label: "Runs recorded", value: fmtNumber(stats.runsTotal) },
+                { label: "Open failures", value: fmtNumber(stats.deadLettersOpen), tone: stats.deadLettersOpen > 0 ? "bad" : "ok" },
+                { label: "Total spend", value: fmtUsd(stats.costUsd) },
+                { label: "Tokens used", value: fmtCompact(stats.inputTokens + stats.outputTokens + stats.embeddingTokens) },
+              ]}
+            />
+          </Panel>
+
+          {/* Quality: trend on the left, the run that produced the numbers on the right. */}
+          <SectionTitle
+            title="Quality"
+            description="Golden-suite results across recent evaluation runs."
             actions={
-              <Link href={`/evals/${evalRun.id}`} className="text-xs text-[var(--accent)] underline">
-                Open eval run
+              <Link href="/evals" className={`${inlineLink} text-[13px]`}>
+                All evaluations
               </Link>
             }
           />
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded border border-[var(--line)] bg-[var(--card)] px-3 py-2 text-sm">
-            <span className="flex items-center gap-2">
-              <Link href={`/evals/${evalRun.id}`} className="text-[var(--accent)] underline">
-                <Mono title={evalRun.id}>{shortId(evalRun.id)}</Mono>
-              </Link>
-              <StatusBadge status={evalRun.status} />
-              {evalRun.isBaseline ? <StatusBadge status="accepted" title="baseline run" /> : null}
-            </span>
-            <span>
-              regression{" "}
-              {evalRun.regressionPassed === null ? <span className="text-[var(--muted)]">n/a</span> : <StatusBadge status={evalRun.regressionPassed ? "pass" : "fail"} title={evalRegression?.hasBaseline ? "compared against baseline" : "no baseline: absolute rules only"} />}
-            </span>
-            {evalMetrics ? (
-              <>
-                <span>
-                  cases <span className="font-mono tabular-nums">{evalMetrics.cases.passed} / {evalMetrics.cases.total}</span>
-                </span>
-                <span>
-                  scalar acc. <span className="font-mono tabular-nums">{fmtPct(evalMetrics.extraction.scalar_exact_accuracy, 1)}</span>
-                </span>
-                <span>
-                  list F1 <span className="font-mono tabular-nums">{fmtPct(evalMetrics.extraction.list_micro_f1, 1)}</span>
-                </span>
-                <span>
-                  evidence <span className="font-mono tabular-nums">{fmtPct(evalMetrics.extraction.provenance_validity, 1)}</span>
-                </span>
-                <span>
-                  review recall <span className="font-mono tabular-nums">{fmtPct(evalMetrics.review.recall, 1)}</span>
-                </span>
-                <span>
-                  recall@5 <span className="font-mono tabular-nums">{fmtPct(evalMetrics.rag.retrieval_recall_at_5, 1)}</span>
-                </span>
-                <span>
-                  citation prec. <span className="font-mono tabular-nums">{fmtPct(evalMetrics.rag.citation_precision, 1)}</span>
-                </span>
-                <span>
-                  refusal acc. <span className="font-mono tabular-nums">{fmtPct(evalMetrics.rag.refusal_accuracy, 1)}</span>
-                </span>
-                <span>
-                  semantic <span className="font-mono tabular-nums">{evalMetrics.rag.semantic_score.toFixed(3)}</span>
-                </span>
-              </>
-            ) : (
-              <span className="text-[var(--muted)]">{evalRun.status === "running" ? "metrics pending" : "no aggregate metrics recorded"}</span>
-            )}
-            <span className="ml-auto text-xs text-[var(--muted)]">
-              <Mono>{fmtDate(evalRun.startedAt, true)}</Mono>
-            </span>
+          <div className="mb-6 grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+            <Panel>
+              <PanelHeader title="Quality over time" description={trend.length > 1 ? `${trend.length} evaluation runs` : undefined} />
+              <PanelBody className="p-3">
+                {trend.length > 1 ? (
+                  <QualityTrend data={trend} />
+                ) : (
+                  <div className="flex h-[196px] flex-col items-center justify-center gap-1 text-center text-[13px]">
+                    <span className="font-medium">Not enough history yet</span>
+                    <span className="text-[var(--muted)]">A trend appears once a second evaluation run completes.</span>
+                  </div>
+                )}
+              </PanelBody>
+            </Panel>
+
+            <Panel>
+              <PanelHeader
+                title="Latest evaluation"
+                actions={
+                  evalRun ? (
+                    <Button asChild variant="secondary" size="xs">
+                      <Link href={`/evals/${evalRun.id}`}>
+                        Open run
+                        <ArrowRight size={13} aria-hidden />
+                      </Link>
+                    </Button>
+                  ) : null
+                }
+              />
+              {evalRun ? (
+                <>
+                  <div className="flex flex-wrap items-center gap-2 border-b border-[var(--line)] px-4 py-2.5 text-[12.5px] text-[var(--muted)]">
+                    <Mono title={evalRun.id}>{shortId(evalRun.id)}</Mono>
+                    <StatusBadge status={evalRun.status} size="sm" />
+                    {evalRun.regressionPassed === null ? null : (
+                      <StatusBadge status={evalRun.regressionPassed ? "pass" : "fail"} size="sm" title={regression?.hasBaseline ? "Compared against the baseline run" : "No baseline: absolute rules only"} />
+                    )}
+                    {evalRun.isBaseline ? <StatusBadge status="baseline" size="sm" /> : null}
+                    <TimeAgo value={evalRun.startedAt} className="ml-auto" />
+                  </div>
+                  {metrics ? (
+                    <dl className="grid grid-cols-2 gap-x-4 gap-y-3 p-4 sm:grid-cols-3">
+                      {[
+                        { label: "Cases passed", value: `${metrics.cases.passed} / ${metrics.cases.total}` },
+                        { label: "List F1", value: fmtPct(metrics.extraction.list_micro_f1, 1) },
+                        { label: "Evidence validity", value: fmtPct(metrics.extraction.provenance_validity, 1) },
+                        { label: "Review recall", value: fmtPct(metrics.review.recall, 1) },
+                        { label: "Retrieval recall@5", value: fmtPct(metrics.rag.retrieval_recall_at_5, 1) },
+                        { label: "Refusal accuracy", value: fmtPct(metrics.rag.refusal_accuracy, 1) },
+                      ].map((m) => (
+                        <div key={m.label} className="min-w-0">
+                          <dt className="truncate text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--muted)]">{m.label}</dt>
+                          <dd className="tnum mt-0.5 text-[15px] font-semibold">{m.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : (
+                    <PanelBody className="text-[13px] text-[var(--muted)]">{evalRun.status === "running" ? "Metrics appear when the suite finishes." : "This run recorded no aggregate metrics."}</PanelBody>
+                  )}
+                </>
+              ) : (
+                <PanelBody className="text-[13px] text-[var(--muted)]">
+                  No evaluation has run in this workspace yet.{" "}
+                  <Link href="/evals" className={inlineLink}>
+                    Run the golden suite
+                  </Link>{" "}
+                  to measure extraction, retrieval and refusal quality.
+                </PanelBody>
+              )}
+            </Panel>
+          </div>
+
+          {/* Recent activity: two focused tables, not the full lists. A workspace
+              with only a run or two would leave half the row empty, so pair them
+              side by side only once the runs table can hold its own column. */}
+          <div className={`grid gap-5 ${runs.length >= 3 ? "xl:grid-cols-2" : ""}`}>
+            <section className="min-w-0">
+              <SectionTitle
+                title="Recent runs"
+                actions={
+                  <Link href="/runs" className={`${inlineLink} text-[13px]`}>
+                    All runs
+                  </Link>
+                }
+              />
+              <Table minWidth={520}>
+                <THead>
+                  <Th>Run</Th>
+                  <Th>Status</Th>
+                  <Th align="right">Documents</Th>
+                  <Th align="right">Review</Th>
+                  <Th align="right">Started</Th>
+                </THead>
+                <tbody>
+                  {runs.length === 0 ? <TableEmpty colSpan={5}>No processing runs yet.</TableEmpty> : null}
+                  {runs.map((r) => (
+                    <Tr key={r.id}>
+                      <Td>
+                        <CellStack
+                          primary={
+                            <Link href={`/runs/${r.id}`} className={rowLink}>
+                              <Mono>{shortId(r.id)}</Mono>
+                            </Link>
+                          }
+                          secondary={r.configJson.label ? String(r.configJson.label) : r.runType}
+                        />
+                      </Td>
+                      <Td>
+                        <StatusBadge status={r.status} />
+                      </Td>
+                      <Td align="right" title={`${r.documentsCompleted} completed, ${r.documentsFailed} failed, ${r.documentsTotal} total`}>
+                        {r.documentsCompleted}
+                        <span className="text-[var(--faint)]">/{r.documentsTotal}</span>
+                        {r.documentsFailed > 0 ? <span className="ml-1 text-[var(--bad)]">{r.documentsFailed} failed</span> : null}
+                      </Td>
+                      <Td align="right">{r.reviewItemsCreated || <span className="text-[var(--faint)]">0</span>}</Td>
+                      <Td align="right">
+                        <TimeAgo value={r.startedAt ?? r.createdAt} />
+                      </Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+            </section>
+
+            <section className="min-w-0">
+              <SectionTitle
+                title="Recent documents"
+                actions={
+                  <Link href="/documents" className={`${inlineLink} text-[13px]`}>
+                    All documents
+                  </Link>
+                }
+              />
+              <Table minWidth={520}>
+                <THead>
+                  <Th>Document</Th>
+                  <Th align="right">Version</Th>
+                  <Th>Status</Th>
+                  <Th align="right">Review</Th>
+                  <Th align="right">Processed</Th>
+                </THead>
+                <tbody>
+                  {docs.length === 0 ? <TableEmpty colSpan={5}>No documents yet.</TableEmpty> : null}
+                  {docs.map((d) => (
+                    <Tr key={d.id}>
+                      <Td className="max-w-[280px]">
+                        <CellStack
+                          primary={
+                            <Link href={`/documents/${d.id}`} className={rowLink} title={d.displayName}>
+                              {d.displayName}
+                            </Link>
+                          }
+                          secondary={<Mono className="text-[var(--muted)]">{d.logicalKey}</Mono>}
+                        />
+                      </Td>
+                      <Td align="right">{d.versionNumber !== null ? `v${d.versionNumber}` : "—"}</Td>
+                      <Td>
+                        <StatusBadge status={d.processingStatus} />
+                      </Td>
+                      <Td align="right">
+                        {d.openReviewCount > 0 ? <span className="font-semibold text-[var(--warn)]">{d.openReviewCount}</span> : <span className="text-[var(--faint)]">0</span>}
+                      </Td>
+                      <Td align="right">
+                        <TimeAgo value={d.updatedAt} />
+                      </Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+            </section>
           </div>
         </>
-      ) : null}
-
-      <SectionHeader title="Latest runs" actions={<Link href="/runs" className="text-xs text-[var(--accent)] underline">All runs</Link>} />
-      <Table>
-        <THead>
-          <Th>Run</Th>
-          <Th>Type</Th>
-          <Th>Status</Th>
-          <Th>Step</Th>
-          <Th align="right">Docs done / failed / total</Th>
-          <Th align="right">Review items</Th>
-          <Th align="right">Cost</Th>
-          <Th>Started</Th>
-        </THead>
-        <tbody>
-          {runs.length === 0 ? <TableEmpty colSpan={8}>No runs yet. Upload a document to start one.</TableEmpty> : null}
-          {runs.map((r) => (
-            <Tr key={r.id}>
-              <Td>
-                <Link href={`/runs/${r.id}`} className="text-[var(--accent)] underline">
-                  <Mono title={r.id}>{shortId(r.id)}</Mono>
-                </Link>
-                {r.configJson.label ? <div className="text-xs text-[var(--muted)]">{String(r.configJson.label)}</div> : null}
-              </Td>
-              <Td>{r.runType}</Td>
-              <Td>
-                <StatusBadge status={r.status} />
-              </Td>
-              <Td>
-                <Mono>{r.currentStep ?? ""}</Mono>
-              </Td>
-              <Td align="right">
-                {r.documentsCompleted} / {r.documentsFailed} / {r.documentsTotal}
-              </Td>
-              <Td align="right">{r.reviewItemsCreated}</Td>
-              <Td align="right">{fmtUsd(r.estimatedCostUsd)}</Td>
-              <Td>
-                <Mono>{fmtDate(r.startedAt ?? r.createdAt)}</Mono>
-              </Td>
-            </Tr>
-          ))}
-        </tbody>
-      </Table>
-
-      <SectionHeader title="Latest documents" actions={<Link href="/documents" className="text-xs text-[var(--accent)] underline">All documents</Link>} />
-      <Table>
-        <THead>
-          <Th>Document</Th>
-          <Th>Logical key</Th>
-          <Th align="right">Version</Th>
-          <Th>Status</Th>
-          <Th align="right">Open review</Th>
-          <Th>Updated</Th>
-        </THead>
-        <tbody>
-          {docs.length === 0 ? <TableEmpty colSpan={6}>No documents yet.</TableEmpty> : null}
-          {docs.map((d) => (
-            <Tr key={d.id}>
-              <Td>
-                <Link href={`/documents/${d.id}`} className="text-[var(--accent)] underline">
-                  {d.displayName}
-                </Link>
-                <div className="text-xs text-[var(--muted)]">{d.sourceFilename}</div>
-              </Td>
-              <Td>
-                <Mono>{d.logicalKey}</Mono>
-              </Td>
-              <Td align="right">{d.versionNumber !== null ? `v${d.versionNumber}` : ""}</Td>
-              <Td>
-                <StatusBadge status={d.processingStatus} />
-              </Td>
-              <Td align="right">{d.openReviewCount}</Td>
-              <Td>
-                <Mono>{fmtDate(d.updatedAt)}</Mono>
-              </Td>
-            </Tr>
-          ))}
-        </tbody>
-      </Table>
+      )}
     </>
-  );
-}
-
-function NavButton({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link href={href} className="rounded border border-[var(--line)] bg-[var(--card)] px-2.5 py-1 text-sm hover:bg-[var(--bg)]">
-      {children}
-    </Link>
   );
 }

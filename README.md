@@ -109,7 +109,11 @@ Uncached evaluation: $0 actual API spend (no OpenAI calls), 89,350 estimated moc
 
 ## Screenshots
 
-[Dashboard](docs/screenshots/dashboard.png) · [Documents](docs/screenshots/documents.png) · [Provenance](docs/screenshots/provenance.png) · [Review](docs/screenshots/review.png) · [Cited answer](docs/screenshots/answer.png) · [Evaluations](docs/screenshots/evaluations.png) · [Run activity](docs/screenshots/run.png) · [QA report](docs/screenshots/qa-report.png) · [Mobile](docs/screenshots/mobile-documents.png).
+A reviewer opening a blocked value sees the source block, the quote checked against it, why the router sent it here, and the five weighted components that produced the score — before deciding.
+
+![Review item with source evidence, routing reason and confidence breakdown](docs/screenshots/review.png)
+
+[Dashboard](docs/screenshots/dashboard.png) · [Documents](docs/screenshots/documents.png) · [Extracted record](docs/screenshots/provenance.png) · [Cited answer](docs/screenshots/answer.png) · [Evaluations](docs/screenshots/evaluations.png) · [Run activity](docs/screenshots/run.png) · [Upload](docs/screenshots/upload.png) · [QA report](docs/screenshots/qa-report.png) · Mobile: [overview](docs/screenshots/mobile-dashboard.png), [review queue](docs/screenshots/mobile-review.png).
 
 ## Running Locally
 

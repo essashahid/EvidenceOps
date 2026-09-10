@@ -17,9 +17,18 @@ export async function getRun(workspaceId: string, runId: string) {
 export async function listRunDocuments(workspaceId: string, versionIds: string[]) {
   if (versionIds.length === 0) return [];
   const rows = await getDb()
-    .select({ version: schema.documentVersions, document: schema.documents })
+    .select({
+      version: schema.documentVersions,
+      document: {
+        id: schema.documents.id,
+        logicalKey: schema.documents.logicalKey,
+        // The extracted report title names the document everywhere else in the app.
+        displayName: sql<string>`coalesce(${schema.recordVersions.payloadJson}->>'report_title', ${schema.documents.displayName})`,
+      },
+    })
     .from(schema.documentVersions)
     .innerJoin(schema.documents, eq(schema.documents.id, schema.documentVersions.documentId))
+    .leftJoin(schema.recordVersions, and(eq(schema.recordVersions.documentVersionId, schema.documentVersions.id), eq(schema.recordVersions.isCurrent, true)))
     .where(and(eq(schema.documentVersions.workspaceId, workspaceId), inArray(schema.documentVersions.id, versionIds)));
   const order = new Map(versionIds.map((id, i) => [id, i]));
   return rows.sort((a, b) => (order.get(a.version.id) ?? 0) - (order.get(b.version.id) ?? 0));

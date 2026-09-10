@@ -1,52 +1,46 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { mutationAllowed } from "@/lib/access";
 import { requireWorkspace } from "@/lib/workspace";
 import { getReviewItemDetail } from "@/lib/review/queries";
+import { openQueueNeighbours } from "@/lib/queries/review";
 import { enumValuesFor } from "@/lib/schema/report";
-import { CONFIDENCE_WEIGHTS } from "@/lib/config";
-import { PageHeader, SectionHeader } from "@/components/PageHeader";
-import { StatusBadge } from "@/components/StatusBadge";
+import { CONFIDENCE_WEIGHTS, ROUTING_THRESHOLDS } from "@/lib/config";
+import { PageHeader } from "@/components/PageHeader";
+import { Panel, PanelHeader, PanelBody, SectionTitle, Notice } from "@/components/ui/panel";
+import { Badge, StatusBadge } from "@/components/ui/badge";
 import { ConfidenceBar } from "@/components/ConfidenceBar";
-import { Table, THead, Th, Tr, Td, Mono, TableEmpty } from "@/components/DataTable";
-import { fmtDate, fmtValue, shortId } from "@/components/format";
+import { FieldValue } from "@/components/FieldValue";
+import { KeyValueList } from "@/components/ui/kv";
+import { Button } from "@/components/ui/button";
+import { Table, THead, Th, Tr, Td, Mono } from "@/components/ui/table";
+import { TimeStamp } from "@/components/ui/time";
+import { EmptyLine } from "@/components/ui/empty";
+import { fmtValue, shortId } from "@/components/format";
 import { ReviewForm } from "./ReviewForm";
 
 export const dynamic = "force-dynamic";
 
-const COMPONENTS: { key: keyof typeof CONFIDENCE_WEIGHTS; field: "evidenceExactMatch" | "deterministicValidation" | "verifierSupport" | "crossPassAgreement" | "evidenceSpecificity"; label: string }[] = [
-  { key: "evidence_exact_match", field: "evidenceExactMatch", label: "Evidence exact match" },
-  { key: "deterministic_validation", field: "deterministicValidation", label: "Deterministic validation" },
-  { key: "verifier_support", field: "verifierSupport", label: "Verifier support" },
-  { key: "cross_pass_agreement", field: "crossPassAgreement", label: "Cross-pass agreement" },
-  { key: "evidence_specificity", field: "evidenceSpecificity", label: "Evidence specificity" },
+const COMPONENTS: { key: keyof typeof CONFIDENCE_WEIGHTS; field: "evidenceExactMatch" | "deterministicValidation" | "verifierSupport" | "crossPassAgreement" | "evidenceSpecificity"; label: string; help: string }[] = [
+  { key: "evidence_exact_match", field: "evidenceExactMatch", label: "Evidence exact match", help: "The cited quote occurs verbatim in the cited source block" },
+  { key: "deterministic_validation", field: "deterministicValidation", label: "Deterministic validation", help: "Type, enum, date, amount and list checks in code" },
+  { key: "verifier_support", field: "verifierSupport", label: "Verifier support", help: "An independent model's verdict on the value" },
+  { key: "cross_pass_agreement", field: "crossPassAgreement", label: "Cross-pass agreement", help: "Extractor and verifier agree on the value" },
+  { key: "evidence_specificity", field: "evidenceSpecificity", label: "Evidence specificity", help: "How directly the evidence states the value" },
 ];
+
+/** The stored reason repeats the badges; show the verifier's own words where present. */
+function explainReason(reason: string): string {
+  const verifier = /\(verifier:\s*([^)]+)\)/i.exec(reason);
+  if (verifier?.[1]) return verifier[1].trim().replace(/^./, (c) => c.toUpperCase());
+  return reason.replace(/^(blocked|review|auto_approved):\s*/i, "").replace(/^./, (c) => c.toUpperCase());
+}
 
 function pretty(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (typeof value === "string") return value;
   return JSON.stringify(value, null, 2);
-}
-
-function Panel({ title, children, actions }: { title: string; children: React.ReactNode; actions?: React.ReactNode }) {
-  return (
-    <section className="min-w-0 rounded border border-[var(--line)] bg-[var(--card)]">
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--line)] bg-[var(--bg)] px-3 py-1.5 text-[11px] uppercase tracking-wide text-[var(--muted)]">
-        <span>{title}</span>
-        {actions}
-      </div>
-      <div className="px-3 py-2 text-sm">{children}</div>
-    </section>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-[150px_minmax(0,1fr)] gap-x-3 border-b border-[var(--line)] py-1.5 last:border-b-0">
-      <div className="text-xs text-[var(--muted)]">{label}</div>
-      <div className="min-w-0 break-words">{children}</div>
-    </div>
-  );
 }
 
 export default async function ReviewItemPage({ params, searchParams }: { params: Promise<{ itemId: string }>; searchParams: Promise<{ flash?: string | string[] }> }) {
@@ -56,6 +50,8 @@ export default async function ReviewItemPage({ params, searchParams }: { params:
   const detail = await getReviewItemDetail(workspace.workspaceId, itemId);
   if (!detail) notFound();
   const { item, field, version, document, record, evidence, context, extraction, currentRecord, actions } = detail;
+  const documentTitle = detail.documentTitle || document.displayName;
+  const queue = await openQueueNeighbours(workspace.workspaceId, itemId);
   const flash = Array.isArray(sp.flash) ? sp.flash[0] : sp.flash;
   const reviewer = mutationAllowed(sessionContext);
   const versionHref = `/documents/${document.id}/versions/${version.id}`;
@@ -64,269 +60,330 @@ export default async function ReviewItemPage({ params, searchParams }: { params:
   const isOpen = ["open", "needs_source"].includes(item.status);
   const leaf = item.fieldPath.replace(/^.*\./, "");
   const enumValues = enumValuesFor(item.fieldPath);
-  const valueKind: "text" | "number" | "enum" = enumValues ? "enum" : leaf === "amount" ? "number" : "text";
+  const isListItem = /\[\d+\]$/.test(item.fieldPath);
+  const valueKind: "text" | "number" | "enum" | "json" = isListItem ? "json" : enumValues ? "enum" : leaf === "amount" ? "number" : "text";
   const candidate = field.valueJson;
   const suggested = field.verifierCorrectedValueJson;
   const hasSuggestion = suggested !== null && suggested !== undefined;
   const resolution = actions.find((a) => a.action.resultingRecordVersionId) ?? actions[0] ?? null;
   const staleRecord = currentRecord && currentRecord.id !== record.id;
+  const errors = field.validationMessages.filter((m) => m.level === "error");
+  const warnings = field.validationMessages.filter((m) => m.level !== "error");
 
   return (
     <>
       <PageHeader
+        breadcrumbs={[{ label: "Review queue", href: "/review" }, { label: detail.fieldLabel }]}
         title={
-          <span className="flex flex-wrap items-center gap-2">
-            Review: {detail.fieldLabel} <StatusBadge status={item.status} />
-            {item.priority === "high" ? <StatusBadge status="blocked" title="high priority" /> : null}
-          </span>
+          <>
+            {detail.fieldLabel}
+            <StatusBadge status={item.status} />
+            {item.priority === "high" ? <StatusBadge status="high" title="High priority: blocked or a required field" /> : null}
+          </>
         }
-        subtitle={
-          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <Link href={versionHref} className="text-[var(--accent)] underline">
-              {document.displayName}
+        meta={
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-[var(--muted)]">
+            <Link href={versionHref} className="max-w-[380px] truncate font-medium text-[var(--fg)] transition-colors hover:text-[var(--accent)]" title={documentTitle}>
+              {documentTitle}
             </Link>
-            <Mono>{document.logicalKey}</Mono>
-            <span>v{version.versionNumber}</span>
-            <span>created {fmtDate(item.createdAt, true)}</span>
-            <Mono title={item.id}>item {shortId(item.id)}</Mono>
-          </span>
+            <span>
+              <Mono>{document.logicalKey}</Mono> v{version.versionNumber}
+            </span>
+            <Mono className="text-[var(--muted)]">{item.fieldPath}</Mono>
+            <TimeStamp value={item.createdAt} />
+          </div>
         }
         actions={
-          <Link href="/review" className="text-sm text-[var(--accent)] underline">
-            Back to queue
-          </Link>
+          <div className="flex items-center gap-1.5">
+            {queue.index >= 0 ? (
+              <span className="tnum mr-1 text-[12.5px] text-[var(--muted)]">
+                {queue.index + 1} of {queue.total} open
+              </span>
+            ) : null}
+            <Button asChild variant="secondary" size="sm" className={queue.prevId ? "" : "pointer-events-none opacity-40"}>
+              <Link href={queue.prevId ? `/review/${queue.prevId}` : "#"} aria-label="Previous open item">
+                <ChevronLeft size={14} aria-hidden />
+              </Link>
+            </Button>
+            <Button asChild variant="secondary" size="sm" className={queue.nextId ? "" : "pointer-events-none opacity-40"}>
+              <Link href={queue.nextId ? `/review/${queue.nextId}` : "#"} aria-label="Next open item">
+                <ChevronRight size={14} aria-hidden />
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/review">Back to queue</Link>
+            </Button>
+          </div>
         }
       />
-      {flash ? <div className="mb-3 rounded border border-[var(--ok)] bg-[color-mix(in_srgb,var(--ok)_8%,white)] px-3 py-1.5 text-sm text-[var(--ok)]">{flash}</div> : null}
+
+      {flash ? (
+        <Notice tone="ok" className="mb-4">
+          {flash}
+        </Notice>
+      ) : null}
       {!isOpen ? (
-        <div className="mb-3 rounded border border-[var(--line)] bg-[var(--card)] px-3 py-2 text-sm">
-          <span className="font-medium">This item is {item.status}</span>
-          {item.resolvedAt ? <span className="text-[var(--muted)]"> on {fmtDate(item.resolvedAt, true)}</span> : null}
-          {resolution ? (
-            <span className="text-[var(--muted)]">
-              {" "}
-              by {resolution.reviewer?.displayName ?? resolution.reviewer?.email ?? "unknown"} ({resolution.action.action})
-            </span>
-          ) : null}
+        <Notice tone="info" title={`This item is ${item.status.replaceAll("_", " ")}.`} className="mb-4">
+          {resolution ? `${resolution.action.action.replaceAll("_", " ")} by ${resolution.reviewer?.displayName ?? resolution.reviewer?.email ?? "an unknown reviewer"}.` : null}{" "}
           {resolution?.action.resultingRecordVersionId ? (
-            <span>
-              {" "}
-              <Link href={`${versionHref}#history`} className="text-[var(--accent)] underline">
-                resulting record version <Mono>{shortId(resolution.action.resultingRecordVersionId)}</Mono>
-              </Link>
-            </span>
+            <Link href={`${versionHref}#history`} className="underline underline-offset-2">
+              View the resulting record version
+            </Link>
           ) : null}
-        </div>
+        </Notice>
       ) : null}
       {isOpen && staleRecord ? (
-        <div className="mb-3 rounded border border-[var(--warn)] bg-[color-mix(in_srgb,var(--warn)_8%,white)] px-3 py-1.5 text-sm text-[var(--warn)]">
-          The record has moved on since this item was created (item record v{record.versionNumber}, current v{currentRecord.versionNumber}). Actions apply to the current record.
-        </div>
+        <Notice tone="warn" title="The record moved on since this item was created." className="mb-4">
+          This item points at record v{record.versionNumber}; the current record is v{currentRecord.versionNumber}. Your decision applies to the current record.
+        </Notice>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <Panel
-          title="Source"
-          actions={
-            locator ? (
-              <a href={`${versionHref}#${locator}`} className="normal-case tracking-normal text-[var(--accent)] underline">
-                Open full document
-              </a>
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(380px,440px)]">
+        {/* ---------------- Source evidence ---------------- */}
+        <div className="flex min-w-0 flex-col gap-4">
+          <Panel>
+            <PanelHeader
+              title="Source evidence"
+              actions={
+                <Button asChild variant="secondary" size="xs">
+                  <a href={locator ? `${versionHref}#${locator}` : `${versionHref}#source`}>
+                    Open full document
+                    <ExternalLink size={12} aria-hidden />
+                  </a>
+                </Button>
+              }
+            />
+            <KeyValueList
+              items={[
+                {
+                  label: "Version",
+                  value: (
+                    <span className="flex flex-wrap items-center gap-2">
+                      v{version.versionNumber}
+                      <StatusBadge status={version.isCurrent ? "current" : "superseded"} size="sm" />
+                      <span className="text-[12px] text-[var(--muted)]">{version.sourceFilename}</span>
+                    </span>
+                  ),
+                },
+                {
+                  label: "Locator",
+                  value: locator ? <Mono>{locator}</Mono> : <span className="text-[var(--bad)]">No evidence was recorded for this field.</span>,
+                },
+                { label: "Source hash", value: <Mono title={version.contentHash}>sha256 {version.contentHash.slice(0, 16)}…</Mono> },
+                ...(evidence
+                  ? [
+                      {
+                        label: "Cited quote",
+                        value: (
+                          <span className="flex flex-col items-start gap-1.5">
+                            <span className="italic leading-6">&ldquo;{evidence.quoteText}&rdquo;</span>
+                            <Badge
+                              tone={evidence.exactMatch ? "ok" : "warn"}
+                              title={evidence.exactMatch ? "The quote occurs verbatim in the cited block" : "The quote could not be located verbatim in the cited block"}
+                            >
+                              {evidence.exactMatch ? "Found verbatim" : "Not found verbatim"}
+                            </Badge>
+                          </span>
+                        ),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+            <div className="border-t border-[var(--line)] bg-[var(--surface-sunken)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]">Surrounding context</div>
+            {context ? (
+              <div className="scroll-thin max-h-[460px] overflow-y-auto px-4 py-3">
+                <p className="whitespace-pre-wrap break-words font-mono text-[12.5px] leading-6 text-[var(--muted)]">
+                  {context.before}
+                  {context.match ? <mark className="font-sans text-[13px] text-[var(--fg)]">{context.match}</mark> : null}
+                  {context.after}
+                </p>
+              </div>
             ) : (
-              <Link href={`${versionHref}#source`} className="normal-case tracking-normal text-[var(--accent)] underline">
-                Open full document
-              </Link>
-            )
-          }
-        >
-          <Row label="Document">
-            <Link href={versionHref} className="text-[var(--accent)] underline">
-              {document.displayName}
-            </Link>
-            <div className="text-xs text-[var(--muted)]">
-              <Mono>{document.logicalKey}</Mono> {version.sourceFilename}
-            </div>
-          </Row>
-          <Row label="Version">
-            v{version.versionNumber} {version.isCurrent ? <StatusBadge status="accepted" title="current version" /> : <span className="text-xs text-[var(--muted)]">superseded</span>}
-          </Row>
-          <Row label="Locator">{locator ? <Mono>{locator}</Mono> : <span className="text-[var(--bad)]">no evidence recorded for this field</span>}</Row>
-          <Row label="Source hash">
-            <Mono title={version.contentHash}>sha256 {version.contentHash.slice(0, 12)}</Mono>
-          </Row>
-          {evidence ? (
-            <Row label="Quote">
-              <span className="italic">&ldquo;{evidence.quoteText}&rdquo;</span>{" "}
-              <span className={`text-xs ${evidence.exactMatch ? "text-[var(--ok)]" : "text-[var(--warn)]"}`}>{evidence.exactMatch ? "exact match" : "not found verbatim"}</span>
-            </Row>
-          ) : null}
-          <div className="mt-2 text-[11px] uppercase tracking-wide text-[var(--muted)]">Context</div>
-          {context ? (
-            <pre className="mt-1 max-h-[420px] overflow-y-auto whitespace-pre-wrap break-words rounded border border-[var(--line)] bg-[var(--bg)] px-2 py-1.5 font-mono text-xs leading-5">
-              {context.before}
-              {context.match ? <mark className="rounded bg-[color-mix(in_srgb,var(--warn)_35%,white)] px-0.5">{context.match}</mark> : null}
-              {context.after}
-            </pre>
-          ) : (
-            <div className="mt-1 text-xs text-[var(--muted)]">No source block is linked to this evidence.</div>
-          )}
-        </Panel>
-
-        <Panel title="Candidate">
-          <Row label="Field">
-            {detail.fieldLabel}
-            <div>
-              <Mono className="text-[var(--muted)]">{item.fieldPath}</Mono>
-              {field.isRequired ? <span className="ml-1 text-xs text-[var(--bad)]">required</span> : null}
-            </div>
-          </Row>
-          <Row label="Candidate value">
-            {candidate === null || candidate === undefined ? (
-              <span className="text-[var(--muted)]">null</span>
-            ) : typeof candidate === "string" ? (
-              <span className="break-words">{candidate}</span>
-            ) : (
-              <pre className="whitespace-pre-wrap break-words font-mono text-xs">{pretty(candidate)}</pre>
+              <PanelBody>
+                <EmptyLine>No source block is linked to this evidence, so there is no context to show.</EmptyLine>
+              </PanelBody>
             )}
-          </Row>
-          <Row label="Confidence">
-            <ConfidenceBar value={confidence} width={160} />
-            <table className="mt-1 w-full text-xs">
-              <thead className="text-[11px] uppercase tracking-wide text-[var(--muted)]">
-                <tr>
-                  <th className="py-0.5 text-left font-medium">Component</th>
-                  <th className="py-0.5 text-right font-medium">Weight</th>
-                  <th className="py-0.5 text-right font-medium">Value</th>
-                  <th className="py-0.5 text-right font-medium">Contribution</th>
-                </tr>
-              </thead>
-              <tbody className="font-mono tabular-nums">
+          </Panel>
+
+          <Panel>
+            <PanelHeader title="Why this was routed here" />
+            <PanelBody className="space-y-3">
+              <p className="text-[13px] leading-6">{explainReason(item.reason)}</p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <StatusBadge status={field.routingStatus} />
+                <StatusBadge status={field.verifierStatus ?? "unverified"} title="Independent verifier verdict" />
+                {field.contradiction ? <StatusBadge status="contradicted" /> : null}
+                {field.isRequired ? <StatusBadge status="high" title="Required field" /> : null}
+              </div>
+              {errors.length + warnings.length > 0 ? (
+                <ul className="space-y-1 text-[12.5px]">
+                  {[...errors, ...warnings].map((m, i) => (
+                    <li key={i} className="flex flex-wrap items-baseline gap-1.5">
+                      <StatusBadge status={m.level === "error" ? "error" : "warn"} size="sm" />
+                      <Mono className="text-[var(--muted)]">{m.code}</Mono>
+                      <span>{m.message}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-[12.5px] text-[var(--muted)]">Deterministic validation raised no messages for this field.</p>
+              )}
+            </PanelBody>
+          </Panel>
+
+          <Panel>
+            <PanelHeader title="Confidence" description={`Auto-approve at ${ROUTING_THRESHOLDS.autoApprove}, review from ${ROUTING_THRESHOLDS.review}. Calculated in code, never by a model.`} />
+            <PanelBody className="p-4 pb-2">
+              <ConfidenceBar value={confidence} width={220} className="mb-3" />
+            </PanelBody>
+            <Table bare minWidth={420}>
+              <THead>
+                <Th>Component</Th>
+                <Th align="right" width={80}>
+                  Weight
+                </Th>
+                <Th align="right" width={80}>
+                  Value
+                </Th>
+                <Th align="right" width={110}>
+                  Contribution
+                </Th>
+              </THead>
+              <tbody>
                 {COMPONENTS.map((c) => {
                   const v = Number(field[c.field]);
                   return (
-                    <tr key={c.key} className="border-t border-[var(--line)]">
-                      <td className="py-0.5 font-sans">{c.label}</td>
-                      <td className="py-0.5 text-right">{CONFIDENCE_WEIGHTS[c.key].toFixed(2)}</td>
-                      <td className="py-0.5 text-right">{v.toFixed(2)}</td>
-                      <td className="py-0.5 text-right">{(v * CONFIDENCE_WEIGHTS[c.key]).toFixed(3)}</td>
-                    </tr>
+                    <Tr key={c.key}>
+                      <Td title={c.help}>{c.label}</Td>
+                      <Td align="right" className="text-[var(--muted)]">
+                        {CONFIDENCE_WEIGHTS[c.key].toFixed(2)}
+                      </Td>
+                      <Td align="right" className={v === 0 ? "text-[var(--bad)]" : v < 1 ? "text-[var(--warn)]" : ""}>
+                        {v.toFixed(2)}
+                      </Td>
+                      <Td align="right" className="font-medium">
+                        {(v * CONFIDENCE_WEIGHTS[c.key]).toFixed(3)}
+                      </Td>
+                    </Tr>
                   );
                 })}
-                <tr className="border-t border-[var(--line)] font-semibold">
-                  <td className="py-0.5 font-sans">Total</td>
-                  <td className="py-0.5 text-right">1.00</td>
-                  <td></td>
-                  <td className="py-0.5 text-right">{confidence.toFixed(3)}</td>
-                </tr>
+                <Tr className="bg-[var(--surface-sunken)] font-semibold">
+                  <Td>Total</Td>
+                  <Td align="right">1.00</Td>
+                  <Td />
+                  <Td align="right">{confidence.toFixed(3)}</Td>
+                </Tr>
               </tbody>
-            </table>
-          </Row>
-          <Row label="Routing">
-            <span className="flex flex-wrap items-center gap-1">
-              <StatusBadge status={field.routingStatus} />
-              {field.contradiction ? <StatusBadge status="contradicted" /> : null}
-            </span>
-          </Row>
-          <Row label="Verifier">
-            <span className="flex flex-wrap items-center gap-1">
-              <StatusBadge status={field.verifierStatus ?? "unverified"} />
-            </span>
-            <div className="mt-0.5 text-xs">{item.reason}</div>
-          </Row>
-          <Row label="Models">
-            {extraction ? (
-              <div className="text-xs">
-                <div>
-                  extractor <Mono>{extraction.extractorModel}</Mono> <Mono className="text-[var(--muted)]">{extraction.extractorPromptVersion}</Mono>
-                </div>
-                <div>
-                  verifier <Mono>{extraction.verifierModel}</Mono> <Mono className="text-[var(--muted)]">{extraction.verifierPromptVersion}</Mono>
-                </div>
-                <div>
-                  config <Mono title={extraction.modelConfigHash}>{shortId(extraction.modelConfigHash)}</Mono> record v{record.versionNumber}
-                </div>
-              </div>
-            ) : (
-              <span className="text-xs text-[var(--muted)]">no extraction run linked</span>
-            )}
-          </Row>
-          <Row label="Validation">
-            {field.validationMessages.length === 0 ? (
-              <span className="text-xs text-[var(--muted)]">no validation messages</span>
-            ) : (
-              <ul className="text-xs">
-                {field.validationMessages.map((m, i) => (
-                  <li key={i} className={m.level === "error" ? "text-[var(--bad)]" : "text-[var(--warn)]"}>
-                    <Mono>{m.code}</Mono> {m.message}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Row>
-          {hasSuggestion ? (
-            <Row label="Verifier corrected">
-              <span className="text-[var(--warn)]">{typeof suggested === "string" ? suggested : pretty(suggested)}</span>
-            </Row>
-          ) : null}
+            </Table>
+          </Panel>
+        </div>
 
-          <div className="mt-3 border-t border-[var(--line)] pt-3">
-            {!isOpen ? (
-              <div className="text-xs text-[var(--muted)]">No actions are available: this item is {item.status}.</div>
-            ) : !reviewer ? (
-              <div className="text-xs text-[var(--muted)]">Read-only: your role ({workspace.role}) cannot resolve review items. Ask a reviewer or admin.</div>
-            ) : (
-              <ReviewForm
-                reviewItemId={item.id}
-                fieldPath={item.fieldPath}
-                expectedRecordVersionId={currentRecord?.id ?? null}
-                initialValue={candidate === null || candidate === undefined ? "" : typeof candidate === "string" ? candidate : fmtValue(candidate)}
-                valueKind={valueKind}
-                enumValues={enumValues}
-                suggestedValue={hasSuggestion ? (typeof suggested === "string" ? suggested : fmtValue(suggested)) : null}
-              />
-            )}
-          </div>
-        </Panel>
+        {/* ---------------- Decision ---------------- */}
+        <div className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-[112px]">
+          <Panel>
+            <PanelHeader title="Candidate value" description={extraction ? `Extracted by ${extraction.extractorModel}` : undefined} />
+            <PanelBody className="space-y-3">
+              <div className="rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--surface-sunken)] px-3 py-2.5 text-[13.5px] leading-6">
+                <FieldValue fieldPath={item.fieldPath} value={candidate} />
+              </div>
+              {hasSuggestion ? (
+                <div className="rounded-[var(--r-md)] border border-[var(--warn-border)] bg-[var(--warn-soft)] px-3 py-2.5">
+                  <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--warn)]">Verifier suggests</div>
+                  <div className="text-[13.5px] leading-6">
+                    <FieldValue fieldPath={item.fieldPath} value={suggested} />
+                  </div>
+                </div>
+              ) : null}
+              {typeof candidate === "object" && candidate !== null ? (
+                <details className="text-[12px]">
+                  <summary className="cursor-pointer text-[var(--muted)] transition-colors hover:text-[var(--accent)]">Raw stored value</summary>
+                  <pre className="scroll-thin mt-1.5 max-h-56 overflow-auto rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--surface-sunken)] p-2.5 font-mono text-[12px] leading-5">{pretty(candidate)}</pre>
+                </details>
+              ) : null}
+            </PanelBody>
+          </Panel>
+
+          <Panel>
+            <PanelHeader title="Decision" description={isOpen ? "Every decision creates a new immutable record version." : undefined} />
+            <PanelBody>
+              {!isOpen ? (
+                <p className="text-[13px] text-[var(--muted)]">This item is {item.status.replaceAll("_", " ")}; no further action is available.</p>
+              ) : !reviewer ? (
+                <p className="text-[13px] text-[var(--muted)]">
+                  Read-only access: the <StatusBadge status={workspace.role} size="sm" /> role cannot resolve review items.
+                </p>
+              ) : (
+                <ReviewForm
+                  reviewItemId={item.id}
+                  fieldPath={item.fieldPath}
+                  expectedRecordVersionId={currentRecord?.id ?? null}
+                  initialValue={candidate === null || candidate === undefined ? "" : typeof candidate === "string" ? candidate : pretty(candidate)}
+                  valueKind={valueKind}
+                  enumValues={enumValues}
+                  suggestedValue={hasSuggestion ? (typeof suggested === "string" ? suggested : pretty(suggested)) : null}
+                />
+              )}
+            </PanelBody>
+          </Panel>
+
+          <Panel>
+            <PanelHeader dense title="Provenance" />
+            <KeyValueList
+              labelWidth={112}
+              items={[
+                { label: "Extractor", value: extraction ? <span className="flex flex-wrap items-center gap-1.5"><Mono>{extraction.extractorModel}</Mono><Mono className="text-[var(--muted)]">{extraction.extractorPromptVersion}</Mono></span> : <span className="text-[var(--muted)]">Not linked</span> },
+                { label: "Verifier", value: extraction ? <span className="flex flex-wrap items-center gap-1.5"><Mono>{extraction.verifierModel}</Mono><Mono className="text-[var(--muted)]">{extraction.verifierPromptVersion}</Mono></span> : <span className="text-[var(--muted)]">Not linked</span> },
+                { label: "Model config", value: extraction ? <Mono title={extraction.modelConfigHash}>{shortId(extraction.modelConfigHash)}</Mono> : "—" },
+                { label: "Record version", value: <span>v{record.versionNumber}{currentRecord ? <span className="text-[var(--muted)]"> (current v{currentRecord.versionNumber})</span> : null}</span> },
+                { label: "Item id", value: <Mono title={item.id}>{shortId(item.id)}</Mono> },
+              ]}
+            />
+          </Panel>
+        </div>
       </div>
 
-      <SectionHeader title="Action history" count={actions.length} />
-      <Table>
-        <THead>
-          <Th>When</Th>
-          <Th>Action</Th>
-          <Th>Reviewer</Th>
-          <Th>Old value</Th>
-          <Th>New value</Th>
-          <Th>Comment</Th>
-          <Th>Resulting record</Th>
-        </THead>
-        <tbody>
-          {actions.length === 0 ? <TableEmpty colSpan={7}>No actions yet.</TableEmpty> : null}
-          {actions.map(({ action: a, reviewer: r }) => (
-            <Tr key={a.id}>
-              <Td>
-                <Mono>{fmtDate(a.createdAt, true)}</Mono>
-              </Td>
-              <Td>
-                <StatusBadge status={a.action} />
-              </Td>
-              <Td>{r?.displayName ?? r?.email ?? shortId(a.reviewerUserId)}</Td>
-              <Td className="max-w-[240px] break-words text-xs">{fmtValue(a.oldValueJson) || <span className="text-[var(--muted)]">null</span>}</Td>
-              <Td className="max-w-[240px] break-words text-xs">{fmtValue(a.newValueJson) || <span className="text-[var(--muted)]">null</span>}</Td>
-              <Td className="max-w-[280px] break-words text-xs">{a.comment ?? ""}</Td>
-              <Td>
-                {a.resultingRecordVersionId ? (
-                  <Link href={`${versionHref}#history`} className="text-[var(--accent)] underline">
-                    <Mono title={a.resultingRecordVersionId}>{shortId(a.resultingRecordVersionId)}</Mono>
-                  </Link>
-                ) : (
-                  ""
-                )}
-              </Td>
-            </Tr>
-          ))}
-        </tbody>
-      </Table>
+      <SectionTitle title="Action history" count={actions.length} className="mt-6" />
+      {actions.length === 0 ? (
+        <EmptyLine>No reviewer has acted on this item yet. Accepting, editing or rejecting it will be recorded here with the old and new values.</EmptyLine>
+      ) : (
+        <Table minWidth={880}>
+          <THead>
+            <Th width={160}>When</Th>
+            <Th width={130}>Action</Th>
+            <Th width={160}>Reviewer</Th>
+            <Th>Old value</Th>
+            <Th>New value</Th>
+            <Th>Comment</Th>
+            <Th width={120}>Record</Th>
+          </THead>
+          <tbody>
+            {actions.map(({ action: a, reviewer: r }) => (
+              <Tr key={a.id}>
+                <Td>
+                  <TimeStamp value={a.createdAt} withSeconds />
+                </Td>
+                <Td>
+                  <StatusBadge status={a.action === "edit_accept" ? "accepted" : a.action === "accept" ? "accepted" : a.action} size="sm" title={a.action} />
+                </Td>
+                <Td className="truncate">{r?.displayName ?? r?.email ?? shortId(a.reviewerUserId)}</Td>
+                <Td className="max-w-[220px] break-words text-[12.5px] text-[var(--muted)]">{fmtValue(a.oldValueJson) || <span className="text-[var(--faint)]">null</span>}</Td>
+                <Td className="max-w-[220px] break-words text-[12.5px]">{fmtValue(a.newValueJson) || <span className="text-[var(--faint)]">null</span>}</Td>
+                <Td className="max-w-[240px] break-words text-[12.5px] text-[var(--muted)]">{a.comment ?? <span className="text-[var(--faint)]">—</span>}</Td>
+                <Td>
+                  {a.resultingRecordVersionId ? (
+                    <Link href={`${versionHref}#history`} className="text-[var(--accent)] transition-colors hover:underline">
+                      <Mono title={a.resultingRecordVersionId}>{shortId(a.resultingRecordVersionId)}</Mono>
+                    </Link>
+                  ) : (
+                    <span className="text-[var(--faint)]">—</span>
+                  )}
+                </Td>
+              </Tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
     </>
   );
 }

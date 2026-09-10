@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db/client";
 
 /** Last N questions asked in the workspace with their (latest) answer's mode and sufficiency. */
@@ -36,13 +36,15 @@ export async function loadVersionRefs(workspaceId: string, versionIds: string[])
     .select({
       versionId: schema.documentVersions.id,
       documentId: schema.documents.id,
-      displayName: schema.documents.displayName,
+      // The extracted report title names documents consistently across the app.
+      displayName: sql<string>`coalesce(${schema.recordVersions.payloadJson}->>'report_title', ${schema.documents.displayName})`,
       logicalKey: schema.documents.logicalKey,
       versionNumber: schema.documentVersions.versionNumber,
       isCurrent: schema.documentVersions.isCurrent,
     })
     .from(schema.documentVersions)
     .innerJoin(schema.documents, eq(schema.documents.id, schema.documentVersions.documentId))
+    .leftJoin(schema.recordVersions, and(eq(schema.recordVersions.documentVersionId, schema.documentVersions.id), eq(schema.recordVersions.isCurrent, true)))
     .where(and(eq(schema.documentVersions.workspaceId, workspaceId), inArray(schema.documentVersions.id, unique)));
   return new Map<string, VersionRef>(rows.map((r) => [r.versionId, r]));
 }

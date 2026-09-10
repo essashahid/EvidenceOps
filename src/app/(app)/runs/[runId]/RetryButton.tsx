@@ -14,11 +14,11 @@ export function RetryButton({ runId, documentVersionId, failedStep, canRetry, re
       <input type="hidden" name="documentVersionId" value={documentVersionId} />
       <input type="hidden" name="failedStep" value={failedStep} />
       <span title={title} className="inline-block">
-        <FormButton size="sm" variant="secondary" disabled={disabled} title={title} pendingText="Retrying...">
-          Retry failed step
+        <FormButton size="xs" variant="secondary" disabled={disabled} title={title} pendingText="Retrying…">
+          Retry step
         </FormButton>
       </span>
-      {state ? <span className={`text-xs ${state.ok ? "text-[var(--ok)]" : "text-[var(--bad)]"}`}>{state.message}</span> : null}
+      {state ? <span className={`text-[12px] ${state.ok ? "text-[var(--ok)]" : "text-[var(--bad)]"}`}>{state.message}</span> : null}
     </form>
   );
 }

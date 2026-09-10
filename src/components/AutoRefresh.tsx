@@ -12,5 +12,10 @@ export function AutoRefresh({ active, intervalMs = 5000 }: { active: boolean; in
     return () => clearInterval(id);
   }, [active, intervalMs, router]);
   if (!active) return null;
-  return <span className="text-xs text-[var(--muted)]">Auto-refreshing every {Math.round(intervalMs / 1000)} s</span>;
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--info-border)] bg-[var(--info-soft)] px-2 py-0.5 text-[12px] font-medium text-[var(--info)]">
+      <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-current" />
+      Live, refreshing every {Math.round(intervalMs / 1000)} s
+    </span>
+  );
 }

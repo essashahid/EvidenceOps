@@ -8,7 +8,10 @@ export default async function UploadPage() {
   const context = await requireWorkspace();
   return (
     <>
-      <PageHeader title="Upload documents" subtitle="Files are hashed, versioned by logical key, stored, then processed through parse, chunk, extract, validate, verify, score and route, embed." />
+      <PageHeader
+        title="Upload documents"
+        subtitle="Files are hashed and versioned by logical key before anything is processed, so re-uploading the same document never costs a second extraction."
+      />
       <UploadForm canUpload={mutationAllowed(context) && jobsConfigured()} directUpload={env().STORAGE_DRIVER !== "local"} />
     </>
   );

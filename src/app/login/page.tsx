@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 import { LoginForm } from "./LoginForm";
@@ -14,24 +15,40 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const e = env();
   const showHints = e.NODE_ENV !== "production";
   const next = params.next && params.next.startsWith("/") ? params.next : "/";
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 py-12">
-      <div className="rounded border border-[var(--line)] bg-[var(--card)] p-5">
-        <div className="mb-4">
-          <div className="text-base font-semibold text-[var(--accent)]">EvidenceOps</div>
-          <h1 className="text-sm text-[var(--muted)]">Sign in to your workspace</h1>
+    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="w-full max-w-[380px]">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <span className="mb-3 grid size-11 place-items-center rounded-[var(--r-lg)] bg-[var(--accent)] text-white shadow-[var(--shadow-md)]">
+            <ShieldCheck size={22} aria-hidden strokeWidth={2.2} />
+          </span>
+          <h1 className="text-[20px] font-semibold tracking-[-0.02em]">EvidenceOps</h1>
+          <p className="mt-1 text-[13px] text-[var(--muted)]">Document intelligence with evidence you can check.</p>
         </div>
-        <LoginForm next={next} initialError={params.error ? (ERRORS[params.error] ?? "Sign-in required") : null} />
+
+        <div className="rounded-[var(--r-lg)] border border-[var(--line)] bg-[var(--surface)] p-5 shadow-[var(--shadow-md)]">
+          <LoginForm next={next} initialError={params.error ? (ERRORS[params.error] ?? "Sign-in required") : null} />
+        </div>
+
         {showHints ? (
-          <div className="mt-4 border-t border-[var(--line)] pt-3 text-xs text-[var(--muted)]">
-            <div className="mb-1 font-medium">Demo accounts</div>
-            <div className="font-mono">
-              {e.DEMO_ADMIN_EMAIL} / {e.DEMO_ADMIN_PASSWORD} (admin)
-            </div>
-            <div className="font-mono">
-              {e.DEMO_REVIEWER_EMAIL} / {e.DEMO_REVIEWER_PASSWORD} (reviewer)
-            </div>
-            <div className="mt-1">Auth driver: {e.AUTH_DRIVER}</div>
+          <div className="mt-4 rounded-[var(--r-lg)] border border-dashed border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-[12.5px]">
+            <div className="mb-1.5 font-semibold text-[var(--muted)]">Demo accounts</div>
+            <dl className="space-y-1">
+              {[
+                ["Admin", e.DEMO_ADMIN_EMAIL, e.DEMO_ADMIN_PASSWORD],
+                ["Reviewer", e.DEMO_REVIEWER_EMAIL, e.DEMO_REVIEWER_PASSWORD],
+                ["Viewer", e.DEMO_VIEWER_EMAIL, e.DEMO_VIEWER_PASSWORD],
+              ].map(([role, email, password]) => (
+                <div key={role} className="flex flex-wrap items-baseline gap-x-2">
+                  <dt className="w-16 shrink-0 text-[var(--muted)]">{role}</dt>
+                  <dd className="min-w-0 font-mono text-[11.5px]">
+                    {email} / {password}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-2 text-[var(--faint)]">Auth driver: {e.AUTH_DRIVER}</p>
           </div>
         ) : null}
       </div>

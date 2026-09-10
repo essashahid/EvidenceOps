@@ -1,7 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Loader2 } from "lucide-react";
+import { Field, Textarea } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Notice } from "@/components/ui/panel";
+import { cn } from "@/lib/utils";
 import { resolveReviewAction, type ReviewFormState } from "./actions";
 
 type Props = {
@@ -9,58 +14,103 @@ type Props = {
   fieldPath: string;
   expectedRecordVersionId: string | null;
   initialValue: string;
-  valueKind: "text" | "number" | "enum";
+  valueKind: "text" | "number" | "enum" | "json";
   enumValues: readonly string[] | null;
   suggestedValue: string | null;
 };
 
-function ActionButton({ action, children, variant, pendingText, title }: { action: string; children: React.ReactNode; variant: "primary" | "secondary" | "danger"; pendingText: string; title?: string }) {
-  const { pending } = useFormStatus();
-  const cls =
-    variant === "primary"
-      ? "bg-[var(--accent)] text-white border-[var(--accent)] hover:opacity-90"
-      : variant === "danger"
-        ? "bg-[var(--card)] text-[var(--bad)] border-[var(--bad)] hover:bg-[var(--bg)]"
-        : "bg-[var(--card)] text-[var(--fg)] border-[var(--line)] hover:bg-[var(--bg)]";
-  return (
-    <button type="submit" name="action" value={action} disabled={pending} title={title} className={`inline-flex items-center rounded border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 ${cls}`}>
-      {pending ? pendingText : children}
-    </button>
-  );
+/** Keyboard hint rendered next to an action. */
+function Kbd({ children }: { children: React.ReactNode }) {
+  return <kbd className="ml-1 rounded border border-current/25 px-1 text-[10px] font-semibold uppercase opacity-70">{children}</kbd>;
 }
 
-const INPUT = "w-full rounded border border-[var(--line)] bg-[var(--card)] px-2 py-1 text-sm text-[var(--fg)]";
+function ActionButton({ action, children, variant, pendingText, title, shortcut }: { action: string; children: React.ReactNode; variant: "primary" | "secondary" | "danger"; pendingText: string; title?: string; shortcut?: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" name="action" value={action} variant={variant} size="md" disabled={pending} title={title} data-review-action={action}>
+      {pending ? (
+        <>
+          <Loader2 size={14} aria-hidden className="animate-spin" />
+          {pendingText}
+        </>
+      ) : (
+        <>
+          {children}
+          {shortcut ? <Kbd>{shortcut}</Kbd> : null}
+        </>
+      )}
+    </Button>
+  );
+}
 
 export function ReviewForm({ reviewItemId, fieldPath, expectedRecordVersionId, initialValue, valueKind, enumValues, suggestedValue }: Props) {
   const [state, formAction] = useActionState<ReviewFormState, FormData>(resolveReviewAction, null);
   const [value, setValue] = useState(initialValue);
+  const formRef = useRef<HTMLFormElement>(null);
+  const editRef = useRef<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement>(null);
   const leaf = fieldPath.replace(/^.*\./, "");
 
+  /**
+   * Queue shortcuts (spec: A accept, E edit, R reject). They stay inert while the
+   * reviewer is typing so a comment never triggers a decision.
+   */
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+      const key = e.key.toLowerCase();
+      if (key === "e") {
+        e.preventDefault();
+        editRef.current?.focus();
+        return;
+      }
+      if (key === "a" || key === "r") {
+        const action = key === "a" ? "accept" : "reject";
+        const button = formRef.current?.querySelector<HTMLButtonElement>(`[data-review-action="${action}"]`);
+        if (button) {
+          e.preventDefault();
+          button.click();
+        }
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const editorId = "review-edited-value";
+
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form ref={formRef} action={formAction} className="flex flex-col gap-3">
       <input type="hidden" name="reviewItemId" value={reviewItemId} />
       <input type="hidden" name="fieldPath" value={fieldPath} />
       <input type="hidden" name="expectedRecordVersionId" value={expectedRecordVersionId ?? ""} />
 
-      {state?.error ? (
-        <div role="alert" className="rounded border border-[var(--bad)] bg-[color-mix(in_srgb,var(--bad)_8%,white)] px-3 py-1.5 text-sm text-[var(--bad)]">
-          {state.error}
-        </div>
-      ) : null}
+      {state?.error ? <Notice tone="bad">{state.error}</Notice> : null}
 
-      <label className="flex flex-col gap-1 text-xs text-[var(--muted)]">
-        <span className="flex items-center gap-2">
-          <span>Edited value for Edit &amp; Accept</span>
-          <span className="font-mono">{leaf}</span>
-          {suggestedValue !== null && suggestedValue !== value ? (
-            <button type="button" onClick={() => setValue(suggestedValue)} className="ml-auto rounded border border-[var(--warn)] px-2 py-0.5 text-xs text-[var(--warn)] hover:bg-[var(--bg)]" title="Prefill the edit box with the verifier's corrected value">
-              Use this value
-            </button>
-          ) : null}
-        </span>
+      <Field
+        htmlFor={editorId}
+        label={
+          <span className="flex w-full items-center gap-2">
+            <span>Edited value</span>
+            <span className="font-mono text-[11px] text-[var(--faint)]">{leaf}</span>
+            {suggestedValue !== null && suggestedValue !== value ? (
+              <button
+                type="button"
+                onClick={() => setValue(suggestedValue)}
+                className="ml-auto rounded-[var(--r-sm)] border border-[var(--warn-border)] bg-[var(--warn-soft)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--warn)] transition-colors hover:brightness-98"
+                title="Prefill the editor with the verifier's corrected value"
+              >
+                Use verifier value
+              </button>
+            ) : null}
+          </span>
+        }
+        hint={valueKind === "json" ? "List items are edited as JSON objects." : undefined}
+      >
         {valueKind === "enum" && enumValues ? (
-          <select name="newValue" value={value} onChange={(e) => setValue(e.target.value)} className={INPUT}>
-            <option value="">choose a value</option>
+          <select id={editorId} ref={editRef as React.Ref<HTMLSelectElement>} name="newValue" value={value} onChange={(e) => setValue(e.target.value)} className="w-full px-2.5 py-1.5">
+            <option value="">Choose a value</option>
             {enumValues.map((v) => (
               <option key={v} value={v}>
                 {v}
@@ -68,29 +118,36 @@ export function ReviewForm({ reviewItemId, fieldPath, expectedRecordVersionId, i
             ))}
           </select>
         ) : valueKind === "number" ? (
-          <input name="newValue" type="number" step="any" value={value} onChange={(e) => setValue(e.target.value)} className={INPUT} />
+          <input id={editorId} ref={editRef as React.Ref<HTMLInputElement>} name="newValue" type="number" step="any" value={value} onChange={(e) => setValue(e.target.value)} className="w-full px-2.5 py-1.5" />
         ) : (
-          <textarea name="newValue" rows={Math.min(6, Math.max(2, Math.ceil(value.length / 80)))} value={value} onChange={(e) => setValue(e.target.value)} className={INPUT} />
+          <Textarea
+            id={editorId}
+            ref={editRef as React.Ref<HTMLTextAreaElement>}
+            name="newValue"
+            rows={valueKind === "json" ? 6 : Math.min(6, Math.max(2, Math.ceil(value.length / 60)))}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className={cn(valueKind === "json" && "font-mono text-[12px] leading-5")}
+          />
         )}
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-xs text-[var(--muted)]">
-        Comment (optional, recorded with any action)
-        <textarea name="comment" rows={2} className={INPUT} placeholder="Why this decision was made" />
-      </label>
+      <Field label="Comment" hint="Recorded with whichever action you take.">
+        <Textarea name="comment" rows={2} placeholder="Why this decision was made" />
+      </Field>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <ActionButton action="accept" variant="primary" pendingText="Accepting..." title="Keep the candidate value as extracted">
+      <div className="flex flex-wrap items-center gap-2 border-t border-[var(--line)] pt-3">
+        <ActionButton action="accept" variant="primary" pendingText="Accepting…" shortcut="A" title="Keep the candidate value as extracted">
           Accept
         </ActionButton>
-        <ActionButton action="edit_accept" variant="secondary" pendingText="Saving..." title="Replace the candidate with the edited value and accept">
-          Edit &amp; Accept
+        <ActionButton action="edit_accept" variant="secondary" pendingText="Saving…" shortcut="E" title="Replace the candidate with the edited value and accept">
+          Edit &amp; accept
         </ActionButton>
-        <ActionButton action="reject" variant="danger" pendingText="Rejecting..." title="Clear the value; a new record version is created with null">
+        <ActionButton action="reject" variant="danger" pendingText="Rejecting…" shortcut="R" title="Clear the value; a new record version is created with null">
           Reject
         </ActionButton>
-        <ActionButton action="needs_source" variant="secondary" pendingText="Flagging..." title="Leave unresolved and flag the field as lacking source evidence">
-          Needs more source
+        <ActionButton action="needs_source" variant="secondary" pendingText="Flagging…" title="Leave unresolved and flag the field as lacking source evidence">
+          Needs source
         </ActionButton>
       </div>
     </form>
