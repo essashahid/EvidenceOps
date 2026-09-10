@@ -3,7 +3,15 @@
   "qaReportUrl": "https://evidenceops.vercel.app/reports/44e7b61d-3e9c-4cb2-8d03-ed39fa9a9305",
   "provider": "mock",
   "liveOpenAiVerified": false,
-  "inngestDeliveryVerified": false,
+  "inngestDeliveryVerified": true,
+  "inngestVerification": {
+    "verifiedAt": "2026-09-10T17:20:40.760Z",
+    "processingRunId": "563be526-2c47-4769-85bc-4821eb74860f",
+    "status": "completed_with_review",
+    "documentsCompleted": 1,
+    "documentsFailed": 0,
+    "callbackStatus": 206
+  },
   "environmentVerification": [
     {
       "environment": "production",

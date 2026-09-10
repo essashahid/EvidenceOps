@@ -29,13 +29,11 @@ Model settings use gpt-5.6-luna and text-embedding-3-small with 768 dimensions. 
 
 ## Provider activation
 
-1. Accept the Inngest free-plan terms in the Vercel Marketplace, then install `inngest/account` into this project. The CLI requires interactive terms acceptance by the account owner.
-2. Pull the resulting environment into a private temporary file and merge event/signing keys into `.data/production.env`. Do not overwrite local development configuration.
-3. Add OPENAI_API_KEY privately, set LLM_PROVIDER=openai when ready to run the live evaluation, and sync all target environments.
-4. Sync the deployed `/api/inngest` endpoint. Expect process-document, retry-document, and evaluate-corpus. Exercise upload, retry, and evaluation through the actual service.
-5. Run `pnpm deploy:production` for a fully provisioned live deployment. It validates credentials, migrates, seeds/evaluates, syncs environments and deploys. It never resets production data.
+Inngest Marketplace activation is complete. The Production event/signing keys are installed, `/api/inngest` is synced, six functions are registered (including failure handlers), and a real document-processing event completed through the hosted callback and Neon.
 
-The read-only demo can deploy while Inngest credentials are absent. Job mutations are explicitly rejected before creating uploads or runs; signed-in users see a setup notice. This is not a fully enabled live processing deployment.
+To activate OpenAI, add `OPENAI_API_KEY` privately, set `LLM_PROVIDER=openai`, and run `pnpm deploy:production`. The command validates credentials, migrates, seeds/evaluates, synchronizes Vercel variables and deploys. It never resets production data. Re-run live processing and evaluation after changing providers.
+
+The public synthetic demo remains read-only. Signed-in authorized workflows can use the configured Inngest background processor. Live model calls remain disabled while `LLM_PROVIDER=mock`.
 
 ## Storage and authentication
 
@@ -45,6 +43,6 @@ Database passwords use scrypt. Session cookies are signed, HTTP-only, secure in 
 
 ## Verification
 
-Run lint, typecheck, unit tests, integration tests, production build, then browser checks against the hosted URL. Verify desktop/mobile routes, anonymous mutation restrictions, authenticated login, private source/report downloads, and no browser errors. Full provider verification additionally requires actual Inngest processing and live OpenAI evaluations.
+Run lint, typecheck, unit tests, integration tests, production build, then browser checks against the hosted URL. Verify desktop/mobile routes, anonymous mutation restrictions, authenticated login, private source/report downloads, Inngest processing and no browser errors. Full OpenAI provider verification additionally requires live model processing and evaluation.
 
 Preview/development currently share the synthetic production database and store. Provision isolated resources before testing destructive changes or adding private documents. Public demo mode must only be used with material intended for public viewing.

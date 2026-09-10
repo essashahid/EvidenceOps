@@ -4,7 +4,7 @@
 
 The workbench is implemented, seeded and verified locally using the deterministic mock provider. The optimized production server runs at `http://localhost:3010`. The prior agent's implementation was repaired and extended rather than discarded. Earlier local databases were preserved; the final demonstration uses `evidenceops_verified`.
 
-The demo is deployed at https://evidenceops.vercel.app using dedicated Neon PostgreSQL, database-backed signed sessions, and private Vercel Blob. All three Vercel environments have the database, authentication, storage and demo configuration. Hosted desktop/mobile browsing, admin sign-in, private client-token uploads and source downloads pass. **Live processing remains incomplete:** Inngest terms acceptance and OpenAI credentials are still required. Background mutations are guarded until Inngest is configured; the demo explicitly identifies its mock provider.
+The demo is deployed at https://evidenceops.vercel.app using dedicated Neon PostgreSQL, database-backed signed sessions, private Vercel Blob and Inngest. All three Vercel environments have the database, authentication, storage and demo configuration. Hosted desktop/mobile browsing, admin sign-in, private client-token uploads and source downloads pass. The Production Inngest app is synced with six functions; a real document event reached the Vercel callback and completed in Neon with one document completed and zero failures. OpenAI credentials are still required for live-model quality verification; the demo explicitly identifies its mock provider.
 
 ## Findings and fixes
 
@@ -69,10 +69,10 @@ See [evaluation-results.json](evaluation-results.json) for the uncached run `525
 
 The Vercel project is connected to `essashahid/EvidenceOps`, configured for Node 22 and pnpm, with known production/preview variables and generated strong demo passwords. The private `.data/production.env` file contains these passwords and placeholders for missing credentials; it is ignored by git and mode 600.
 
-To enable live processing, accept Inngest Marketplace terms and provide an OpenAI API key privately. Sync Inngest and verify live uploads/evaluations after activation. See [deployment.md](deployment.md).
+Inngest Marketplace activation, production sync and background delivery are complete. Provide an OpenAI API key privately and switch `LLM_PROVIDER` to `openai` to run live-model processing and evaluation. See [deployment.md](deployment.md).
 
 No OCR, scanned-document interpretation, image extraction, complex table reconstruction, legal/compliance function or tariff/HTS logic is implemented. The synthetic mock intentionally reads truth/golden fixtures. Page-boundary fragments can appear in extractive mock answers. Real model and operational limits must be measured after credentials are supplied.
 
 ## Neon/Vercel verification update
 
-49 unit tests, 20 integration tests, lint, typecheck and production build pass. Hosted browser checks cover eight routes at both 1440px and 390px: HTTP 200, no page errors, no horizontal overflow, and successful admin sign-in. A short-lived Blob token successfully uploads a private test object; anonymous access is denied (403), authenticated bytes match, and the test object is removed. A source downloaded through the application matches its stored SHA-256 and has private/no-store and nosniff headers. These checks do not substitute for live OpenAI or Inngest verification.
+49 unit tests, 20 integration tests, lint, typecheck and production build pass. Hosted browser checks cover eight routes at both 1440px and 390px: HTTP 200, no page errors, no horizontal overflow, and successful admin sign-in. A short-lived Blob token successfully uploads a private test object; anonymous access is denied (403), authenticated bytes match, and the test object is removed. A source downloaded through the application matches its stored SHA-256 and has private/no-store and nosniff headers. A production Inngest event completed through the hosted callback and persisted its successful outcome to Neon. Live OpenAI behavior remains unverified.
