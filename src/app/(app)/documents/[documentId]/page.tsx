@@ -31,7 +31,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ docum
 
   return (
     <>
-      <PageHeader
+      <PageHeader section="documents"
         breadcrumbs={[{ label: "Documents", href: "/documents" }, { label: doc.logicalKey }]}
         title={title}
         meta={

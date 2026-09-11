@@ -69,7 +69,7 @@ export function Notice({ tone = "info", title, children, className = "", actions
         {title && children ? " " : null}
         {children ? <span className={cn(title && "text-[var(--fg)]")}>{children}</span> : null}
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex min-w-0 flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
   );
 }

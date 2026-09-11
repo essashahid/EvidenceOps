@@ -4,6 +4,8 @@ import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { FileText, UploadCloud, X } from "lucide-react";
 import { FormButton } from "@/components/FormButton";
+import { PipelineExplainer } from "@/components/PipelineExplainer";
+import { RunProgress } from "@/components/RunProgress";
 import { StatusBadge } from "@/components/ui/badge";
 import { Panel, PanelHeader, PanelBody, PanelFooter, SectionTitle, Notice } from "@/components/ui/panel";
 import { Table, THead, Th, Tr, Td, Mono, rowLink } from "@/components/ui/table";
@@ -157,6 +159,8 @@ export function UploadForm({ canUpload, directUpload }: { canUpload: boolean; di
         </form>
       </Panel>
 
+      {state.runId ? <RunProgress runId={state.runId} /> : null}
+
       {state.rows.length > 0 ? (
         <section>
           <SectionTitle
@@ -223,23 +227,7 @@ export function UploadForm({ canUpload, directUpload }: { canUpload: boolean; di
       <Panel>
         <PanelHeader dense title="What happens next" />
         <PanelBody>
-          <ol className="grid gap-2.5 text-[13px] leading-5 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              ["Hash and version", "The file is hashed. An identical hash is a duplicate; a new hash for the same logical key becomes the next version."],
-              ["Parse and chunk", "PDF pages or DOCX paragraphs become addressable source blocks, then overlapping chunks."],
-              ["Extract with evidence", "Every value the model returns must cite a source block and quote it verbatim."],
-              ["Validate and verify", "Deterministic checks run in code, then a second model verifies each value without seeing the first one's confidence."],
-              ["Score and route", "Code computes confidence from five components and routes each value to auto-approval, review or blocked."],
-              ["Embed and index", "Chunks are embedded for hybrid retrieval so the document can be asked about."],
-            ].map(([title, body], i) => (
-              <li key={title} className="flex gap-2.5">
-                <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[11px] font-semibold text-[var(--accent)]">{i + 1}</span>
-                <span>
-                  <span className="font-medium">{title}.</span> <span className="text-[var(--muted)]">{body}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
+          <PipelineExplainer />
         </PanelBody>
       </Panel>
     </div>

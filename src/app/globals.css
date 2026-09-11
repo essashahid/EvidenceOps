@@ -50,6 +50,27 @@
   --viz-grid: #e6eaeb;
   --viz-muted: #c3ced1;
 
+  /* Section identities: one hue per area so a screen is recognisable at a
+     glance. Actions keep the single accent; these only say where you are. */
+  --sec-docs: #2a5db0;
+  --sec-docs-soft: #eaf0fb;
+  --sec-docs-border: #bfd0f0;
+  --sec-review: #a3590c;
+  --sec-review-soft: #fdf2e4;
+  --sec-review-border: #edd2ab;
+  --sec-ask: #6641b5;
+  --sec-ask-soft: #f0ebfb;
+  --sec-ask-border: #d2c5ef;
+  --sec-evals: #1f8a4c;
+  --sec-evals-soft: #e6f5ec;
+  --sec-evals-border: #b6dec6;
+  --sec-runs: #4a5f6d;
+  --sec-runs-soft: #ecf1f4;
+  --sec-runs-border: #c8d4db;
+
+  /* A quiet wash behind the dashboard hero: teal into violet, mostly white. */
+  --hero: linear-gradient(135deg, #e6f1ee 0%, #ffffff 46%, #f1ecfb 100%);
+
   /* Radius */
   --r-sm: 4px;
   --r-md: 6px;
@@ -193,3 +214,19 @@ mark {
   main { padding: 0 !important; max-width: none !important; }
   .panel, table { break-inside: avoid; box-shadow: none !important; }
 }
+
+/* ---- Motion for live states (reduced-motion rule above disables it) ---- */
+@keyframes eo-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.shimmer { position: relative; overflow: hidden; }
+.shimmer::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.6), transparent);
+  animation: eo-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes eo-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.rise { animation: eo-rise 0.22s ease-out both; }
+.rise-2 { animation-delay: 70ms; }
+.rise-3 { animation-delay: 140ms; }
+@keyframes eo-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.caret::after { content: "▍"; margin-left: 1px; color: var(--accent); animation: eo-blink 1s steps(1) infinite; }

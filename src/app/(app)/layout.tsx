@@ -18,10 +18,17 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             tone="accent"
             title="Synthetic demo workspace."
             className="mb-5 no-print"
-            actions={isPublic ? <Link href="/login" className="font-semibold underline underline-offset-2">Sign in to manage</Link> : null}
+            actions={
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]">
+                <span className="text-[var(--muted)]">Try:</span>
+                <Link href="/review" className="font-medium underline underline-offset-2">Decide a flagged value</Link>
+                <Link href="/ask" className="font-medium underline underline-offset-2">Ask a question</Link>
+                <Link href="/evals" className="font-medium underline underline-offset-2">See the quality gate</Link>
+                {isPublic ? <Link href="/login" className="font-semibold underline underline-offset-2">Sign in to manage</Link> : null}
+              </span>
+            }
           >
-            Explore source evidence, review decisions and quality results.
-            {e.LLM_PROVIDER === "mock" ? " Model output comes from a deterministic test provider." : ""}
+            Sixteen synthetic reports, already processed.{e.LLM_PROVIDER === "mock" ? " Model output comes from a deterministic test provider." : ""}
           </Notice>
         ) : null}
         {!isPublic && !jobsConfigured() ? (

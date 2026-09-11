@@ -50,7 +50,7 @@ export default async function EvalsPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader
+      <PageHeader section="evals"
         title="Evaluations"
         subtitle="The golden suite scores extraction, provenance, review routing, retrieval, cited answers, refusals and corpus integrity, then compares the result against the baseline."
         actions={
@@ -83,7 +83,7 @@ export default async function EvalsPage({ searchParams }: { searchParams: Promis
       ) : null}
 
       {runs.length === 0 ? (
-        <EmptyState icon={<BookOpenCheck size={18} aria-hidden />} title="No evaluation has run yet">
+        <EmptyState hue="evals" icon={<BookOpenCheck size={18} aria-hidden />} title="No evaluation has run yet">
           The golden suite measures the pipeline against committed fixtures and fails the build on regression. Run it once to establish a baseline.
         </EmptyState>
       ) : (

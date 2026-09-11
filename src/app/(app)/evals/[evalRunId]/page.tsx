@@ -99,7 +99,7 @@ export default async function EvalRunPage({ params, searchParams }: { params: Pr
 
   return (
     <>
-      <PageHeader
+      <PageHeader section="evals"
         breadcrumbs={[{ label: "Evaluations", href: "/evals" }, { label: shortId(run.id) }]}
         title={
           <>

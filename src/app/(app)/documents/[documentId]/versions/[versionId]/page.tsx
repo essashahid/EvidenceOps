@@ -51,7 +51,7 @@ export default async function VersionPage({ params }: { params: Promise<{ docume
 
   return (
     <>
-      <PageHeader
+      <PageHeader section="documents"
         breadcrumbs={[
           { label: "Documents", href: "/documents" },
           { label: document.logicalKey, href: `/documents/${document.id}` },

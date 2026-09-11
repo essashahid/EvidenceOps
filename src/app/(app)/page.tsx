@@ -1,31 +1,38 @@
 import Link from "next/link";
 import { ArrowRight, FileText, Upload } from "lucide-react";
 import { QualityTrend } from "@/components/QualityCharts";
-import { requireWorkspace } from "@/lib/workspace";
+import { canReview, isAdmin, requireWorkspace } from "@/lib/workspace";
+import { mutationAllowed } from "@/lib/access";
+import { jobsConfigured } from "@/lib/env";
 import { getDashboardStats, listRecentRuns } from "@/lib/queries/dashboard";
 import { listDocuments } from "@/lib/queries/documents";
 import { listEvalRuns, latestEvalRun, metricsOf, regressionOf } from "@/lib/queries/evals";
+import { getWorkflowSnapshot } from "@/lib/queries/workflow";
+import { buildStages, guideSteps, nextAction } from "@/lib/workflow";
 import { PageHeader } from "@/components/PageHeader";
+import { WorkflowStrip, NextActionCard } from "@/components/WorkflowStrip";
+import { GettingStarted } from "@/components/GettingStarted";
 import { SectionTitle, Panel, PanelHeader, PanelBody } from "@/components/ui/panel";
 import { Metric, MetricGroup, MetricStrip } from "@/components/ui/metric";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, THead, Th, Tr, Td, Mono, CellStack, TableEmpty, rowLink, inlineLink } from "@/components/ui/table";
 import { TimeAgo } from "@/components/ui/time";
-import { EmptyState } from "@/components/ui/empty";
 import { fmtCompact, fmtNumber, fmtPct, fmtUsd, plural, shortId } from "@/components/format";
 import { SUCCESS_TARGETS } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const { workspace } = await requireWorkspace();
-  const [stats, runs, docs, evalRun, history] = await Promise.all([
+  const context = await requireWorkspace();
+  const { workspace } = context;
+  const [stats, runs, docs, evalRun, history, snapshot] = await Promise.all([
     getDashboardStats(workspace.workspaceId),
     listRecentRuns(workspace.workspaceId, 6),
     listDocuments(workspace.workspaceId, 6),
     latestEvalRun(workspace.workspaceId),
     listEvalRuns(workspace.workspaceId, 8),
+    getWorkflowSnapshot(workspace.workspaceId),
   ]);
   const metrics = evalRun ? metricsOf(evalRun) : null;
   const regression = evalRun ? regressionOf(evalRun) : null;
@@ -38,42 +45,53 @@ export default async function DashboardPage() {
   const latestRun = runs[0];
   const empty = stats.documents === 0;
 
+  const jobs = jobsConfigured();
+  const perms = {
+    canUpload: mutationAllowed(context) && jobs,
+    canReview: mutationAllowed(context) && canReview(workspace.role),
+    canAsk: mutationAllowed(context),
+    canEvaluate: isAdmin(workspace.role) && jobs,
+  };
+  const stages = buildStages(snapshot);
+  const next = nextAction(snapshot, perms);
+  const guide = guideSteps(snapshot);
+
   return (
     <>
-      <PageHeader
-        title="Workspace overview"
-        subtitle="Documents, review load and measured quality across the corpus."
-        actions={
-          <>
-            <Button asChild variant="secondary" size="sm">
-              <Link href="/documents">
-                <FileText size={14} aria-hidden />
-                Browse documents
-              </Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/upload">
-                <Upload size={14} aria-hidden />
-                Upload documents
-              </Link>
-            </Button>
-          </>
-        }
-      />
-
-      {empty ? (
-        <EmptyState
-          icon={<Upload size={18} aria-hidden />}
-          title="No documents in this workspace yet"
-          action={
-            <Button asChild>
-              <Link href="/upload">Upload the first documents</Link>
-            </Button>
+      {/* Hero: where the workspace is in the flow and the one thing to do next. */}
+      <section className="-mx-4 mb-6 border-b border-[var(--line)] px-4 pb-6 pt-1 sm:-mx-6 sm:px-6" style={{ background: "var(--hero)" }} aria-label="Workspace status">
+        <PageHeader
+          className="mb-4"
+          title="Workspace overview"
+          subtitle={empty ? "Nothing has been uploaded yet. The flow below fills in as work happens." : "Where the corpus stands, what is waiting on a person, and how quality is trending."}
+          actions={
+            <>
+              <Button asChild variant="secondary" size="sm">
+                <Link href="/documents">
+                  <FileText size={14} aria-hidden />
+                  Browse documents
+                </Link>
+              </Button>
+              {perms.canUpload ? (
+                <Button asChild size="sm">
+                  <Link href="/upload">
+                    <Upload size={14} aria-hidden />
+                    Upload documents
+                  </Link>
+                </Button>
+              ) : null}
+            </>
           }
-        >
-          Upload a PDF or DOCX file to start the pipeline. Every value it extracts will be linked back to the page or paragraph it came from.
-        </EmptyState>
-      ) : (
+        />
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <WorkflowStrip stages={stages} />
+          <NextActionCard action={next} />
+        </div>
+      </section>
+
+      <GettingStarted steps={guide} storageKey={`eo:guide:${workspace.workspaceId}`} />
+
+      {empty ? null : (
         <>
           {/* The four numbers that describe the workspace right now. */}
           <MetricGroup className="mb-3">

@@ -1,6 +1,6 @@
 import { mutationAllowed } from "@/lib/access";
 import Link from "next/link";
-import { Quote, Sparkles } from "lucide-react";
+import { FileSearch, RefreshCcw, Search, ShieldCheck, Sparkles, Upload } from "lucide-react";
 import { requireWorkspace } from "@/lib/workspace";
 import { getAnswer } from "@/lib/rag/answer";
 import { listRecentQuestions, loadChunkTexts, loadVersionRefs, type VersionRef } from "@/lib/queries/ask";
@@ -8,32 +8,36 @@ import type { AnswerMode } from "@/lib/db/schema";
 import { PageHeader } from "@/components/PageHeader";
 import { Panel, PanelHeader, PanelBody, PanelFooter, SectionTitle, Notice } from "@/components/ui/panel";
 import { StatusBadge } from "@/components/ui/badge";
-import { FormButton } from "@/components/FormButton";
-import { Field, Textarea, CheckboxField } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 import { Table, THead, Th, Tr, Td, Mono, TableEmpty } from "@/components/ui/table";
 import { TimeAgo } from "@/components/ui/time";
 import { fmtDate, fmtDuration, fmtNumber, fmtUsd } from "@/components/format";
 import { askAction } from "./actions";
+import { AskComposer, type ModeOption, type Suggestion } from "./AskComposer";
+import { AnswerView, type AnswerPart, type CiteRef } from "./AnswerView";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-const MODES: { value: AnswerMode; label: string; hint: string }[] = [
+const MODES: ModeOption[] = [
   { value: "answer", label: "Answer", hint: "A direct answer with inline citations" },
   { value: "executive_brief", label: "Executive brief", hint: "Summary, findings, recommendations, limitations" },
   { value: "findings", label: "Findings", hint: "Findings with their supporting evidence" },
   { value: "recommendations", label: "Recommendations", hint: "Recommendations and the entity each targets" },
 ];
 
-const EXAMPLES = [
-  "What is the revised program cost in the Northstar operational review?",
-  "Which reports mention Cardinal Fleet Services?",
-  "What did the corrected edition change?",
+const SUGGESTIONS: Suggestion[] = [
+  { text: "What is the revised program cost in the Northstar operational review?", mode: "answer" },
+  { text: "Which reports mention Cardinal Fleet Services?", mode: "answer" },
+  { text: "What did the corrected edition of the Northstar review change?", mode: "answer" },
+  { text: "Brief the fuel card misuse investigation for a board member.", mode: "executive_brief" },
+  { text: "List every high-severity finding across the audits.", mode: "findings" },
 ];
 
 type Retrieved = { text?: string; chunkId: string; documentVersionId: string; logicalKey: string; versionNumber: number; similarity: number; lexical: number; combined: number; startLocator: string; endLocator: string };
 type AnswerJson = { invalidCitations?: number; citations?: { raw: string; valid: boolean }[] };
-type CiteRef = { n: number; valid: boolean; quote: string; href: string | null; locator: string | null; label: string };
+
+const CITE_RE = /(\[[A-Z0-9][A-Z0-9-]*\s+v\d+\s+[^\]]+\])/g;
 
 function one(v: string | string[] | undefined): string {
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
@@ -46,6 +50,7 @@ export default async function AskPage({ searchParams }: { searchParams: Promise<
   const canAsk = mutationAllowed(context);
   const answerId = one(sp.answer);
   const error = one(sp.error);
+  const modeParam = one(sp.mode);
   const [stored, recent] = await Promise.all([answerId ? getAnswer(answerId) : Promise.resolve(null), listRecentQuestions(workspace.workspaceId, 12)]);
   const loaded = stored && stored.query.workspaceId === workspace.workspaceId ? stored : null;
 
@@ -54,26 +59,42 @@ export default async function AskPage({ searchParams }: { searchParams: Promise<
   const versionIds = [...retrieved.map((r) => r.documentVersionId), ...(loaded?.citations ?? []).map((c) => c.documentVersionId).filter((v): v is string => Boolean(v))];
   const [versions, chunkText] = await Promise.all([loadVersionRefs(workspace.workspaceId, versionIds), loadChunkTexts(retrieved.map((r) => r.chunkId))]);
 
+  // Citations in display order, each resolved to a link into the source view.
   const refs: CiteRef[] = (loaded?.citations ?? []).map((row, i) => {
     const ref = row.documentVersionId ? versions.get(row.documentVersionId) : undefined;
     return {
       n: i + 1,
       valid: Boolean(ref),
       quote: row.quoteText ?? "",
+      claim: row.supportedClaim,
       locator: row.sourceLocator,
       href: ref && row.sourceLocator ? `/documents/${ref.documentId}/versions/${ref.versionId}#${row.sourceLocator}` : null,
       label: ref ? `${ref.logicalKey} v${ref.versionNumber}` : "Source unavailable",
     };
   });
-  const citationLinks = new Map((loaded?.citations ?? []).map((row, i) => [json.citations?.filter((c) => c.valid)[i]?.raw ?? row.quoteText, refs[i]!]));
+  // The model writes [KEY vN locator]; map each raw marker to its numbered reference.
+  const rawToN = new Map<string, number>();
+  (json.citations ?? []).filter((c) => c.valid).forEach((c, i) => rawToN.set(c.raw, i + 1));
+  const parts: AnswerPart[] = loaded
+    ? loaded.answer.answerText.split(CITE_RE).flatMap((piece): AnswerPart[] => {
+        if (!piece) return [];
+        const n = rawToN.get(piece);
+        return n ? [{ kind: "cite" as const, value: piece, n }] : [{ kind: "text" as const, value: piece }];
+      })
+    : [];
+  const plainText = loaded ? loaded.answer.answerText.replace(CITE_RE, (m) => (rawToN.get(m) ? ` [${rawToN.get(m)}]` : m)) : "";
+  const citedChunks = new Set((loaded?.citations ?? []).map((c) => c.chunkId).filter(Boolean));
+
   const modeLabel = (m: string) => MODES.find((x) => x.value === m)?.label ?? m;
-  const currentMode = loaded?.answer.mode ?? "answer";
+  const initialMode: AnswerMode = (loaded?.answer.mode ?? (MODES.some((m) => m.value === modeParam) ? (modeParam as AnswerMode) : "answer")) as AnswerMode;
+  const supported = loaded?.answer.sufficientEvidence ?? false;
 
   return (
     <>
       <PageHeader
+        section="ask"
         title="Ask & draft"
-        subtitle="Answers built only from retrieved source blocks. Every claim carries a citation that is re-checked against the source in code, and questions the corpus cannot answer are refused."
+        subtitle="Answers are built only from retrieved source blocks. Every claim carries a citation that is re-checked against the source in code, and questions the corpus cannot answer are refused."
       />
 
       {error ? (
@@ -84,133 +105,95 @@ export default async function AskPage({ searchParams }: { searchParams: Promise<
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-4">
-          {/* ------------------------------ Composer ------------------------------ */}
-          <Panel as="div">
-            <form action={askAction}>
-              <PanelBody className="space-y-3">
-                <Field label="Question or drafting request" htmlFor="ask-question">
-                  <Textarea
-                    id="ask-question"
-                    name="question"
-                    rows={3}
-                    required
-                    maxLength={2000}
-                    defaultValue={loaded?.query.queryText ?? one(sp.q)}
-                    placeholder="What is the revised program cost in the Northstar operational review?"
-                    className="text-[14px]"
-                  />
-                </Field>
-
-                <fieldset>
-                  <legend className="mb-1.5 text-[12px] font-medium text-[var(--muted)]">Mode</legend>
-                  <div className="inline-flex flex-wrap gap-1 rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--surface-sunken)] p-1">
-                    {MODES.map((m) => (
-                      <label
-                        key={m.value}
-                        title={m.hint}
-                        className="cursor-pointer rounded-[var(--r-sm)] px-2.5 py-1 text-[13px] font-medium text-[var(--muted)] transition-colors hover:text-[var(--fg)] has-[:checked]:bg-[var(--surface)] has-[:checked]:text-[var(--accent)] has-[:checked]:shadow-[var(--shadow-sm)]"
-                      >
-                        <input type="radio" name="mode" value={m.value} defaultChecked={currentMode === m.value} className="sr-only" />
-                        {m.label}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-              </PanelBody>
-              <PanelFooter className="justify-between">
-                <CheckboxField name="includeSuperseded" defaultChecked={loaded?.query.includeSuperseded ?? false} label="Include superseded versions" title="By default only current document versions are retrieved" />
-                <span className="ml-auto flex items-center gap-3">
-                  {!canAsk ? <span className="text-[12px]">Sign in to run a new request.</span> : null}
-                  <FormButton disabled={!canAsk} pendingText="Retrieving and answering…">
-                    <Sparkles size={14} aria-hidden />
-                    Ask
-                  </FormButton>
-                </span>
-              </PanelFooter>
-            </form>
-          </Panel>
+          <AskComposer action={askAction} modes={MODES} suggestions={SUGGESTIONS} initialQuestion={loaded?.query.queryText ?? one(sp.q)} initialMode={initialMode} includeSuperseded={loaded?.query.includeSuperseded ?? false} canAsk={canAsk} />
 
           {answerId && !loaded ? <Notice tone="warn">That answer does not belong to this workspace.</Notice> : null}
 
-          {/* ------------------------------- Answer ------------------------------- */}
           {!loaded ? (
-            <Panel>
-              <PanelHeader title="How answering works" />
-              <PanelBody className="space-y-3 text-[13px] leading-6 text-[var(--muted)]">
-                <ol className="space-y-2">
-                  {[
-                    "Hybrid retrieval pulls the closest chunks: 75% vector similarity, 25% full-text rank, current versions only unless you include superseded ones.",
-                    "The model may use only those chunks, and must cite each claim as [KEY vN locator].",
-                    "Every citation is re-checked in code against the retrieved text. An answer with no valid citation is downgraded to a refusal.",
-                  ].map((step, i) => (
-                    <li key={i} className="flex gap-2.5">
-                      <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[11px] font-semibold text-[var(--accent)]">{i + 1}</span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ol>
-                {canAsk ? (
-                  <div className="border-t border-[var(--line)] pt-3">
-                    <div className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--muted)]">Try asking</div>
-                    <ul className="flex flex-col items-start gap-1.5">
-                      {EXAMPLES.map((q) => (
-                        <li key={q}>
-                          <Link
-                            href={`/rag?q=${encodeURIComponent(q)}`}
-                            className="rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1 text-[var(--fg)] transition-colors hover:border-[var(--accent-border)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
-                          >
-                            {q}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-              </PanelBody>
-            </Panel>
+            /* Before the first question: what makes an answer here trustworthy, in three beats. */
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { icon: Search, title: "Retrieve", body: "Hybrid search pulls the closest chunks: 75% vector similarity, 25% full-text rank. Current versions only unless you say otherwise." },
+                { icon: Sparkles, title: "Draft from evidence", body: "The model may use only those chunks and must cite every claim as [KEY vN locator]." },
+                { icon: ShieldCheck, title: "Check in code", body: "Each citation is re-checked against the retrieved text. No valid citation, no answer: the question is refused instead." },
+              ].map((s, i) => (
+                <div key={s.title} className={cn("rise rounded-[var(--r-lg)] border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[var(--shadow-sm)]", i === 1 && "rise-2", i === 2 && "rise-3")}>
+                  <span className="mb-2.5 grid size-8 place-items-center rounded-[var(--r-md)] border border-[var(--sec-ask-border)] bg-[var(--sec-ask-soft)] text-[var(--sec-ask)]">
+                    <s.icon size={15} aria-hidden strokeWidth={2.1} />
+                  </span>
+                  <div className="text-[13.5px] font-semibold">{s.title}</div>
+                  <p className="mt-1 text-[12.5px] leading-5 text-[var(--muted)]">{s.body}</p>
+                </div>
+              ))}
+            </div>
           ) : (
             <>
-              <Panel>
+              {/* ------------------------------- Answer ------------------------------- */}
+              <Panel className="rise">
                 <PanelHeader
+                  className={supported ? "border-l-[3px] border-l-[var(--sec-ask)]" : "border-l-[3px] border-l-[var(--bad)]"}
                   title={
                     <span className="flex flex-wrap items-center gap-2">
                       {modeLabel(loaded.answer.mode)}
-                      <StatusBadge status={loaded.answer.sufficientEvidence ? "supported" : "needs_source"} title={loaded.answer.sufficientEvidence ? "Every claim is supported by a validated citation" : "Refused: insufficient evidence"} />
+                      <StatusBadge status={supported ? "supported" : "needs_source"} title={supported ? "Every claim is supported by a validated citation" : "Refused: insufficient evidence"} />
+                      {supported && refs.length > 0 ? (
+                        <span className="text-[12px] font-normal text-[var(--muted)]">
+                          {refs.filter((r) => r.valid).length} of {refs.length} citations checked
+                        </span>
+                      ) : null}
                       {loaded.query.includeSuperseded ? <span className="text-[12px] font-normal text-[var(--muted)]">superseded versions included</span> : null}
                     </span>
                   }
+                  description={<span className="line-clamp-2">“{loaded.query.queryText}”</span>}
                   actions={<TimeAgo value={loaded.answer.createdAt} prefix="asked" className="text-[12px]" />}
                 />
 
-                {!loaded.answer.sufficientEvidence ? (
-                  <PanelBody>
-                    <div className="rounded-[var(--r-md)] border border-[var(--bad-border)] bg-[var(--bad-soft)] px-3.5 py-3">
-                      <div className="text-[13px] font-semibold text-[var(--bad)]">Refused: insufficient evidence</div>
-                      <p className="mt-1 text-[13px] leading-6">{loaded.answer.refusalReason ?? "The retrieved evidence could not support an answer."}</p>
-                      <p className="mt-2 font-mono text-[12px] text-[var(--muted)]">{loaded.answer.answerText}</p>
+                {!supported ? (
+                  <PanelBody className="p-5">
+                    <div className="flex gap-3">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-[var(--r-lg)] border border-[var(--bad-border)] bg-[var(--bad-soft)] text-[var(--bad)]">
+                        <FileSearch size={17} aria-hidden />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-[15px] font-semibold">Refused: the documents cannot answer this</div>
+                        <p className="mt-1 text-[13.5px] leading-6 text-[var(--muted)]">{loaded.answer.refusalReason ?? "The retrieved evidence could not support an answer, so nothing was invented."}</p>
+                        {loaded.answer.answerText ? <p className="mt-2 font-mono text-[12px] text-[var(--faint)]">{loaded.answer.answerText}</p> : null}
+                        <div className="mt-4 rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--surface-sunken)] p-3 text-[12.5px] leading-5">
+                          <div className="mb-1 font-semibold">What usually helps</div>
+                          <ul className="list-disc space-y-0.5 pl-4 text-[var(--muted)]">
+                            <li>Name the report or the entity the way the document does.</li>
+                            <li>Tick “Include superseded versions” if the answer might be in an earlier edition.</li>
+                            <li>
+                              If the document is not in the workspace yet,{" "}
+                              <Link href="/upload" className="text-[var(--accent)] underline-offset-2 hover:underline">
+                                upload it
+                              </Link>{" "}
+                              and ask again.
+                            </li>
+                          </ul>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button asChild variant="secondary" size="xs">
+                            <Link href={`/ask?q=${encodeURIComponent(loaded.query.queryText)}`}>
+                              <RefreshCcw size={12} aria-hidden />
+                              Rephrase and retry
+                            </Link>
+                          </Button>
+                          <Button asChild variant="ghost" size="xs">
+                            <Link href="/upload">
+                              <Upload size={12} aria-hidden />
+                              Upload a document
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </PanelBody>
                 ) : (
-                  <PanelBody className="p-5">
-                    <div className="whitespace-pre-wrap break-words text-[14px] leading-7">
-                      {loaded.answer.answerText.split(/(\[[A-Z0-9][A-Z0-9-]*\s+v\d+\s+[^\]]+\])/g).map((part, i) => {
-                        const ref = citationLinks.get(part);
-                        return ref?.href ? (
-                          <Link
-                            key={i}
-                            href={ref.href}
-                            title={`Open the cited source: “${ref.quote}”`}
-                            className="mx-0.5 inline-flex rounded-[var(--r-sm)] border border-[var(--accent-border)] bg-[var(--accent-soft)] px-1 align-baseline font-mono text-[11.5px] text-[var(--accent)] transition-colors hover:bg-[var(--accent)] hover:text-white"
-                          >
-                            {part}
-                          </Link>
-                        ) : (
-                          <span key={i}>{part}</span>
-                        );
-                      })}
-                    </div>
-                    {json.invalidCitations ? <p className="mt-3 text-[13px] text-[var(--bad)]">{json.invalidCitations} citation(s) could not be validated against the retrieved evidence.</p> : null}
-                  </PanelBody>
+                  <>
+                    <AnswerView parts={parts} refs={refs} plainText={plainText} />
+                    {json.invalidCitations ? <p className="border-t border-[var(--line)] px-5 py-2.5 text-[12.5px] text-[var(--bad)]">{json.invalidCitations} citation(s) could not be validated against the retrieved evidence and are struck through.</p> : null}
+                  </>
                 )}
 
                 <PanelFooter>
@@ -228,31 +211,8 @@ export default async function AskPage({ searchParams }: { searchParams: Promise<
                 </PanelFooter>
               </Panel>
 
-              {refs.length > 0 ? (
-                <Panel>
-                  <PanelHeader dense title={`Citations (${refs.length})`} />
-                  <ol className="divide-y divide-[var(--line)]">
-                    {refs.map((r) => (
-                      <li key={r.n} className="flex gap-3 px-4 py-2.5 text-[13px]">
-                        <CiteBadge r={r} />
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                            <span className="font-medium">{r.label}</span>
-                            {r.locator ? <Mono className="text-[var(--muted)]">{r.locator}</Mono> : null}
-                          </div>
-                          <p className="mt-0.5 flex gap-1.5 text-[var(--muted)]">
-                            <Quote size={12} aria-hidden className="mt-1 shrink-0 text-[var(--faint)]" />
-                            <span className="italic">{r.quote}</span>
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                </Panel>
-              ) : null}
-
               <div>
-                <SectionTitle title="Retrieved evidence" count={retrieved.length} description="Hybrid retrieval: 75% vector similarity, 25% full-text rank, normalized across the candidate pool." />
+                <SectionTitle title="Retrieved evidence" count={retrieved.length} description="Hybrid retrieval: 75% vector similarity, 25% full-text rank, normalized across the candidate pool. Rows the answer cites are marked." />
                 <Table minWidth={980}>
                   <THead>
                     <Th align="right" width={44}>
@@ -277,20 +237,24 @@ export default async function AskPage({ searchParams }: { searchParams: Promise<
                     {retrieved.map((r, i) => {
                       const ref: VersionRef | undefined = versions.get(r.documentVersionId);
                       const text = r.text ?? chunkText.get(r.chunkId);
+                      const cited = citedChunks.has(r.chunkId);
                       return (
-                        <Tr key={r.chunkId}>
+                        <Tr key={r.chunkId} className={cited ? "bg-[var(--sec-ask-soft)]/40" : undefined}>
                           <Td align="right" className="text-[var(--muted)]">
-                            {i + 1}
+                            <span className={cn("inline-block border-l-2 pl-2", cited ? "border-[var(--sec-ask)]" : "border-transparent")}>{i + 1}</span>
                           </Td>
                           <Td className="max-w-[260px]">
                             {ref ? (
-                              <Link href={`/documents/${ref.documentId}/versions/${ref.versionId}#${r.startLocator}`} className="block truncate text-[var(--fg)] transition-colors hover:text-[var(--accent)]" title={ref.displayName}>
+                              <Link href={`/documents/${ref.documentId}/versions/${ref.versionId}#${r.startLocator}`} className="block truncate text-[var(--fg)] transition-colors hover:text-[var(--sec-ask)]" title={ref.displayName}>
                                 {ref.displayName}
                               </Link>
                             ) : (
                               <span className="text-[var(--faint)]">Not in this workspace</span>
                             )}
-                            <Mono className="text-[var(--muted)]">{r.logicalKey}</Mono>
+                            <span className="flex items-center gap-1.5">
+                              <Mono className="text-[var(--muted)]">{r.logicalKey}</Mono>
+                              {cited ? <span className="rounded-full border border-[var(--sec-ask-border)] bg-[var(--sec-ask-soft)] px-1.5 text-[10.5px] font-semibold text-[var(--sec-ask)]">Cited</span> : null}
+                            </span>
                           </Td>
                           <Td>
                             <span className="flex items-center gap-1.5">
@@ -316,7 +280,7 @@ export default async function AskPage({ searchParams }: { searchParams: Promise<
                               <span className="text-[12px] text-[var(--faint)]">no longer indexed</span>
                             ) : (
                               <details>
-                                <summary className="cursor-pointer text-[12px] text-[var(--accent)]">{fmtNumber(text.length)} chars</summary>
+                                <summary className="cursor-pointer text-[12px] text-[var(--sec-ask)]">{fmtNumber(text.length)} chars</summary>
                                 <pre className="scroll-thin mt-1.5 max-h-[280px] w-[min(560px,60vw)] overflow-auto whitespace-pre-wrap break-words rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--surface-sunken)] p-2 font-mono text-[11.5px] leading-5">{text}</pre>
                               </details>
                             )}
@@ -335,14 +299,14 @@ export default async function AskPage({ searchParams }: { searchParams: Promise<
         <Panel as="aside" className="xl:sticky xl:top-[112px]">
           <PanelHeader dense title="Recent questions" />
           {recent.length === 0 ? (
-            <PanelBody className="text-[13px] text-[var(--muted)]">Nothing has been asked in this workspace yet.</PanelBody>
+            <PanelBody className="text-[13px] text-[var(--muted)]">Nothing has been asked in this workspace yet. Your questions and their outcomes will collect here.</PanelBody>
           ) : (
             <ul className="scroll-thin max-h-[520px] divide-y divide-[var(--line)] overflow-y-auto">
               {recent.map((q) => (
                 <li key={q.answerId}>
                   <Link
                     href={`/ask?answer=${q.answerId}`}
-                    className={cn("block px-3.5 py-2.5 transition-colors hover:bg-[var(--surface-hover)]", q.answerId === answerId && "bg-[var(--accent-soft)]")}
+                    className={cn("block border-l-2 px-3.5 py-2.5 transition-colors hover:bg-[var(--surface-hover)]", q.answerId === answerId ? "border-[var(--sec-ask)] bg-[var(--sec-ask-soft)]/50" : "border-transparent")}
                     title={q.question}
                   >
                     <span className="line-clamp-2 text-[13px] leading-5 text-[var(--fg)]">{q.question}</span>
@@ -361,24 +325,5 @@ export default async function AskPage({ searchParams }: { searchParams: Promise<
         </Panel>
       </div>
     </>
-  );
-}
-
-function CiteBadge({ r }: { r: CiteRef | undefined }) {
-  if (!r) return null;
-  const cls = r.valid ? "border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent)]" : "border-[var(--bad-border)] bg-[var(--bad-soft)] text-[var(--bad)] line-through";
-  const title = `${r.valid ? "Validated citation" : "Source not found"}: “${r.quote}”`;
-  const inner = `[${r.n}]`;
-  if (r.href && r.valid) {
-    return (
-      <Link href={r.href} title={title} className={cn("h-fit shrink-0 rounded-[var(--r-sm)] border px-1.5 py-0.5 font-mono text-[11px] transition-colors hover:brightness-97", cls)}>
-        {inner}
-      </Link>
-    );
-  }
-  return (
-    <span title={title} className={cn("h-fit shrink-0 rounded-[var(--r-sm)] border px-1.5 py-0.5 font-mono text-[11px]", cls)}>
-      {inner}
-    </span>
   );
 }

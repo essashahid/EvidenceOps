@@ -72,7 +72,7 @@ export default async function ReviewItemPage({ params, searchParams }: { params:
 
   return (
     <>
-      <PageHeader
+      <PageHeader section="review"
         breadcrumbs={[{ label: "Review queue", href: "/review" }, { label: detail.fieldLabel }]}
         title={
           <>

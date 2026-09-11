@@ -113,7 +113,7 @@ A reviewer opening a blocked value sees the source block, the quote checked agai
 
 ![Review item with source evidence, routing reason and confidence breakdown](docs/screenshots/review.png)
 
-[Dashboard](docs/screenshots/dashboard.png) · [Documents](docs/screenshots/documents.png) · [Extracted record](docs/screenshots/provenance.png) · [Cited answer](docs/screenshots/answer.png) · [Evaluations](docs/screenshots/evaluations.png) · [Run activity](docs/screenshots/run.png) · [Upload](docs/screenshots/upload.png) · [QA report](docs/screenshots/qa-report.png) · Mobile: [overview](docs/screenshots/mobile-dashboard.png), [review queue](docs/screenshots/mobile-review.png).
+[Dashboard](docs/screenshots/dashboard.png) · [How it works](docs/screenshots/how-it-works.png) · [Documents](docs/screenshots/documents.png) · [Extracted record](docs/screenshots/provenance.png) · [Ask & draft](docs/screenshots/ask.png) · [Cited answer](docs/screenshots/answer.png) · [Evaluations](docs/screenshots/evaluations.png) · [Run activity](docs/screenshots/run.png) · [Upload](docs/screenshots/upload.png) · [QA report](docs/screenshots/qa-report.png) · Mobile: [overview](docs/screenshots/mobile-dashboard.png), [review queue](docs/screenshots/mobile-review.png).
 
 ## Running Locally
 

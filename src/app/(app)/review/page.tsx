@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { ChevronRight, ListChecks } from "lucide-react";
-import { requireWorkspace } from "@/lib/workspace";
+import { ArrowRight, ChevronRight, ListChecks } from "lucide-react";
+import { canReview, requireWorkspace } from "@/lib/workspace";
 import { listReviewItems, reviewCounts, type ReviewFilters } from "@/lib/review/queries";
-import { listReviewFieldRoots, listReviewVersions } from "@/lib/queries/review";
+import { firstOpenReviewItemId, listReviewFieldRoots, listReviewVersions } from "@/lib/queries/review";
 import { fieldLabel, LIST_FIELDS, SCALAR_FIELDS } from "@/lib/schema/report";
 import { PageHeader } from "@/components/PageHeader";
 import { Metric, MetricGroup } from "@/components/ui/metric";
@@ -74,12 +74,14 @@ export default async function ReviewQueuePage({ searchParams }: { searchParams: 
     minConfidence: numOrUndefined(min),
     maxConfidence: numOrUndefined(max),
   };
-  const [counts, items, versions, roots] = await Promise.all([
+  const [counts, items, versions, roots, firstOpenId] = await Promise.all([
     reviewCounts(workspace.workspaceId),
     listReviewItems(workspace.workspaceId, filters),
     listReviewVersions(workspace.workspaceId),
     listReviewFieldRoots(workspace.workspaceId),
+    firstOpenReviewItemId(workspace.workspaceId),
   ]);
+  const reviewer = canReview(workspace.role);
   const knownRoots: string[] = [...SCALAR_FIELDS, ...LIST_FIELDS];
   const fieldOptions = [...knownRoots.filter((r) => roots.includes(r)), ...roots.filter((r) => !knownRoots.includes(r))];
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
@@ -89,8 +91,19 @@ export default async function ReviewQueuePage({ searchParams }: { searchParams: 
   return (
     <>
       <PageHeader
+        section="review"
         title="Review queue"
         subtitle="Every value the pipeline could not auto-approve, with the evidence behind it. Decisions create a new immutable record version."
+        actions={
+          firstOpenId ? (
+            <Button asChild size="sm">
+              <Link href={`/review/${firstOpenId}`}>
+                {reviewer ? "Start reviewing" : "Open the first item"}
+                <ArrowRight size={14} aria-hidden />
+              </Link>
+            </Button>
+          ) : null
+        }
       />
 
       {flash ? (
@@ -175,7 +188,7 @@ export default async function ReviewQueuePage({ searchParams }: { searchParams: 
       </form>
 
       {items.length === 0 ? (
-        <EmptyState
+        <EmptyState hue="review"
           icon={<ListChecks size={18} aria-hidden />}
           title={filtered ? "No items match these filters" : "The review queue is clear"}
           action={

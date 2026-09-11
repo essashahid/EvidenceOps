@@ -36,7 +36,7 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
 
   return (
     <>
-      <PageHeader
+      <PageHeader section="runs"
         title="Run activity"
         subtitle="Every processing run with its steps, retries, token usage and cost. Runs always reach a terminal state."
         actions={
@@ -56,7 +56,7 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
       </MetricGroup>
 
       {visible.length === 0 ? (
-        <EmptyState icon={<Activity size={18} aria-hidden />} title="No processing runs yet">
+        <EmptyState hue="runs" icon={<Activity size={18} aria-hidden />} title="No processing runs yet">
           Runs appear here as soon as a document is uploaded or reprocessed.
         </EmptyState>
       ) : (

@@ -14,7 +14,7 @@ export default async function DocumentsPage() {
   const docs = await listDocuments(workspace.workspaceId);
   return (
     <>
-      <PageHeader
+      <PageHeader section="documents"
         title="Document library"
         subtitle="Every edition is preserved and every extracted value stays linked to the page or paragraph it came from."
         actions={
@@ -27,7 +27,7 @@ export default async function DocumentsPage() {
         }
       />
       {docs.length === 0 ? (
-        <EmptyState
+        <EmptyState hue="docs"
           icon={<Upload size={18} aria-hidden />}
           title="No documents yet"
           action={

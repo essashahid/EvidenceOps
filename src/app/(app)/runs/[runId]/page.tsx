@@ -10,6 +10,7 @@ import { Panel, PanelBody, SectionTitle, Notice } from "@/components/ui/panel";
 import { MetricStrip } from "@/components/ui/metric";
 import { StatusBadge } from "@/components/ui/badge";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { RunProgress } from "@/components/RunProgress";
 import { FormButton } from "@/components/FormButton";
 import { Button } from "@/components/ui/button";
 import { Field, FilterBar, Select } from "@/components/ui/field";
@@ -88,7 +89,7 @@ export default async function RunPage({ params, searchParams }: { params: Promis
 
   return (
     <>
-      <PageHeader
+      <PageHeader section="runs"
         breadcrumbs={[{ label: "Run activity", href: "/runs" }, { label: shortId(run.id) }]}
         title={
           <>
@@ -140,6 +141,8 @@ export default async function RunPage({ params, searchParams }: { params: Promis
           ]}
         />
       </Panel>
+
+      {active && !processedNothing ? <RunProgress runId={run.id} className="mb-5" /> : null}
 
       {processedNothing ? (
         /* Duplicate uploads and no-op runs get a one-line explanation instead of five empty tables. */

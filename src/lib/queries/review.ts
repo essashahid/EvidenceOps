@@ -57,3 +57,14 @@ export async function openQueueNeighbours(workspaceId: string, itemId: string): 
   if (i === -1) return { index: -1, total: ids.length, prevId: null, nextId: ids[0] ?? null };
   return { index: i, total: ids.length, prevId: ids[i - 1] ?? null, nextId: ids[i + 1] ?? null };
 }
+
+/** The item a reviewer should open first: high priority, then newest. */
+export async function firstOpenReviewItemId(workspaceId: string): Promise<string | null> {
+  const [row] = await getDb()
+    .select({ id: schema.reviewItems.id })
+    .from(schema.reviewItems)
+    .where(and(eq(schema.reviewItems.workspaceId, workspaceId), eq(schema.reviewItems.status, "open")))
+    .orderBy(desc(schema.reviewItems.priority), desc(schema.reviewItems.createdAt))
+    .limit(1);
+  return row?.id ?? null;
+}
